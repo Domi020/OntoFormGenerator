@@ -6,6 +6,12 @@
     <link rel="stylesheet" href="./material.min.css">
     <script src="./material.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .ontology-list {
+            width: 300px;
+        }
+    </style>
+
 </head>
 <body>
     <h1>OntoFormGenerator</h1>
@@ -24,7 +30,48 @@
                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                     Open
                 </a>
+            </div>
         </div>
     </div>
+    <div>
+        <h2>Ontologies</h2>
+        <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--raised">
+            Import new ontology
+        </button>
+        <dialog class="mdl-dialog">
+            <h4>Import new ontology</h4>
+            <form class="mdl-dialog__content" action="/ontology" method="post">
+                <div>
+                    <label for="ontology-file">Ontology file</label>
+                    <input type="file" id="ontology-file" name="ontology-file">
+                </div>
+                <div>
+                    <button type="submit">Import</button>
+                </div>
+            </form>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="close">Cancel</button>
+            </div>
+        </dialog>
+        <ul class="mdl-list ontology-list">
+            <li class="mdl-list__item">
+                <span class="mdl-list__item-primary-content">
+                    Wines and Meals
+                </span>
+                <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">star</i></a>
+                <a class="mdl-list__item-secondary-action" href="##"><i class="material-icons">star</i></a>
+            </li>
+        </ul>
+    </div>
+    <script>
+        var dialog = document.querySelector('dialog');
+        var showDialogButton = document.querySelector('#show-ontology-import-dialog');
+        showDialogButton.addEventListener('click', function() {
+            dialog.showModal();
+        });
+        dialog.querySelector('.close').addEventListener('click', function() {
+            dialog.close();
+        });
+    </script>
 </body>
 </html>
