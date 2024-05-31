@@ -2,6 +2,8 @@ package fau.fdm.OntoFormGenerator.controller;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -14,26 +16,28 @@ import java.util.UUID;
 @Controller
 public class OntologyController {
 
-    private OntologyOverviewService ontologyOverviewService;
+    Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+
+    private final OntologyOverviewService ontologyOverviewService;
 
     public OntologyController(OntologyOverviewService ontologyOverviewService) {
         this.ontologyOverviewService = ontologyOverviewService;
     }
-    /*TODO
-     * 1. Save file to disk
-     * 2. Parse file as OWL ontology
-     * 3. Save ontology to database
-     */
+
     @RequestMapping(value = "/ontology", method = RequestMethod.POST)
-    public boolean importOntology(@RequestParam("file") MultipartFile file) {
+    public boolean importOntology(@RequestParam("file") MultipartFile file,
+                                  @RequestParam("ontologyName") String ontologyName) {
         String fileName = UUID.randomUUID() + ".owl";
         File localFile = null;
         try {
             localFile = new File("temp/ontology/" + fileName);
+            localFile.getParentFile().mkdirs();
+            localFile.createNewFile();
             file.transferTo(localFile);
+            ontologyOverviewService.importOntology(localFile, ontologyName);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error importing ontology", e);
             return false;
         } finally {
             if (localFile != null) {
