@@ -1,21 +1,17 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.ontology.OntModel;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
-import org.springframework.test.context.event.annotation.AfterTestMethod;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,16 +39,16 @@ public class OntologyOverviewServiceTest {
     }
 
     @Test
-    public void importOntologyReturnsTrueWhenFileExistsAndIsReadable() {
+    public void importOntology_returnsTrueWhenFileExistsAndIsReadable() {
         File mockFile = new File("src/test/resources/ontology-files/wine.owl");
 
-        var result = ontologyOverviewService.importOntology(mockFile, "testOntology");
+        var result = ontologyOverviewService.importOntology(mockFile, "testOntology2");
 
         assertTrue(result);
         Dataset dataset = TDB2Factory.connectDataset("ontologies/test/uploadedOntologies");
         dataset.begin(ReadWrite.READ);
         Model nullModel = dataset.getNamedModel("testOntologys");
-        Model model = dataset.getNamedModel("testOntology");
+        Model model = dataset.getNamedModel("testOntology2");
         assertTrue(nullModel.isEmpty());
         assertFalse(model.isEmpty());
         dataset.end();
@@ -76,5 +72,17 @@ public class OntologyOverviewServiceTest {
 
         assertFalse(result);
         verify(logger).error(anyString(), any(RiotException.class));
+    }
+
+    @Test
+    public void importOntology_returnsFalseWhenOntologyNameAlreadyExists() {
+        File mockFile = new File("src/test/resources/ontology-files/wine.owl");
+
+        var resultOne = ontologyOverviewService.importOntology(mockFile, "testOntology");
+        var resultTwo = ontologyOverviewService.importOntology(mockFile, "testOntology");
+
+        assertTrue(resultOne);
+        assertFalse(resultTwo);
+        verify(logger).error("Ontology with name {} already exists", "testOntology");
     }
 }

@@ -10,6 +10,9 @@
         .ontology-list {
             width: 300px;
         }
+        .clickable-button {
+            cursor: pointer;
+        }
     </style>
 
 </head>
@@ -40,7 +43,7 @@
         </button>
         <dialog class="mdl-dialog">
             <h4>Import new ontology</h4>
-            <form class="mdl-dialog__content" action="/ontology" method="post" enctype="multipart/form-data">
+            <form class="mdl-dialog__content" action="/ontologies" method="post" enctype="multipart/form-data">
                 <div>
                     <label for="ontologyName">Ontology name</label>
                     <input type="text" id="ontologyName" name="ontologyName">
@@ -58,12 +61,20 @@
             </div>
         </dialog>
         <ul class="mdl-list ontology-list">
-            <li class="mdl-list__item">
-                <span class="mdl-list__item-primary-content">
-                    Wines and Meals
+            <li class="mdl-list__item" th:each="ontology : ${ontologies}">
+                <span class="mdl-list__item-primary-content" th:text="${ontology}">
+                    Ontology
                 </span>
-                <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">star</i></a>
-                <a class="mdl-list__item-secondary-action" href="##"><i class="material-icons">star</i></a>
+                <a class="mdl-list__item-secondary-action clickable-button"
+                   th:data-ontology="${ontology}"
+                   onclick="deleteOntology(this.getAttribute('data-ontology'));">
+                    <i class="material-icons">delete</i></a>
+                <a class="mdl-list__item-secondary-action" data-method="delete" href="##"><i class="material-icons">star</i></a>
+            </li>
+            <li class="mdl-list__item" th:if="${ontologies.isEmpty()}">
+                <span class="mdl-list__item-primary-content">
+                    No ontologies
+                </span>
             </li>
         </ul>
     </div>
@@ -76,6 +87,15 @@
         dialog.querySelector('.close').addEventListener('click', function() {
             dialog.close();
         });
+        function deleteOntology(ontologyName) {
+            fetch("/ontologies/" + ontologyName, {
+                method: 'DELETE'
+            }).then(function(response) {
+                if (response.ok) {
+                    location.reload();
+                }
+            });
+        }
     </script>
 </body>
 </html>
