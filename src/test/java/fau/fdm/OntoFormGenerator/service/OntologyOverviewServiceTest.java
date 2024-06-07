@@ -26,10 +26,12 @@ public class OntologyOverviewServiceTest {
 
     private OntologyOverviewService ontologyOverviewService;
 
+    //TODO: Include new FormOntology in tests
+
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        this.ontologyOverviewService = new OntologyOverviewService("ontologies/test/uploadedOntologies",
+        this.ontologyOverviewService = new OntologyOverviewService(null, "ontologies/test/uploadedOntologies",
                 logger);
     }
 
