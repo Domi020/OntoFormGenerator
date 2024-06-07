@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Form editor</title>
+    <link rel="stylesheet" href="../material.min.css">
+    <script src="../material.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .ontology-list {
+            width: 300px;
+        }
+        .clickable-button {
+            cursor: pointer;
+        }
+    </style>
+    <script>
+
+        let elements = 0;
+
+        function removeFormElement(id) {
+            let item = document.getElementById(id);
+            const fieldContainer = document.querySelector('.field-container');
+            fieldContainer.removeChild(item);
+        }
+
+        function addNewFormElement() {
+            const fieldContainer = document.querySelector('.field-container');
+            const newField = document.createElement('div');
+            newField.id = `field-${elements}`;
+            newField.innerHTML = `
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text">
+                    <label class="mdl-textfield__label">Field name</label>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input class="mdl-textfield__input" type="text">
+                    <label class="mdl-textfield__label">Field type</label>
+                </div>
+                <div>
+                    <button type="button" class="mdl-button delete-form-element"
+                    onclick="removeFormElement('field-` + elements + `')">Remove</button>
+                </div>
+            `;
+            elements++;
+            fieldContainer.appendChild(newField);
+        }
+    </script>
+</head>
+<body>
+    <h1>Form editor</h1>
+    <form>
+        <div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="formName">
+                <label class="mdl-textfield__label" for="formName">Form name</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="ontologyName"
+                       th:value="${ontology}" disabled>
+                <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <input class="mdl-textfield__input" type="text" id="ontologyClass">
+                <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
+            <div class="field-container"></div>
+        </div>
+    </form>
+</body>
+</html>
