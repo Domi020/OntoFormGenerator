@@ -81,6 +81,7 @@ public class OntologyOverviewService {
         List<String> ontologyNames = new ArrayList<>();
         ontologyNamesIterator.forEachRemaining(ontologyNames::add);
         dataset.end();
+        ontologyNames.removeIf(name -> name.equals("forms"));
         return ontologyNames;
     }
 

@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,15 +16,19 @@ public class RestController {
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
+    private final FormOverviewService formOverviewService;
 
-    public RestController(OntologyOverviewService ontologyOverviewService) {
+    public RestController(OntologyOverviewService ontologyOverviewService,
+                          FormOverviewService formOverviewService) {
         this.ontologyOverviewService = ontologyOverviewService;
+        this.formOverviewService = formOverviewService;
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String loadMainPage(Model model) {
 
         model.addAttribute("ontologies", ontologyOverviewService.getNamesOfImportedOntologies());
+        model.addAttribute("forms", formOverviewService.getAllForms());
 
         return "index";
     }

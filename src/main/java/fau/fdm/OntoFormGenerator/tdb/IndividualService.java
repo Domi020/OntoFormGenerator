@@ -1,12 +1,15 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +18,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import javax.xml.crypto.Data;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class IndividualService {
@@ -33,20 +37,20 @@ public class IndividualService {
 
     private final Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
-    public void addIndividual(Dataset dataset,
-                              String ontologyName,
-                              String className,
-                              String individualName) {
+    public Individual addIndividual(Dataset dataset,
+                                    String ontologyName,
+                                    String className,
+                                    String individualName) {
         var model = dataset.getNamedModel(ontologyName);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
         var ontClass = ontModel.getOntClass(baseIRI + "/"+ ontologyName + "#" + className);
-        ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
+        return ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
     }
 
-    public void addIndividual(Dataset dataset,
+    public Individual addIndividual(Dataset dataset,
                               String className,
                               String individualName) {
-        addIndividual(dataset, "forms", className, individualName);
+        return addIndividual(dataset, "forms", className, individualName);
     }
 
     public void deleteIndividual(Dataset dataset,
@@ -56,6 +60,42 @@ public class IndividualService {
                 dataset.getNamedModel(ontologyName));
         ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName).remove();
     }
+
+    public Individual addObjectPropertyToIndividual(Dataset dataset,
+                                                    String ontologyName,
+                                                    Individual domainIndividual,
+                                                    String propertyName,
+                                                    String otherIndividualName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        var otherIndividual = ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + otherIndividualName);
+        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), otherIndividual);
+        return domainIndividual;
+    }
+
+    public Resource getObjectPropertyFromIndividual(Dataset dataset,
+                                                    String ontologyName,
+                                                    Individual domainIndividual,
+                                                    String propertyName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName))
+                .asResource();
+    }
+
+    public List<Individual> getAllIndividualsOfClass(Dataset dataset,
+                                                     String ontologyName,
+                                                     String className) {
+        List<Individual> individuals = new ArrayList<>();
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
+        var iter = ontModel.listIndividuals(ontClass);
+        iter.forEachRemaining(individuals::add);
+        return individuals;
+    }
+
+
 
     @EventListener(ApplicationReadyEvent.class)
     public void initFormOntology() {
@@ -79,5 +119,6 @@ public class IndividualService {
         dataset.commit();
         dataset.end();
     }
+
 
 }

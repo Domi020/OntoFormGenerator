@@ -20,28 +20,61 @@
     <h1>OntoFormGenerator</h1>
     <div>
         <h2>Forms</h2>
-        <div class="mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title">
-                <h3 class="mdl-card__title-text">
-                    Form1
-                </h3>
+        <button id="form-create-dialog-button" class="mdl-button mdl-js-button mdl-button--raised">
+            Create new form
+        </button>
+        <dialog id="formCreateDialog" class="mdl-dialog">
+            <h4>Create new form</h4>
+            <form class="mdl-dialog__content" action="/api/forms" method="post" enctype="multipart/form-data">
+                <div>
+                    <label for="formName">Form name</label>
+                    <input type="text" id="formName" name="formName">
+                </div>
+                <div>
+                    <label for="ontologyNameInFormCreate">Ontology name</label>
+                    <select type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate">
+                        <option th:each="ontology : ${ontologies}" th:text="${ontology}">Ontology</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit">Create</button>
+                </div>
+            </form>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="close">Cancel</button>
             </div>
-            <div class="mdl-card__supporting-text">
-                Wines and Meals
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-                    Open
-                </a>
-            </div>
-        </div>
+        </dialog>
+        <ul class="mdl-list ontology-list">
+            <li class="mdl-list__item" th:each="form : ${forms}">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h3 class="mdl-card__title-text" th:text="${form.getFormName()}">
+                            Form1
+                        </h3>
+                    </div>
+                    <div class="mdl-card__supporting-text" th:text="${form.getOntologyName()}">
+                        Wines and Meals
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                            Open
+                        </a>
+                    </div>
+                </div>
+            </li>
+            <li class="mdl-list__item" th:if="${forms.isEmpty()}">
+                <span class="mdl-list__item-primary-content">
+                    No forms
+                </span>
+            </li>
+        </ul>
     </div>
     <div>
         <h2>Ontologies</h2>
         <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--raised">
             Import new ontology
         </button>
-        <dialog class="mdl-dialog">
+        <dialog id="importOntologyDialog" class="mdl-dialog">
             <h4>Import new ontology</h4>
             <form class="mdl-dialog__content" action="/ontologies" method="post" enctype="multipart/form-data">
                 <div>
@@ -79,13 +112,22 @@
         </ul>
     </div>
     <script>
-        var dialog = document.querySelector('dialog');
+        var importOntologyDialog = document.querySelector('#importOntologyDialog');
         var showDialogButton = document.querySelector('#show-ontology-import-dialog');
         showDialogButton.addEventListener('click', function() {
-            dialog.showModal();
+            importOntologyDialog.showModal();
         });
-        dialog.querySelector('.close').addEventListener('click', function() {
-            dialog.close();
+        importOntologyDialog.querySelector('.close').addEventListener('click', function() {
+            importOntologyDialog.close();
+        });
+
+        var createFormDialog = document.querySelector('#formCreateDialog');
+        var showCreateFormDialogButton = document.querySelector('#form-create-dialog-button');
+        showCreateFormDialogButton.addEventListener('click', function() {
+            createFormDialog.showModal();
+        });
+        createFormDialog.querySelector('.close').addEventListener('click', function() {
+            createFormDialog.close();
         });
         function deleteOntology(ontologyName) {
             fetch("/ontologies/" + ontologyName, {
