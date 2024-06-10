@@ -4,11 +4,9 @@ import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
@@ -92,6 +90,47 @@ public class IndividualService {
         var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
         var iter = ontModel.listIndividuals(ontClass);
         iter.forEachRemaining(individuals::add);
+        return individuals;
+    }
+
+    public Individual deleteObjectPropertyFromIndividual(Dataset dataset,
+                                                         String ontologyName,
+                                                         Individual domainIndividual,
+                                                         String propertyName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        domainIndividual.removeAll(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        return domainIndividual;
+    }
+
+    public Individual deleteObjectPropertyFromIndividual(Dataset dataset,
+                                                         String ontologyName,
+                                                         String individualName,
+                                                         String propertyName) {
+        var individual = getIndividualByString(dataset, ontologyName, individualName);
+        return deleteObjectPropertyFromIndividual(dataset, ontologyName, individual, propertyName);
+    }
+
+    public Individual getIndividualByString(Dataset dataset,
+                                            String ontologyName,
+                                            String individualName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
+    }
+
+    public List<Resource> selectIndividualsInSPARQLQuery(Dataset dataset,
+                                                           String ontologyName,
+                                                           String query) {
+        List<Resource> individuals = new ArrayList<>();
+        var model = dataset.getNamedModel(ontologyName);
+        Query q = QueryFactory.create(query);
+        try (QueryExecution exc = QueryExecutionFactory.create(q, model)) {
+            ResultSet results = exc.execSelect();
+            while (results.hasNext()) {
+                individuals.add(results.nextSolution().getResource("f"));
+            }
+        }
         return individuals;
     }
 
