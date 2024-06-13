@@ -27,7 +27,7 @@ public class RestController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String loadMainPage(Model model) {
 
-        model.addAttribute("ontologies", ontologyOverviewService.getNamesOfImportedOntologies());
+        model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());
 
         return "index";

@@ -1,16 +1,15 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
+import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.tdb2.TDB2Factory;
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -52,16 +49,24 @@ public class OntologyOverviewService {
     }
 
     public boolean importOntology(File owlFile, String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        var model = dataset.getNamedModel("forms");
+        OntModel formsModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
         try {
             var fis = new FileInputStream(owlFile);
             ontModel.read(fis, null);
+            fis.close();
+            var fisTwo = new FileInputStream(owlFile);
+            formsModel.read(fisTwo, null);
+            fisTwo.close();
         } catch (Exception e) {
             logger.error("Error reading file while importing new ontology", e);
+            dataset.abort();
+            dataset.end();
             return false;
         }
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
         if (!dataset.getNamedModel(ontologyName).isEmpty()) {
             logger.error("Ontology with name {} already exists", ontologyName);
             dataset.abort();
@@ -69,23 +74,32 @@ public class OntologyOverviewService {
             return false;
         }
         dataset.addNamedModel(ontologyName, ontModel);
-        individualService.addIndividual(dataset, "Ontology", ontologyName);
+        String ontURI = ontModel.getNsPrefixURI("");
+        if (ontURI.charAt(ontURI.length() - 1) == '#' || ontURI.charAt(ontURI.length() - 1) == '/') {
+            ontURI = ontURI.substring(0, ontURI.length() - 1);
+        }
+        individualService.addIndividualWithURI(dataset, "Ontology", ontURI);
         dataset.commit();
         dataset.end();
         logger.info("Ontology {} imported successfully", ontologyName);
         return true;
     }
 
-    public List<String> getNamesOfImportedOntologies() {
-        //TODO: read from form ontology instead of iterating over all models
+    public List<Ontology> getImportedOntologies() {
+        List<Ontology> ontologies = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        Iterator<String> ontologyNamesIterator = dataset.listNames();
-        List<String> ontologyNames = new ArrayList<>();
-        ontologyNamesIterator.forEachRemaining(ontologyNames::add);
+        OntClass ontologyClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel("forms")).getOntClass(formsIRI + "#Ontology");
+        ontologyClass.listInstances().forEach(
+                res -> {
+                    var ontName = res.getLocalName();
+                    var ontIRI = res.getURI();
+                    ontologies.add(new Ontology(ontName, ontIRI));
+                }
+        );
         dataset.end();
-        ontologyNames.removeIf(name -> name.equals("forms"));
-        return ontologyNames;
+        return ontologies;
     }
 
     public void deleteOntology(String ontologyName) {

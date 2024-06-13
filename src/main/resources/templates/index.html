@@ -36,7 +36,7 @@
                 <div>
                     <label for="ontologyNameInFormCreate">Ontology name</label>
                     <select type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate">
-                        <option th:each="ontology : ${ontologies}" th:text="${ontology}">Ontology</option>
+                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">Ontology</option>
                     </select>
                 </div>
                 <div>
@@ -98,7 +98,7 @@
         </dialog>
         <ul class="mdl-list ontology-list">
             <li class="mdl-list__item" th:each="ontology : ${ontologies}">
-                <span class="mdl-list__item-primary-content" th:text="${ontology}">
+                <span class="mdl-list__item-primary-content" th:text="${ontology.getName()}">
                     Ontology
                 </span>
                 <a class="mdl-list__item-secondary-action clickable-button"

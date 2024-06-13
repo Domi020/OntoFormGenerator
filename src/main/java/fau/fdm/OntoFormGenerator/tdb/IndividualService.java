@@ -4,6 +4,8 @@ import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.ontology.Ontology;
+import org.apache.jena.ontology.impl.OntResourceImpl;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -51,6 +53,19 @@ public class IndividualService {
         return addIndividual(dataset, "forms", className, individualName);
     }
 
+    public Individual addIndividualWithURI(Dataset dataset,
+                                    String className,
+                                    String URI) {
+        var model = dataset.getNamedModel("forms");
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
+        var ontClass = ontModel.getOntClass(baseIRI + "/forms#" + className);
+        return ontModel.createIndividual(URI, ontClass);
+    }
+
+    public void addImportToFormsOntology(Ontology baseOntology, OntModel toBeImported) {
+        baseOntology.addImport(toBeImported.getOntology(""));
+    }
+
     public void deleteIndividual(Dataset dataset,
                                  String ontologyName,
                                  String individualName) {
@@ -63,11 +78,12 @@ public class IndividualService {
                                                     String ontologyName,
                                                     Individual domainIndividual,
                                                     String propertyName,
-                                                    String otherIndividualName) {
+                                                    String otherIndividualURI) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        var otherIndividual = ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + otherIndividualName);
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), otherIndividual);
+        var otherIndividual = ontModel.getIndividual(otherIndividualURI);
+        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName),
+                otherIndividual);
         return domainIndividual;
     }
 
