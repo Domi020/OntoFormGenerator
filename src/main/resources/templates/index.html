@@ -5,6 +5,9 @@
     <title>OntoFormGenerator</title>
     <link rel="stylesheet" href="./material.min.css">
     <script src="./material.min.js"></script>
+    <script th:inline="javascript">
+        const ontologies = [[${ontologies}]];
+    </script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .ontology-list {
@@ -36,8 +39,13 @@
                 <div>
                     <label for="ontologyNameInFormCreate">Ontology name</label>
                     <select type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate">
-                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">Ontology</option>
+                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}"
+                                onchange="autoFillURI()">Ontology</option>
                     </select>
+                </div>
+                <div>
+                    <label for="ontologyURIInFormCreate">Ontology IRI</label>
+                    <input type="text" id="ontologyURIInFormCreate" name="ontologyURIInFormCreate" readonly>
                 </div>
                 <div>
                     <button type="submit">Create</button>
@@ -141,6 +149,16 @@
                 }
             });
         }
+        function autoFillURI() {
+            const ontologyName = document.getElementById('ontologyNameInFormCreate').value;
+            for (let i = 0; i < ontologies.length; i++) {
+                if (ontologies[i].name === ontologyName) {
+                    document.getElementById('ontologyURIInFormCreate').value = ontologies[i].iri;
+                    break;
+                }
+            }
+        }
+        autoFillURI();
     </script>
 </body>
 </html>

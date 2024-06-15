@@ -17,8 +17,9 @@ public class FormController {
 
     @RequestMapping(value = "/api/forms", method = RequestMethod.POST)
     public String addNewForm(@RequestParam("formName") String formName,
-                             @RequestParam("ontologyNameInFormCreate") String ontologyName) {
-        formOverviewService.addNewForm(formName, ontologyName);
+                             @RequestParam("ontologyNameInFormCreate") String ontologyName,
+                             @RequestParam("ontologyURIInFormCreate") String ontologyURIInFormCreate) {
+        formOverviewService.addNewForm(formName, ontologyName, ontologyURIInFormCreate);
         return "index";
     }
 }

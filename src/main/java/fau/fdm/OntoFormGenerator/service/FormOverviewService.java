@@ -34,12 +34,12 @@ public class FormOverviewService {
         this.individualService = individualService;
     }
 
-    public void addNewForm(String formName, String ontologyName) {
+    public void addNewForm(String formName, String ontologyName, String ontologyURI) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         var individual = individualService.addIndividual(dataset, "Form", formName);
         individualService.addObjectPropertyToIndividual(dataset,
-                "forms", individual, "targetsOntology", ontologyName);
+                "forms", individual, "targetsOntology", ontologyURI);
         dataset.commit();
         dataset.end();
     }
