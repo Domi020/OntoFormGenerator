@@ -5,6 +5,7 @@
     <title>Form editor</title>
     <link rel="stylesheet" href="../material.min.css">
     <script src="../material.min.js"></script>
+    <script src="../functions.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .ontology-list {
@@ -14,6 +15,7 @@
             cursor: pointer;
         }
     </style>
+    <!-- Quelle für autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
     <script>
 
         let elements = 0;
@@ -45,6 +47,8 @@
             elements++;
             fieldContainer.appendChild(newField);
         }
+
+
     </script>
 </head>
 <body>
@@ -52,7 +56,7 @@
     <form>
         <div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="formName">
+                <input class="mdl-textfield__input" type="text" id="formName" th:value="${form}" disabled>
                 <label class="mdl-textfield__label" for="formName">Form name</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
@@ -73,5 +77,9 @@
     <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
         Cancel
     </a>
+    <script th:inline="javascript">
+        const ontologyClasses = [[${ontologyClasses}]];
+        autocomplete(document.getElementById("ontologyClass"), ontologyClasses.map(cl => cl.name));
+    </script>
 </body>
 </html>

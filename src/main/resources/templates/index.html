@@ -67,7 +67,7 @@
                         Wines and Meals
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a th:href="@{/editor/{name}(name=${form.getFormName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                        <a th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                             Edit form
                         </a>
                     </div>

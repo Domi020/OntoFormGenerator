@@ -22,4 +22,5 @@ public class FormController {
         formOverviewService.addNewForm(formName, ontologyName, ontologyURIInFormCreate);
         return "index";
     }
+
 }

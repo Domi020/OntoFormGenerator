@@ -1,17 +1,11 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
