@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.controller;
 
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.commons.io.FileUtils;
@@ -28,8 +29,11 @@ public class OntologyController {
 
     private final OntologyOverviewService ontologyOverviewService;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService) {
+    private final OntologyContentService ontologyContentService;
+
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService) {
         this.ontologyOverviewService = ontologyOverviewService;
+        this.ontologyContentService = ontologyContentService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
@@ -69,6 +73,13 @@ public class OntologyController {
                 .header("Content-Disposition", "attachment; filename=" + ontologyName + ".owl")
                 .body(file);
 
+    }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/properties", method = RequestMethod.GET)
+    public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
+                                                                             @PathVariable String className) {
+        return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, className),
+                HttpStatus.OK);
     }
 
 

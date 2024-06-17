@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Form editor</title>
     <link rel="stylesheet" href="../material.min.css">
+    <link rel="stylesheet" href="../selectize.default.min.css">
+    <script src="../jquery-3.7.1.min.js"></script>
+    <script src="../selectize.min.js"></script>
     <script src="../material.min.js"></script>
     <script src="../functions.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -11,11 +14,27 @@
         .ontology-list {
             width: 300px;
         }
+        .property-row {
+            width: 100%;
+            padding-top: 75px;
+        }
+        .property-select {
+            /* width: 300px; */
+            /*float: left;*/
+        }
+        .property-field {
+            float: left;
+            margin-left: 5%;
+            width: 26.67%;
+            position: relative;
+            text-align: left;
+        }
         .clickable-button {
             cursor: pointer;
         }
     </style>
     <!-- Quelle für autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
+    <!-- Quelle für selectize: https://selectize.dev/ -->
     <script>
 
         let elements = 0;
@@ -30,23 +49,53 @@
             const fieldContainer = document.querySelector('.field-container');
             const newField = document.createElement('div');
             newField.id = `field-${elements}`;
+            newField.className = "property-row";
             newField.innerHTML = `
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
                     <input class="mdl-textfield__input" type="text">
                     <label class="mdl-textfield__label">Field name</label>
                 </div>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text">
-                    <label class="mdl-textfield__label">Field type</label>
+                <div class="property-field">
+                    <label>Property</label>
+                    <select id="prop-select-` + elements + `" class="property-select"></select>
                 </div>
-                <div>
+                <div class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
                 </div>
             `;
-            elements++;
             fieldContainer.appendChild(newField);
+            $('#prop-select-' + elements).selectize({
+                options: availableProperties,
+                valueField: 'name',
+                labelField: 'name',
+                searchField: 'name',
+                maxItems: 1,
+                closeAfterSelect: true
+            });
+            elements++;
         }
+
+        let availableProperties = [];
+
+        function refreshAvailableProperties() {
+            const ontologyClass = document.getElementById("ontologyClass").value;
+            const ontology = document.getElementById("ontologyName").value;
+            fetch(`/api/ontologies/${ontology}/classes/${ontologyClass}/properties`)
+                .then(async function (response) {
+                    availableProperties = await response.json();
+                    $('.property-select').selectize({
+                        options: availableProperties,
+                        valueField: 'name',
+                        labelField: 'name',
+                        searchField: 'name',
+                        maxItems: 1,
+                        closeAfterSelect: true
+                    });
+                })
+        }
+
+
 
 
     </script>
@@ -65,7 +114,7 @@
                 <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="ontologyClass">
+                <input class="mdl-textfield__input" type="text" id="ontologyClass" onchange="refreshAvailableProperties()">
                 <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
             </div>
         </div>
@@ -74,12 +123,15 @@
             <div class="field-container"></div>
         </div>
     </form>
-    <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
-        Cancel
-    </a>
+    <div style="padding-top: 100px">
+        <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
+            Cancel
+        </a>
+    </div>
     <script th:inline="javascript">
         const ontologyClasses = [[${ontologyClasses}]];
         autocomplete(document.getElementById("ontologyClass"), ontologyClasses.map(cl => cl.name));
+        refreshAvailableProperties();
     </script>
 </body>
 </html>
