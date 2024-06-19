@@ -25,7 +25,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 26.67%;
+            width: 15%;
             position: relative;
             text-align: left;
         }
@@ -38,6 +38,10 @@
     <script>
 
         let elements = 0;
+
+        function selectProperty(property) {
+
+        }
 
         function removeFormElement(id) {
             let item = document.getElementById(id);
@@ -60,18 +64,39 @@
                     <select id="prop-select-` + elements + `" class="property-select"></select>
                 </div>
                 <div class="property-field">
+                    <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" disabled>
+                    <label class="mdl-textfield__label">Range</label>
+                </div>
+                <div class="property-field">
+                    <label>Object property</label>
+                    <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
+                </div>
+                <div class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
                 </div>
             `;
             fieldContainer.appendChild(newField);
+            const currentElement = elements;
             $('#prop-select-' + elements).selectize({
                 options: availableProperties,
                 valueField: 'name',
                 labelField: 'name',
                 searchField: 'name',
                 maxItems: 1,
-                closeAfterSelect: true
+                closeAfterSelect: true,
+                onChange: function(value) {
+                    const rangeField = document.getElementById('range-field-' + currentElement);
+                    const objectPropertyCheckbox = document.getElementById('object-property-checkbox-' + currentElement);
+                    const prop = availableProperties.find(prop => prop.name === value);
+                    if (prop.objectProperty) {
+                        objectPropertyCheckbox.checked = true;
+                        rangeField.value = prop.objectRange.name;
+                    } else {
+                        objectPropertyCheckbox.checked = false;
+                        rangeField.value = prop.datatypeRange;
+                    }
+                }
             });
             elements++;
         }
@@ -117,6 +142,10 @@
                 <input class="mdl-textfield__input" type="text" id="ontologyClass" onchange="refreshAvailableProperties()">
                 <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
             </div>
+            <button type="button" onclick="refreshAvailableProperties()"
+                    class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
+                <i class="material-icons">refresh</i>
+            </button>
         </div>
         <div>
             <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
