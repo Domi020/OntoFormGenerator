@@ -32,6 +32,8 @@ public class FormEditorService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         var form = individualService.getIndividualByString(dataset, "forms", formName);
+        var ontology = individualService.getObjectPropertyValueFromIndividual(dataset, "forms",
+                form, "targetsOntology");
 
         // Set targetsClass
         var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyClass"));
@@ -40,13 +42,32 @@ public class FormEditorService {
                 individualService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
                 classIndividual
         );
-        //formInput.forEach((key, value) -> {
-        //    // Set targetsClass
-//
-//
-        //    var property = individualService.getIndividualByString(dataset, "forms", key);
-        //    //form.addProperty(property, value.get(0));
-        //});
+        for (int i = 0; i < formInput.get("fieldName").size(); i++) {
+            // set targetsField for each field
+            var fieldName = formInput.get("fieldName").get(i);
+            var propertyName = formInput.get("propertyName").get(i);
+            var property = individualService.getPropertyFromOntology(dataset, ontology.getLocalName(),
+                    ontology.getURI(), propertyName);
+            var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
+                    property.getURI());
+            if (formInput.get("isObjectProperty").get(i).equals("true")) {
+                // object property
+
+            } else {
+                // datatype property
+                var field = individualService.createDatatypeFormElement(dataset, fieldName,
+                        formInput.get("propertyRange").get(i));
+                individualService.addObjectPropertyToIndividual(dataset, "forms",
+                        field, "targetsField", targetField.getURI());
+                individualService.addObjectPropertyToIndividual(dataset, "forms",
+                        form, "hasFormElement", field.getURI());
+                individualService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "isObjectProperty", "false");
+                individualService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "hasPositionInForm", String.valueOf(i));
+            }
+        }
+
         dataset.commit();
         dataset.end();
     }
