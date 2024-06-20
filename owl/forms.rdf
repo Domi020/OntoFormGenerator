@@ -48,6 +48,15 @@
     
 
 
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/targetsField -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/targetsField">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/TargetField"/>
+    </owl:ObjectProperty>
+    
+
+
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //
@@ -64,6 +73,15 @@
     <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasPositionInForm">
         <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/isObjectProperty -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/isObjectProperty">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
     </owl:DatatypeProperty>
     
 
@@ -116,6 +134,52 @@
     <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#TargetClass -->
 
     <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#TargetClass"/>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Date -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Date">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Datetime -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Datetime">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Number -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Number">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/ObjectSelect -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/ObjectSelect">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Radio -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/Radio">
+        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+    </owl:Class>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/TargetField -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms/TargetField"/>
 </rdf:RDF>
 
 

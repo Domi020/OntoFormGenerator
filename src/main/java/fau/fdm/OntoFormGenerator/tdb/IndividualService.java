@@ -1,14 +1,16 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import org.apache.jena.ontapi.OntModelFactory;
+import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.Ontology;
-import org.apache.jena.ontology.impl.OntResourceImpl;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
@@ -36,6 +38,10 @@ public class IndividualService {
     private String baseIRI;
 
     private final Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+
+    private org.apache.jena.ontapi.model.OntModel getOntModel(Model model) {
+        return OntModelFactory.createModel(model.getGraph(), OntSpecification.OWL2_DL_MEM);
+    }
 
     public Individual addIndividual(Dataset dataset,
                                     String ontologyName,
@@ -87,14 +93,22 @@ public class IndividualService {
         return domainIndividual;
     }
 
-    public Resource getObjectPropertyFromIndividual(Dataset dataset,
-                                                    String ontologyName,
-                                                    Individual domainIndividual,
-                                                    String propertyName) {
+    public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
+                                                         String ontologyName,
+                                                         Individual domainIndividual,
+                                                         String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         return domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName))
                 .asResource();
+    }
+
+    public Property getPropertyFromOntology(Dataset dataset,
+                                           String ontologyName,
+                                           String propertyName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName);
     }
 
     public List<Individual> getAllIndividualsOfClass(Dataset dataset,
@@ -133,6 +147,34 @@ public class IndividualService {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
+    }
+
+    public Individual getIndividualByIri(Dataset dataset,
+                                         String iri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel("forms"));
+        return ontModel.getIndividual(iri);
+    }
+
+    public Individual getOrAddIndividualByString(Dataset dataset,
+                                                String iri,
+                                                String className) {
+        var individual = getIndividualByIri(dataset, iri);
+        if (individual == null) {
+            individual = addIndividualWithURI(dataset, className, iri);
+        }
+        return individual;
+    }
+
+    public String findIriOfClass(Dataset dataset, String className) {
+        // TODO: Was wenn selber ClassName über mehrere Ontologien?
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel("forms"));
+        var classIterator = ontModel.listClasses().filterKeep(ontClass -> ontClass.getLocalName().equals(className));
+        if (classIterator.hasNext()) {
+            return classIterator.next().getURI();
+        }
+        return null;
     }
 
     public List<Resource> selectIndividualsInSPARQLQuery(Dataset dataset,

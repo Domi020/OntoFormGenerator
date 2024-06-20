@@ -56,20 +56,21 @@
             newField.className = "property-row";
             newField.innerHTML = `
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
-                    <input class="mdl-textfield__input" type="text">
+                    <input class="mdl-textfield__input" type="text" name="fieldName">
                     <label class="mdl-textfield__label">Field name</label>
                 </div>
                 <div class="property-field">
                     <label>Property</label>
-                    <select id="prop-select-` + elements + `" class="property-select"></select>
+                    <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
                 </div>
                 <div class="property-field">
-                    <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" disabled>
+                    <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="objectProperty" readonly>
                     <label class="mdl-textfield__label">Range</label>
                 </div>
                 <div class="property-field">
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
+                    <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="propertyRange">
                 </div>
                 <div class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
@@ -88,12 +89,15 @@
                 onChange: function(value) {
                     const rangeField = document.getElementById('range-field-' + currentElement);
                     const objectPropertyCheckbox = document.getElementById('object-property-checkbox-' + currentElement);
+                    const hiddenObjectPropertyCheckbox = document.getElementById('hidden-object-property-checkbox-' + currentElement);
                     const prop = availableProperties.find(prop => prop.name === value);
                     if (prop.objectProperty) {
                         objectPropertyCheckbox.checked = true;
+                        hiddenObjectPropertyCheckbox.value = true;
                         rangeField.value = prop.objectRange.name;
                     } else {
                         objectPropertyCheckbox.checked = false;
+                        hiddenObjectPropertyCheckbox.value = false;
                         rangeField.value = prop.datatypeRange;
                     }
                 }
@@ -127,19 +131,19 @@
 </head>
 <body>
     <h1>Form editor</h1>
-    <form>
+    <form th:action="@{/api/forms/{formName}(formName=${form})}" method="post">
         <div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="formName" th:value="${form}" disabled>
+                <input class="mdl-textfield__input" type="text" id="formName" name="formName" th:value="${form}" disabled>
                 <label class="mdl-textfield__label" for="formName">Form name</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="ontologyName"
+                <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName"
                        th:value="${ontology}" disabled>
                 <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="ontologyClass" onchange="refreshAvailableProperties()">
+                <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass" onchange="refreshAvailableProperties()">
                 <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
             </div>
             <button type="button" onclick="refreshAvailableProperties()"
@@ -150,6 +154,9 @@
         <div>
             <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
             <div class="field-container"></div>
+        </div>
+        <div style="padding-top: 70px">
+            <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
         </div>
     </form>
     <div style="padding-top: 100px">

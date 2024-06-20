@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -51,7 +50,7 @@ public class FormOverviewService {
         var individuals = individualService.getAllIndividualsOfClass(dataset, "forms", "Form");
         for (var individual : individuals) {
             var formName = individual.getLocalName();
-            var ontologyName = individualService.getObjectPropertyFromIndividual(dataset,
+            var ontologyName = individualService.getObjectPropertyValueFromIndividual(dataset,
                     "forms", individual, "targetsOntology").getLocalName();
             var form = new Form(formName, ontologyName);
             forms.add(form);
