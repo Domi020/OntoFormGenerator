@@ -1,14 +1,23 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
+import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class FormEditorService {
@@ -25,10 +34,52 @@ public class FormEditorService {
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
     }
 
+    public String getSelectedEditorClass(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var classValue = individualService.getObjectPropertyValueFromIndividual(dataset,
+                    "forms", form, "targetsClass");
+            if (classValue == null) return null;
+            return classValue.getLocalName();
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public List<OntologyProperty> getAllFormElementsOfForm(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        var form = individualService.getIndividualByString(dataset, "forms", formName);
+        var formElements = individualService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", form, "hasFormElement");
+        List<OntologyProperty> properties = new ArrayList<>(Collections.nCopies(formElements.size(), null));
+        for (var formElement : formElements) {
+            var fieldName = formElement.getLocalName();
+            var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
+            var isObjectProperty = individualService.getDatatypePropertyValueFromIndividual(dataset,
+                    "forms", formElementIndividual, "isObjectProperty").getBoolean();
+            var position = individualService.getDatatypePropertyValueFromIndividual(dataset,
+                    "forms", formElementIndividual, "hasPositionInForm").getInt();
+            var targetField = individualService.getObjectPropertyValueFromIndividual(dataset,
+                    "forms", formElementIndividual, "targetsField");
+            var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
+            if (isObjectProperty) {
+                var objectRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
+                var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                properties.set(position, new OntologyProperty(fieldName, domain, true, objectRange, null));
+            } else {
+                var dataRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
+                properties.set(position, new OntologyProperty(fieldName, domain, false, null,
+                        dataRangeProp.getLocalName()));
+            }
+        }
+        dataset.end();
+        return properties;
+    }
+
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
-        // TODO
-        // 1. targetsClass setzen
-        // 2. pro Feld: targetsField setzen
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         var form = individualService.getIndividualByString(dataset, "forms", formName);
@@ -50,24 +101,26 @@ public class FormEditorService {
                     ontology.getURI(), propertyName);
             var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
                     property.getURI());
+            Individual field;
             if (formInput.get("isObjectProperty").get(i).equals("true")) {
                 // object property
-
+                field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
+                individualService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "isObjectProperty", "true");
             } else {
                 // datatype property
-                var field = individualService.createDatatypeFormElement(dataset, fieldName,
+                field = individualService.createDatatypeFormElement(dataset, fieldName,
                         formInput.get("propertyRange").get(i));
-                individualService.addObjectPropertyToIndividual(dataset, "forms",
-                        field, "targetsField", targetField.getURI());
-                individualService.addObjectPropertyToIndividual(dataset, "forms",
-                        form, "hasFormElement", field.getURI());
                 individualService.addDatatypePropertyToIndividual(dataset, "forms",
                         field, "isObjectProperty", "false");
-                individualService.addDatatypePropertyToIndividual(dataset, "forms",
-                        field, "hasPositionInForm", String.valueOf(i));
             }
+            individualService.addObjectPropertyToIndividual(dataset, "forms",
+                    field, "targetsField", targetField.getURI());
+            individualService.addObjectPropertyToIndividual(dataset, "forms",
+                    form, "hasFormElement", field.getURI());
+            individualService.addDatatypePropertyToIndividual(dataset, "forms",
+                    field, "hasPositionInForm", String.valueOf(i));
         }
-
         dataset.commit();
         dataset.end();
     }

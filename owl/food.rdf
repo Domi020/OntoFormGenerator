@@ -95,27 +95,27 @@
     
 
 
-    <!-- http://www.w3.org/2001/sw/WebOnt/guide-src/hasID -->
+    <!-- http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasID -->
 
-    <owl:DatatypeProperty rdf:about="http://www.w3.org/2001/sw/WebOnt/guide-src/hasID">
+    <owl:DatatypeProperty rdf:about="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasID">
         <rdfs:domain rdf:resource="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Order"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
     </owl:DatatypeProperty>
     
 
 
-    <!-- http://www.w3.org/2001/sw/WebOnt/guide-src/hasSpecialWish -->
+    <!-- http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasSpecialWish -->
 
-    <owl:DatatypeProperty rdf:about="http://www.w3.org/2001/sw/WebOnt/guide-src/hasSpecialWish">
+    <owl:DatatypeProperty rdf:about="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasSpecialWish">
         <rdfs:domain rdf:resource="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Order"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
     </owl:DatatypeProperty>
     
 
 
-    <!-- http://www.w3.org/2001/sw/WebOnt/guide-src/hasTimestamp -->
+    <!-- http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasTimestamp -->
 
-    <owl:DatatypeProperty rdf:about="http://www.w3.org/2001/sw/WebOnt/guide-src/hasTimestamp">
+    <owl:DatatypeProperty rdf:about="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#hasTimestamp">
         <rdfs:domain rdf:resource="http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Order"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTimeStamp"/>
     </owl:DatatypeProperty>

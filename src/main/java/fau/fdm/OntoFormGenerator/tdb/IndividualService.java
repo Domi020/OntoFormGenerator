@@ -4,15 +4,9 @@ import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntIndividual;
-import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.ontology.Ontology;
+import org.apache.jena.ontology.*;
 import org.apache.jena.query.*;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,19 +44,19 @@ public class IndividualService {
                                     String individualName) {
         var model = dataset.getNamedModel(ontologyName);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
-        var ontClass = ontModel.getOntClass(baseIRI + "/"+ ontologyName + "#" + className);
+        var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
         return ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
     }
 
     public Individual addIndividual(Dataset dataset,
-                              String className,
-                              String individualName) {
+                                    String className,
+                                    String individualName) {
         return addIndividual(dataset, "forms", className, individualName);
     }
 
     public OntIndividual addIndividualWithURI(Dataset dataset,
-                                    String className,
-                                    String URI) {
+                                              String className,
+                                              String URI) {
         var model = dataset.getNamedModel("forms");
         var ontModel = getOntModel(model);
         var ontClass = ontModel.getOntClass(baseIRI + "/forms#" + className);
@@ -94,13 +88,22 @@ public class IndividualService {
     }
 
     public Individual addDatatypePropertyToIndividual(Dataset dataset,
-                                                         String ontologyName,
-                                                         Individual domainIndividual,
-                                                         String propertyName,
-                                                         String value) {
+                                                      String ontologyName,
+                                                      Individual domainIndividual,
+                                                      String propertyName,
+                                                      String value) {
         var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
         domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value);
         return domainIndividual;
+    }
+
+    public Literal getDatatypePropertyValueFromIndividual(Dataset dataset,
+                                                           String ontologyName,
+                                                           Individual domainIndividual,
+                                                           String propertyName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return (Literal) domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
     }
 
     public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
@@ -109,25 +112,49 @@ public class IndividualService {
                                                          String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        return domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName))
-                .asResource();
+        var prop = domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop == null) {
+            return null;
+        } else {
+            return prop.asResource();
+        }
+    }
+
+
+    public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
+                                                                       String ontologyName,
+                                                                       Individual domainIndividual,
+                                                                       String propertyName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        var values = domainIndividual.listPropertyValues(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        List<Resource> resources = new ArrayList<>();
+        values.forEachRemaining(val -> resources.add(val.asResource()));
+        return resources;
     }
 
     public Property getPropertyFromOntology(Dataset dataset,
-                                           String ontologyName,
-                                           String propertyName) {
+                                            String ontologyName,
+                                            String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         return ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName);
     }
 
     public Property getPropertyFromOntology(Dataset dataset,
-                                                 String ontologyName,
-                                                 String ontologyURI,
-                                                 String propertyName) {
+                                            String ontologyName,
+                                            String ontologyURI,
+                                            String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         return ontModel.getProperty(ontologyURI + "#" + propertyName);
+    }
+
+    public OntProperty getPropertyFromOntologyByIRI(Dataset dataset,
+                                                    String propertyIRI) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel("forms"));
+        return ontModel.getOntProperty(propertyIRI);
     }
 
     public List<Individual> getAllIndividualsOfClass(Dataset dataset,
@@ -168,16 +195,25 @@ public class IndividualService {
         return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
     }
 
-    public OntIndividual getIndividualByIri(Dataset dataset,
-                                                  String iri) {
+    public OntIndividual getOntIndividualByIri(Dataset dataset,
+                                               String iri) {
         var ontModel = getOntModel(dataset.getNamedModel("forms"));
         return ontModel.getIndividual(iri);
     }
 
+    public Individual getIndividualByIri(Dataset dataset,
+                                               String iri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel("forms"));
+        return ontModel.getIndividual(iri);
+    }
+
+
+
     public OntIndividual getOrAddIndividualByString(Dataset dataset,
-                                                String iri,
-                                                String className) {
-        var individual = getIndividualByIri(dataset, iri);
+                                                    String iri,
+                                                    String className) {
+        var individual = getOntIndividualByIri(dataset, iri);
         if (individual == null) {
             individual = addIndividualWithURI(dataset, className, iri);
         }
@@ -209,8 +245,8 @@ public class IndividualService {
     }
 
     public List<Resource> selectIndividualsInSPARQLQuery(Dataset dataset,
-                                                           String ontologyName,
-                                                           String query) {
+                                                         String ontologyName,
+                                                         String query) {
         List<Resource> individuals = new ArrayList<>();
         var model = dataset.getNamedModel(ontologyName);
         Query q = QueryFactory.create(query);
@@ -222,7 +258,6 @@ public class IndividualService {
         }
         return individuals;
     }
-
 
 
     @EventListener(ApplicationReadyEvent.class)

@@ -124,6 +124,23 @@
                 })
         }
 
+        function firstRefreshAvailableProperties(divs, items) {
+            const ontologyClass = document.getElementById("ontologyClass").value;
+            const ontology = document.getElementById("ontologyName").value;
+            fetch(`/api/ontologies/${ontology}/classes/${ontologyClass}/properties`)
+                .then(async function (response) {
+                    availableProperties = await response.json();
+
+                    for (let i = 0; i < divs.length; i++) {
+                        availableProperties.forEach((prop) => {
+                            divs[i].selectize.addOption(prop);
+                        });
+                        divs[i].selectize.refreshOptions(false);
+                        divs[i].selectize.setValue(items[i], false);
+                    }
+                })
+        }
+
 
 
 
@@ -165,9 +182,35 @@
         </a>
     </div>
     <script th:inline="javascript">
+
+        function initEditorForm() {
+            const targetClass = [[${targetClass}]];
+            if (targetClass != null) {
+                document.getElementById("ontologyClass").value = targetClass;
+            }
+            const formElements = [[${formElements}]];
+            let divs = [];
+            let items = [];
+            formElements.forEach((element, index) => {
+                addNewFormElement();
+                const field = document.getElementById(`field-${index}`);
+                field.querySelector('input[name="fieldName"]').value = element.name;
+                divs.push(field.querySelector('select[name="propertyName"]'));
+                items.push(element.domain.name);
+                field.querySelector('input[name="isObjectProperty"]').value = element.objectProperty;
+                field.querySelector('input[type="checkbox"]').checked = element.objectProperty;
+                if (element.objectProperty) {
+                    field.querySelector('input[name="propertyRange"]').value = element.objectRange.name;
+                } else {
+                    field.querySelector('input[name="propertyRange"]').value = element.datatypeRange;
+                }
+            });
+            firstRefreshAvailableProperties(divs, items);
+        }
+
         const ontologyClasses = [[${ontologyClasses}]];
         autocomplete(document.getElementById("ontologyClass"), ontologyClasses.map(cl => cl.name));
-        refreshAvailableProperties();
+        initEditorForm();
     </script>
 </body>
 </html>
