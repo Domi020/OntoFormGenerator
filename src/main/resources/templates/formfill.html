@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fill form</title>
+    <link rel="stylesheet" href="../material.min.css">
+    <link rel="stylesheet" href="../selectize.default.min.css">
+    <script src="../jquery-3.7.1.min.js"></script>
+    <script src="../selectize.min.js"></script>
+    <script src="../material.min.js"></script>
+    <script src="../functions.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+<body>
+    <h1 th:text="${form}"></h1>
+    <form th:action="@{/api/forms/{name}/fill(name=${form})}">
+        <div th:each="field: ${formElements}">
+            <div th:if="${field.fieldType == 'Input'}">
+                <div th:replace="form-fields.html :: stringField (name=${field.ontologyProperty.name})"></div>
+            </div>
+            <div th:if="${field.fieldType == 'Number'}">
+                <div th:replace="form-fields.html :: numberField (name=${field.ontologyProperty.name})"></div>
+            </div>
+            <div th:if="${field.fieldType == 'ObjectSelect'}">
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.ontologyProperty.name})"></div>
+            </div>
+        </div>
+    </form>
+    <div style="padding-top: 100px">
+        <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
+            Cancel
+        </a>
+    </div>
+    <script th:inline="javascript">
+        $(".object-select").each(function(index, element) {
+            // $(this).selectize({
+            //     valueField: 'iri',
+            //     labelField: 'label',
+            //     searchField: 'label',
+            //     options: [],
+            //     create: false,
+            //     render: {
+            //         option: function(item, escape) {
+            //             return '<div>' +
+            //                 '<span class="title">' +
+            //                 '<span class="name">' + escape(item.label) + '</span>' +
+            //                 '</span>' +
+            //                 '</div>';
+            //         }
+            //     },
+            //     load: function(query, callback) {
+            //         if (!query.length) return callback();
+            //         $.ajax({
+            //             url: '/api/ontologies/' + $(this).attr('data-ontology') + '/search?query=' + encodeURIComponent(query),
+            //             type: 'GET',
+            //             error: function() {
+            //                 callback();
+            //             },
+            //             success: function(res) {
+            //                 callback(res);
+            //             }
+            //         });
+            //     }
+            // });
+        });
+    </script>
+</body>
+</html>

@@ -53,4 +53,16 @@ public class RestController {
         return "editor";
     }
     //TODO: ReloadProperties => löscht alle Property Felder...und macht Form kaputt
+
+    @RequestMapping(value = "/fill/{form}", method = RequestMethod.GET)
+    public String loadFilloutPage(Model model, @PathVariable String form, @RequestParam("ontology") String ontology) {
+        model.addAttribute("form", form);
+        model.addAttribute("ontology", ontology);
+        model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology));
+
+        model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
+        model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
+
+        return "formfill";
+    }
 }

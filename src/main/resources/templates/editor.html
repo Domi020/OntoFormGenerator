@@ -193,16 +193,17 @@
             let items = [];
             formElements.forEach((element, index) => {
                 addNewFormElement();
+                const prop = element.ontologyProperty;
                 const field = document.getElementById(`field-${index}`);
-                field.querySelector('input[name="fieldName"]').value = element.name;
+                field.querySelector('input[name="fieldName"]').value = prop.name;
                 divs.push(field.querySelector('select[name="propertyName"]'));
-                items.push(element.domain.name);
-                field.querySelector('input[name="isObjectProperty"]').value = element.objectProperty;
-                field.querySelector('input[type="checkbox"]').checked = element.objectProperty;
-                if (element.objectProperty) {
-                    field.querySelector('input[name="propertyRange"]').value = element.objectRange.name;
+                items.push(prop.domain.name);
+                field.querySelector('input[name="isObjectProperty"]').value = prop.objectProperty;
+                field.querySelector('input[type="checkbox"]').checked = prop.objectProperty;
+                if (prop.objectProperty) {
+                    field.querySelector('input[name="propertyRange"]').value = prop.objectRange.name;
                 } else {
-                    field.querySelector('input[name="propertyRange"]').value = element.datatypeRange;
+                    field.querySelector('input[name="propertyRange"]').value = prop.datatypeRange;
                 }
             });
             firstRefreshAvailableProperties(divs, items);

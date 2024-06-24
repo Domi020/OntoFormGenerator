@@ -1,12 +1,12 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,16 +47,17 @@ public class FormEditorService {
         }
     }
 
-    public List<OntologyProperty> getAllFormElementsOfForm(String formName) {
+    public List<FormField> getAllFormElementsOfForm(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         var form = individualService.getIndividualByString(dataset, "forms", formName);
         var formElements = individualService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                 "forms", form, "hasFormElement");
-        List<OntologyProperty> properties = new ArrayList<>(Collections.nCopies(formElements.size(), null));
+        List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size(), null));
         for (var formElement : formElements) {
             var fieldName = formElement.getLocalName();
             var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
+            var fieldType = formElementIndividual.getOntClass().getLocalName();
             var isObjectProperty = individualService.getDatatypePropertyValueFromIndividual(dataset,
                     "forms", formElementIndividual, "isObjectProperty").getBoolean();
             var position = individualService.getDatatypePropertyValueFromIndividual(dataset,
@@ -68,15 +68,18 @@ public class FormEditorService {
             if (isObjectProperty) {
                 var objectRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
                 var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
-                properties.set(position, new OntologyProperty(fieldName, domain, true, objectRange, null));
+                formFields.set(position, new FormField(
+                        new OntologyProperty(fieldName, domain, true, objectRange, null),
+                        fieldType));
             } else {
                 var dataRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
-                properties.set(position, new OntologyProperty(fieldName, domain, false, null,
-                        dataRangeProp.getLocalName()));
+                formFields.set(position, new FormField(
+                        new OntologyProperty(fieldName, domain, false, null,
+                        dataRangeProp.getLocalName()), fieldType));
             }
         }
         dataset.end();
-        return properties;
+        return formFields;
     }
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
