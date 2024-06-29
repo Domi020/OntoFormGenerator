@@ -210,6 +210,22 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
+    public Individual getIndividualByIri(Dataset dataset,
+                                         String ontologyName,
+                                         String iri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return ontModel.getIndividual(iri);
+    }
+
+    public Individual findIndividualInOntology(Dataset dataset,
+                                               String ontologyName,
+                                               String individualName) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
+    }
+
 
 
     public OntIndividual getOrAddIndividualByString(Dataset dataset,

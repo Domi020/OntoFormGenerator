@@ -69,13 +69,13 @@ public class FormEditorService {
                 var objectRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
                 var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                 formFields.set(position, new FormField(
-                        new OntologyProperty(fieldName, domain, true, objectRange, null),
-                        fieldType));
+                        new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
+                        fieldType, fieldName));
             } else {
                 var dataRangeProp = individualService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
                 formFields.set(position, new FormField(
-                        new OntologyProperty(fieldName, domain, false, null,
-                        dataRangeProp.getLocalName()), fieldType));
+                        new OntologyProperty(targetField.getLocalName(), domain, false, null,
+                        dataRangeProp.getLocalName()), fieldType, fieldName));
             }
         }
         dataset.end();

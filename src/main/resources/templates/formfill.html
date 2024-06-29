@@ -13,17 +13,34 @@
 </head>
 <body>
     <h1 th:text="${form}"></h1>
-    <form th:action="@{/api/forms/{name}/fill(name=${form})}">
+    <form th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
+        <div class="mdl-textfield mdl-js-textfield">
+            <input id="ontologyName" class="mdl-textfield__input" type="text" name="ontologyName"
+                   th:value="${ontology}" readonly>
+            <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield">
+            <input id="targetClass" class="mdl-textfield__input" type="text" name="targetClass"
+                   th:value="${targetClass}" readonly>
+            <label class="mdl-textfield__label" for="targetClass">Ontology</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield">
+            <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
+            <label class="mdl-textfield__label" for="instanceName">Instance name</label>
+        </div>
         <div th:each="field: ${formElements}">
             <div th:if="${field.fieldType == 'Input'}">
-                <div th:replace="form-fields.html :: stringField (name=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
             <div th:if="${field.fieldType == 'Number'}">
-                <div th:replace="form-fields.html :: numberField (name=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
             <div th:if="${field.fieldType == 'ObjectSelect'}">
-                <div th:replace="form-fields.html :: objectSelectField (name=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
+        </div>
+        <div style="padding-top: 70px">
+            <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
         </div>
     </form>
     <div style="padding-top: 100px">

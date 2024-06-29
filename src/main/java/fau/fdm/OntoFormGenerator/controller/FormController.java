@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.controller;
 
 import fau.fdm.OntoFormGenerator.service.FormEditorService;
+import fau.fdm.OntoFormGenerator.service.FormFillService;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -14,9 +15,13 @@ public class FormController {
 
     private final FormEditorService formEditorService;
 
-    public FormController(FormOverviewService formOverviewService, FormEditorService formEditorService) {
+    private final FormFillService formFillService;
+
+    public FormController(FormOverviewService formOverviewService, FormEditorService formEditorService,
+                          FormFillService formFillService) {
         this.formOverviewService = formOverviewService;
         this.formEditorService = formEditorService;
+        this.formFillService = formFillService;
     }
 
     @RequestMapping(value = "/api/forms", method = RequestMethod.POST)
@@ -32,6 +37,16 @@ public class FormController {
     public String updateCreatedForm(@PathVariable String formName,
                                     @RequestBody MultiValueMap<String, String> form) {
         formEditorService.updateForm(formName, form);
+        return "index";
+    }
+
+    @RequestMapping(value = "/api/forms/{formName}/fill", method = RequestMethod.POST, consumes =
+            MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public String fillForm(@PathVariable String formName,
+                                    @RequestBody MultiValueMap<String, String> form) {
+        formFillService.createIndividualFromFilledForm(formName,
+                form.getFirst("ontologyName"), form.getFirst("targetClass"),
+                form.getFirst("instanceName"), form);
         return "index";
     }
 

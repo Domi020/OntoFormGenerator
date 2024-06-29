@@ -1,19 +1,19 @@
-<div th:fragment="numberField (name)">
+<div th:fragment="numberField (name, propName)">
     <div class="mdl-textfield mdl-js-textfield">
-        <input class="mdl-textfield__input" type="number" th:id="${'input-' + name}">
+        <input class="mdl-textfield__input" type="number" th:id="${'input-' + name}" th:name="${propName}">
         <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
     </div>
 </div>
 
-<div th:fragment="stringField (name)">
+<div th:fragment="stringField (name, propName)">
     <div class="mdl-textfield mdl-js-textfield">
-        <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}">
+        <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}" th:name="${propName}">
         <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
     </div>
 </div>
 
-<div th:fragment="objectSelectField (name)">
+<div th:fragment="objectSelectField (name, propName)">
     <label th:for="${'object-select-' + name}" th:text="${name}">Property</label>
-    <select th:id="${'object-select-' + name}" th:name="${name}" class="object-select">
+    <select th:id="${'object-select-' + name}" th:name="${propName}" class="object-select">
     </select>
 </div>

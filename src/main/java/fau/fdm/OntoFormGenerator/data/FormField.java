@@ -10,4 +10,5 @@ import lombok.Setter;
 public class FormField {
     private OntologyProperty ontologyProperty;
     private String fieldType;
+    private String name;
 }
