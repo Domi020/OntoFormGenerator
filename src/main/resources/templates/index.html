@@ -113,10 +113,13 @@
                     Ontology
                 </span>
                 <a class="mdl-list__item-secondary-action clickable-button"
-                   th:data-ontology="${ontology}"
+                   th:data-ontology="${ontology.name}"
                    onclick="deleteOntology(this.getAttribute('data-ontology'));">
                     <i class="material-icons">delete</i></a>
-                <a class="mdl-list__item-secondary-action" data-method="delete" href="##"><i class="material-icons">star</i></a>
+                <a class="mdl-list__item-secondary-action clickable-button"
+                   th:data-ontology="${ontology.name}"
+                   onclick="location.href='/ontologies/' + this.getAttribute('data-ontology')">
+                    <i class="material-icons">download</i></a>
             </li>
             <li class="mdl-list__item" th:if="${ontologies.isEmpty()}">
                 <span class="mdl-list__item-primary-content">
@@ -150,6 +153,11 @@
                 if (response.ok) {
                     location.reload();
                 }
+            });
+        }
+        function exportOntology(ontologyName) {
+            fetch("/ontologies/" + ontologyName, {
+                method: 'GET'
             });
         }
         function autoFillURI() {
