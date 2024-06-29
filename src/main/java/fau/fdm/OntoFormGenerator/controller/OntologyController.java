@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
@@ -79,6 +80,13 @@ public class OntologyController {
     public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
                                                                              @PathVariable String className) {
         return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, className),
+                HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals", method = RequestMethod.GET)
+    public ResponseEntity<List<Individual>> getAllIndividualsFromClass(@PathVariable String ontologyName,
+                                                                      @PathVariable String className) {
+        return new ResponseEntity<>(ontologyContentService.getAllIndividualsOfClass(ontologyName, className),
                 HttpStatus.OK);
     }
 

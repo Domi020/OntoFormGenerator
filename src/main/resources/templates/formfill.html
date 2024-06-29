@@ -32,36 +32,27 @@
         </a>
     </div>
     <script th:inline="javascript">
+        const ontologyName = [[${ontology}]];
+        const allFormElements = [[${formElements}]];
+
         $(".object-select").each(function(index, element) {
-            // $(this).selectize({
-            //     valueField: 'iri',
-            //     labelField: 'label',
-            //     searchField: 'label',
-            //     options: [],
-            //     create: false,
-            //     render: {
-            //         option: function(item, escape) {
-            //             return '<div>' +
-            //                 '<span class="title">' +
-            //                 '<span class="name">' + escape(item.label) + '</span>' +
-            //                 '</span>' +
-            //                 '</div>';
-            //         }
-            //     },
-            //     load: function(query, callback) {
-            //         if (!query.length) return callback();
-            //         $.ajax({
-            //             url: '/api/ontologies/' + $(this).attr('data-ontology') + '/search?query=' + encodeURIComponent(query),
-            //             type: 'GET',
-            //             error: function() {
-            //                 callback();
-            //             },
-            //             success: function(res) {
-            //                 callback(res);
-            //             }
-            //         });
-            //     }
-            // });
+            const fieldName = element.name;
+            const fieldId = element.id;
+            const currentFormElement = allFormElements
+                .find(formElement => formElement.ontologyProperty.name === fieldName)
+            const className = currentFormElement.ontologyProperty.objectRange.name;
+
+            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
+                .then(async function(response) {
+                    let allIndividuals = await response.json();
+                    $('#' + fieldId).selectize({
+                        valueField: 'name',
+                        labelField: 'name',
+                        searchField: 'name',
+                        maxItems: 1,
+                        options: allIndividuals,
+                    });
+                })
         });
     </script>
 </body>

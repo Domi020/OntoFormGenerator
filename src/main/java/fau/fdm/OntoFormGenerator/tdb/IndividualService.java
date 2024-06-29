@@ -7,6 +7,8 @@ import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.*;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.reasoner.Reasoner;
+import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,6 +253,24 @@ public class IndividualService {
         var model = dataset.getNamedModel(ontologyName);
         Query q = QueryFactory.create(query);
         try (QueryExecution exc = QueryExecutionFactory.create(q, model)) {
+            ResultSet results = exc.execSelect();
+            while (results.hasNext()) {
+                individuals.add(results.nextSolution().getResource("f"));
+            }
+        }
+        return individuals;
+    }
+
+    public List<Resource> selectIndividualsInSPARQLQueryWithReasoner(Dataset dataset,
+                                                         String ontologyName,
+                                                         String query) {
+        List<Resource> individuals = new ArrayList<>();
+        var model = dataset.getNamedModel(ontologyName);
+        Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
+        reasoner.bindSchema(model);
+        InfModel infModel = ModelFactory.createInfModel(reasoner, model);
+        Query q = QueryFactory.create(query);
+        try (QueryExecution exc = QueryExecutionFactory.create(q, infModel)) {
             ResultSet results = exc.execSelect();
             while (results.hasNext()) {
                 individuals.add(results.nextSolution().getResource("f"));
