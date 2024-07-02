@@ -49,14 +49,32 @@ public class FormFillService {
             for (var formValue : formValues.keySet()) {
                 if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass"))
                     continue;
-                var prop = ontology.getProperty(generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue));
+                var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
+                var prop = ontology.getProperty(propUri);
                 if (generalTDBService.checkIfObjectProperty(dataset, ontologyName, prop.getURI())) {
                     var objectValue = formValues.getFirst(formValue);
                     var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, objectValue);
                     individual.addProperty(prop, objectIndividual);
                 } else {
                     var dataValue = formValues.getFirst(formValue);
-                    individual.addProperty(prop, dataValue);
+                    var dtype = ontology.getDataProperty(propUri).ranges().findFirst().get().getLocalName();
+                    switch (dtype) {
+                        case "int":
+                            individual.addLiteral(prop, Integer.parseInt(dataValue));
+                            break;
+                        case "float":
+                            individual.addLiteral(prop, Float.parseFloat(dataValue));
+                            break;
+                        case "double":
+                            individual.addLiteral(prop, Double.parseDouble(dataValue));
+                            break;
+                        case "boolean":
+                            individual.addLiteral(prop, Boolean.parseBoolean(dataValue));
+                            break;
+                        default:
+                            individual.addLiteral(prop, dataValue);
+                            break;
+                    }
                 }
             }
             dataset.commit();

@@ -28,9 +28,6 @@ public class IndividualService {
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    @Value("${ontoformgenerator.ontologies.forms}")
-    private String formsIRI;
-
     @Value("${ontoformgenerator.ontologies.baseIRI}")
     private String baseIRI;
 
@@ -65,10 +62,6 @@ public class IndividualService {
         return ontModel.createIndividual(URI, ontClass);
     }
 
-    public void addImportToFormsOntology(Ontology baseOntology, OntModel toBeImported) {
-        baseOntology.addImport(toBeImported.getOntology(""));
-    }
-
     public void deleteIndividual(Dataset dataset,
                                  String ontologyName,
                                  String individualName) {
@@ -85,88 +78,6 @@ public class IndividualService {
         ontModel.getIndividual(iri).remove();
     }
 
-    public Individual addObjectPropertyToIndividual(Dataset dataset,
-                                                    String ontologyName,
-                                                    Individual domainIndividual,
-                                                    String propertyName,
-                                                    String otherIndividualURI) {
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
-        var otherIndividual = ontModel.getIndividual(otherIndividualURI);
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName),
-                otherIndividual);
-        return domainIndividual;
-    }
-
-    public Individual addDatatypePropertyToIndividual(Dataset dataset,
-                                                      String ontologyName,
-                                                      Individual domainIndividual,
-                                                      String propertyName,
-                                                      String value) {
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value);
-        return domainIndividual;
-    }
-
-    public Literal getDatatypePropertyValueFromIndividual(Dataset dataset,
-                                                           String ontologyName,
-                                                           Individual domainIndividual,
-                                                           String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        return (Literal) domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-    }
-
-    public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
-                                                         String ontologyName,
-                                                         Individual domainIndividual,
-                                                         String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        var prop = domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-        if (prop == null) {
-            return null;
-        } else {
-            return prop.asResource();
-        }
-    }
-
-
-    public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
-                                                                       String ontologyName,
-                                                                       Individual domainIndividual,
-                                                                       String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        var values = domainIndividual.listPropertyValues(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-        List<Resource> resources = new ArrayList<>();
-        values.forEachRemaining(val -> resources.add(val.asResource()));
-        return resources;
-    }
-
-    public Property getPropertyFromOntology(Dataset dataset,
-                                            String ontologyName,
-                                            String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        return ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName);
-    }
-
-    public Property getPropertyFromOntology(Dataset dataset,
-                                            String ontologyName,
-                                            String ontologyURI,
-                                            String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        return ontModel.getProperty(ontologyURI + "#" + propertyName);
-    }
-
-    public OntProperty getPropertyFromOntologyByIRI(Dataset dataset,
-                                                    String propertyIRI) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel("forms"));
-        return ontModel.getOntProperty(propertyIRI);
-    }
-
     public List<Individual> getAllIndividualsOfClass(Dataset dataset,
                                                      String ontologyName,
                                                      String className) {
@@ -177,24 +88,6 @@ public class IndividualService {
         var iter = ontModel.listIndividuals(ontClass);
         iter.forEachRemaining(individuals::add);
         return individuals;
-    }
-
-    public Individual deleteObjectPropertyFromIndividual(Dataset dataset,
-                                                         String ontologyName,
-                                                         Individual domainIndividual,
-                                                         String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        domainIndividual.removeAll(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-        return domainIndividual;
-    }
-
-    public Individual deleteObjectPropertyFromIndividual(Dataset dataset,
-                                                         String ontologyName,
-                                                         String individualName,
-                                                         String propertyName) {
-        var individual = getIndividualByString(dataset, ontologyName, individualName);
-        return deleteObjectPropertyFromIndividual(dataset, ontologyName, individual, propertyName);
     }
 
     public Individual getIndividualByString(Dataset dataset,
@@ -218,14 +111,6 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
-    public Individual getIndividualByIri(Dataset dataset,
-                                         String ontologyName,
-                                         String iri) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        return ontModel.getIndividual(iri);
-    }
-
     public Individual findIndividualInOntology(Dataset dataset,
                                                String ontologyName,
                                                String individualName) {
@@ -233,8 +118,6 @@ public class IndividualService {
                 dataset.getNamedModel(ontologyName));
         return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
     }
-
-
 
     public OntIndividual getOrAddIndividualByString(Dataset dataset,
                                                     String iri,
@@ -284,25 +167,6 @@ public class IndividualService {
         }
         return individuals;
     }
-
-    public List<Resource> selectIndividualsInSPARQLQueryWithReasoner(Dataset dataset,
-                                                         String ontologyName,
-                                                         String query) {
-        List<Resource> individuals = new ArrayList<>();
-        var model = dataset.getNamedModel(ontologyName);
-        Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
-        reasoner.bindSchema(model);
-        InfModel infModel = ModelFactory.createInfModel(reasoner, model);
-        Query q = QueryFactory.create(query);
-        try (QueryExecution exc = QueryExecutionFactory.create(q, infModel)) {
-            ResultSet results = exc.execSelect();
-            while (results.hasNext()) {
-                individuals.add(results.nextSolution().getResource("f"));
-            }
-        }
-        return individuals;
-    }
-
 
     @EventListener(ApplicationReadyEvent.class)
     public void initFormOntology() {

@@ -2,6 +2,7 @@ package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
+import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb2.TDB2Factory;
@@ -27,8 +28,11 @@ public class FormOverviewService {
 
     private final IndividualService individualService;
 
+    private final PropertyService propertyService;
+
     @Autowired
-    public FormOverviewService(IndividualService individualService) {
+    public FormOverviewService(IndividualService individualService, PropertyService propertyService) {
+        this.propertyService = propertyService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
     }
@@ -37,7 +41,7 @@ public class FormOverviewService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         var individual = individualService.addIndividual(dataset, "Form", formName);
-        individualService.addObjectPropertyToIndividual(dataset,
+        propertyService.addObjectPropertyToIndividual(dataset,
                 "forms", individual, "targetsOntology", ontologyURI);
         dataset.commit();
         dataset.end();
@@ -50,7 +54,7 @@ public class FormOverviewService {
         var individuals = individualService.getAllIndividualsOfClass(dataset, "forms", "Form");
         for (var individual : individuals) {
             var formName = individual.getLocalName();
-            var ontologyName = individualService.getObjectPropertyValueFromIndividual(dataset,
+            var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
                     "forms", individual, "targetsOntology").getLocalName();
             var form = new Form(formName, ontologyName);
             forms.add(form);

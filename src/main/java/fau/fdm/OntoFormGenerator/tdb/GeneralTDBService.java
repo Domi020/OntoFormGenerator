@@ -2,11 +2,17 @@ package fau.fdm.OntoFormGenerator.tdb;
 
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 import org.apache.jena.ontapi.OntModelFactory;
 
 @Service
 public class GeneralTDBService {
+
+    public org.apache.jena.ontapi.model.OntModel getOntModel(Model model) {
+        return OntModelFactory.createModel(model.getGraph(), OntSpecification.OWL2_DL_MEM);
+    }
+
     public String getOntologyURIByOntologyName(Dataset dataset, String ontologyName) {
         return dataset.getNamedModel(ontologyName).getNsPrefixURI("");
     }
