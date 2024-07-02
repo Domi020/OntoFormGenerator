@@ -31,7 +31,7 @@ public class OntologyOverviewServiceTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        this.ontologyOverviewService = new OntologyOverviewService(null, "ontologies/test/uploadedOntologies",
+        this.ontologyOverviewService = new OntologyOverviewService("ontologies/test/uploadedOntologies",
                 logger);
     }
 

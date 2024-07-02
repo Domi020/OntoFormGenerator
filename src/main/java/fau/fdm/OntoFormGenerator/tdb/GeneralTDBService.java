@@ -25,6 +25,13 @@ public class GeneralTDBService {
         return namedProperty.getURI();
     }
 
+    public String getIndividualURIInOntology(Dataset dataset, String ontologyName, String individualName) {
+        var ontmodel = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
+                OntSpecification.OWL2_DL_MEM);
+        var namedIndividual = ontmodel.individuals().filter(ontIndividual -> ontIndividual.getLocalName().equals(individualName)).findFirst().orElseThrow();
+        return namedIndividual.getURI();
+    }
+
     public boolean checkIfObjectProperty(Dataset dataset, String ontologyName, String propertyURI) {
         var ontmodel = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                 OntSpecification.OWL2_DL_MEM);

@@ -77,6 +77,14 @@ public class IndividualService {
         ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName).remove();
     }
 
+    public void deleteIndividualByIri(Dataset dataset,
+                                      String ontologyName,
+                                      String iri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        ontModel.getIndividual(iri).remove();
+    }
+
     public Individual addObjectPropertyToIndividual(Dataset dataset,
                                                     String ontologyName,
                                                     Individual domainIndividual,

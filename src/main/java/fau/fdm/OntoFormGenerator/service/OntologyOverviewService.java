@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Ontology;
+import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -39,16 +40,20 @@ public class OntologyOverviewService {
 
     private final IndividualService individualService;
 
+    private final GeneralTDBService generalTDBService;
+
     @Autowired
-    public OntologyOverviewService(IndividualService individualService) {
+    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService) {
+        this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
     }
 
-    public OntologyOverviewService(IndividualService individualService, String ontologyDirectory, Logger logger) {
+    public OntologyOverviewService(String ontologyDirectory, Logger logger) {
         this.ontologyDirectory = ontologyDirectory;
         this.logger = logger;
-        this.individualService = individualService;
+        this.individualService = null;
+        this.generalTDBService = null;
     }
 
     public boolean importOntology(File owlFile, String ontologyName) {
@@ -121,7 +126,8 @@ public class OntologyOverviewService {
                         """.formatted(ontologyName))
                 .forEach(individual -> individualService.deleteIndividual(dataset, "forms",
                         individual.getLocalName()));
-        individualService.deleteIndividual(dataset, "forms", ontologyName);
+        var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
+        individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
         dataset.commit();
         dataset.end();
     }

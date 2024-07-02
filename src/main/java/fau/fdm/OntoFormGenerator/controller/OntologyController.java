@@ -3,6 +3,7 @@ package fau.fdm.OntoFormGenerator.controller;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.commons.io.FileUtils;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,20 +34,25 @@ public class OntologyController {
 
     private final OntologyContentService ontologyContentService;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService) {
+    private final FormOverviewService formOverviewService;
+
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
+        this.formOverviewService = formOverviewService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
-    public ResponseEntity<Boolean> deleteOntology(@PathVariable String ontology) {
+    public String deleteOntology(@PathVariable String ontology,
+                                 Model model) {
         ontologyOverviewService.deleteOntology(ontology);
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        return loadIndexPage(model);
     }
 
     @RequestMapping(value = "/ontologies", method = RequestMethod.POST)
-    public ResponseEntity<Boolean> importOntology(@RequestParam("file") MultipartFile file,
-                                                   @RequestParam("ontologyName") String ontologyName) {
+    public String importOntology(@RequestParam("file") MultipartFile file,
+                                                   @RequestParam("ontologyName") String ontologyName,
+                                                    Model model) {
         String fileName = UUID.randomUUID() + ".owl";
         File localFile = null;
         try {
@@ -54,10 +61,10 @@ public class OntologyController {
             localFile.createNewFile();
             file.transferTo(localFile.toPath());
             ontologyOverviewService.importOntology(localFile, ontologyName);
-            return new ResponseEntity<>(true, org.springframework.http.HttpStatus.OK);
+            return loadIndexPage(model);
         } catch (Exception e) {
             logger.error("Error importing ontology", e);
-            return new ResponseEntity<>(false, HttpStatus.INTERNAL_SERVER_ERROR);
+            return loadIndexPage(model);
         } finally {
             if (localFile != null) {
                 FileUtils.deleteQuietly(localFile);
@@ -90,6 +97,11 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    private String loadIndexPage(Model model) {
+        model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
+        model.addAttribute("forms", formOverviewService.getAllForms());
 
+        return "index";
+    }
 
 }

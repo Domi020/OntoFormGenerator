@@ -113,8 +113,8 @@
                     Ontology
                 </span>
                 <a class="mdl-list__item-secondary-action clickable-button"
-                   th:data-ontology="${ontology.name}"
-                   onclick="deleteOntology(this.getAttribute('data-ontology'));">
+                   th:data-ontology-name="${ontology.getName()}" th:data-ontology-iri="${ontology.getIri()}"
+                   onclick="deleteOntology(this.getAttribute('data-ontology-name'), this.getAttribute('data-ontology-iri'));">
                     <i class="material-icons">delete</i></a>
                 <a class="mdl-list__item-secondary-action clickable-button"
                    th:data-ontology="${ontology.name}"
@@ -146,7 +146,9 @@
         createFormDialog.querySelector('.close').addEventListener('click', function() {
             createFormDialog.close();
         });
-        function deleteOntology(ontologyName) {
+        function deleteOntology(ontologyName, ontologyIri) {
+            // let params = new URLSearchParams();
+            // params.set("iri", );
             fetch("/ontologies/" + ontologyName, {
                 method: 'DELETE'
             }).then(function(response) {
