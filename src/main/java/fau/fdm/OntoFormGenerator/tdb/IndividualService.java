@@ -37,17 +37,17 @@ public class IndividualService {
         return OntModelFactory.createModel(model.getGraph(), OntSpecification.OWL2_DL_MEM);
     }
 
-    public Individual addIndividual(Dataset dataset,
+    public OntIndividual addIndividual(Dataset dataset,
                                     String ontologyName,
                                     String className,
                                     String individualName) {
         var model = dataset.getNamedModel(ontologyName);
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
+        var ontModel = getOntModel(model);
         var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
         return ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
     }
 
-    public Individual addIndividual(Dataset dataset,
+    public OntIndividual addIndividual(Dataset dataset,
                                     String className,
                                     String individualName) {
         return addIndividual(dataset, "forms", className, individualName);
@@ -78,23 +78,22 @@ public class IndividualService {
         ontModel.getIndividual(iri).remove();
     }
 
-    public List<Individual> getAllIndividualsOfClass(Dataset dataset,
+    public List<OntIndividual> getAllIndividualsOfClass(Dataset dataset,
                                                      String ontologyName,
                                                      String className) {
-        List<Individual> individuals = new ArrayList<>();
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        List<OntIndividual> individuals = new ArrayList<>();
+        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
         var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
-        var iter = ontModel.listIndividuals(ontClass);
-        iter.forEachRemaining(individuals::add);
+        var iter = ontModel.namedIndividuals();
+        iter.filter(individual -> individual.hasOntClass(ontClass, true))
+                .forEach(individuals::add);
         return individuals;
     }
 
-    public Individual getIndividualByString(Dataset dataset,
+    public OntIndividual getIndividualByString(Dataset dataset,
                                             String ontologyName,
                                             String individualName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
         return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
     }
 
@@ -104,10 +103,9 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
-    public Individual getIndividualByIri(Dataset dataset,
+    public OntIndividual getIndividualByIri(Dataset dataset,
                                                String iri) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel("forms"));
+        var ontModel = getOntModel(dataset.getNamedModel("forms"));
         return ontModel.getIndividual(iri);
     }
 
@@ -140,8 +138,8 @@ public class IndividualService {
         return null;
     }
 
-    public Individual createDatatypeFormElement(Dataset dataset, String name, String datatype) {
-        Individual formElement = switch (datatype) {
+    public OntIndividual createDatatypeFormElement(Dataset dataset, String name, String datatype) {
+        var formElement = switch (datatype) {
             case "string" -> addIndividual(dataset, "Input", name);
             case "boolean" -> addIndividual(dataset, "Select", name);
             case "date" -> addIndividual(dataset, "Date", name);

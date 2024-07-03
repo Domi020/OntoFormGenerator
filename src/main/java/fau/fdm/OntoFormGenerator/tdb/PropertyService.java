@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -35,9 +36,9 @@ public class PropertyService {
         this.generalTDBService = generalTDBService;
     }
 
-    public Individual addObjectPropertyToIndividual(Dataset dataset,
+    public OntIndividual addObjectPropertyToIndividual(Dataset dataset,
                                                     String ontologyName,
-                                                    Individual domainIndividual,
+                                                    OntIndividual domainIndividual,
                                                     String propertyName,
                                                     String otherIndividualURI) {
         var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
@@ -47,9 +48,9 @@ public class PropertyService {
         return domainIndividual;
     }
 
-    public Individual addDatatypePropertyToIndividual(Dataset dataset,
+    public OntIndividual addDatatypePropertyToIndividual(Dataset dataset,
                                                       String ontologyName,
-                                                      Individual domainIndividual,
+                                                      OntIndividual domainIndividual,
                                                       String propertyName,
                                                       String value) {
         var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
@@ -59,20 +60,19 @@ public class PropertyService {
 
     public Literal getDatatypePropertyValueFromIndividual(Dataset dataset,
                                                           String ontologyName,
-                                                          Individual domainIndividual,
+                                                          OntIndividual domainIndividual,
                                                           String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        return (Literal) domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        return (Literal) domainIndividual.getPropertyResourceValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
     }
 
     public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
                                                          String ontologyName,
-                                                         Individual domainIndividual,
+                                                         OntIndividual domainIndividual,
                                                          String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
-        var prop = domainIndividual.getPropertyValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getPropertyResourceValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
         if (prop == null) {
             return null;
         } else {
@@ -83,13 +83,13 @@ public class PropertyService {
 
     public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
                                                                         String ontologyName,
-                                                                        Individual domainIndividual,
+                                                                        OntIndividual domainIndividual,
                                                                         String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        var values = domainIndividual.listPropertyValues(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        var values = domainIndividual.listProperties(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
         List<Resource> resources = new ArrayList<>();
-        values.forEachRemaining(val -> resources.add(val.asResource()));
+        values.forEachRemaining(val -> resources.add(val.getObject().asResource()));
         return resources;
     }
 

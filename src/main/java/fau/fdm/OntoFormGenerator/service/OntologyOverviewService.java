@@ -3,6 +3,7 @@ package fau.fdm.OntoFormGenerator.service;
 import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
+import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -26,11 +27,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OntologyOverviewService {
 
     private final Logger logger;
+    private final PropertyService propertyService;
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
@@ -43,15 +46,17 @@ public class OntologyOverviewService {
     private final GeneralTDBService generalTDBService;
 
     @Autowired
-    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService) {
+    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, PropertyService propertyService) {
         this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
+        this.propertyService = propertyService;
     }
 
-    public OntologyOverviewService(String ontologyDirectory, Logger logger) {
+    public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService) {
         this.ontologyDirectory = ontologyDirectory;
         this.logger = logger;
+        this.propertyService = propertyService;
         this.individualService = null;
         this.generalTDBService = null;
     }
@@ -60,36 +65,36 @@ public class OntologyOverviewService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-        var model = dataset.getNamedModel("forms");
-        OntModel formsModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, model);
         try {
             var fis = new FileInputStream(owlFile);
             ontModel.read(fis, null);
             fis.close();
-            var fisTwo = new FileInputStream(owlFile);
-            formsModel.read(fisTwo, null);
-            fisTwo.close();
         } catch (Exception e) {
             logger.error("Error reading file while importing new ontology", e);
             dataset.abort();
             dataset.end();
             return false;
         }
-        if (!dataset.getNamedModel(ontologyName).isEmpty()) {
-            logger.error("Ontology with name {} already exists", ontologyName);
-            dataset.abort();
-            dataset.end();
-            return false;
-        }
-        dataset.addNamedModel(ontologyName, ontModel);
         String ontURI = ontModel.getNsPrefixURI("");
         if (ontURI.charAt(ontURI.length() - 1) == '#' || ontURI.charAt(ontURI.length() - 1) == '/') {
             ontURI = ontURI.substring(0, ontURI.length() - 1);
         }
-        individualService.addIndividualWithURI(dataset, "Ontology", ontURI);
+        var modelName = ontologyName + "_" + UUID.randomUUID();
+        var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
+
+        OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        var ontology = newModel.createOntology(newOntURI);
+        for (var ont : ontModel.listOntologies().toList()) {
+            ontology.addImport(ont);
+        }
+        newModel.setNsPrefix("", newOntURI + "#");
+        dataset.addNamedModel(modelName, newModel);
+        var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
+        propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                ontIndiv, "hasOntologyIRI", ontURI);
         dataset.commit();
         dataset.end();
-        logger.info("Ontology {} imported successfully", ontologyName);
+        logger.info("Ontology {} imported successfully", modelName);
         return true;
     }
 
