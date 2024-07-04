@@ -58,6 +58,8 @@ public class FormEditorService {
         var form = individualService.getIndividualByString(dataset, "forms", formName);
         var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                 "forms", form, "hasFormElement");
+        var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                "forms", form, "targetsOntology").getLocalName();
         List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size(), null));
         for (var formElement : formElements) {
             var fieldName = formElement.getLocalName();
@@ -71,13 +73,13 @@ public class FormEditorService {
                     "forms", formElementIndividual, "targetsField");
             var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
             if (isObjectProperty) {
-                var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
+                var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                 var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                 formFields.set(position, new FormField(
                         new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
                         fieldType, fieldName));
             } else {
-                var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, targetField.getURI()).getRange();
+                var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                 formFields.set(position, new FormField(
                         new OntologyProperty(targetField.getLocalName(), domain, false, null,
                         dataRangeProp.getLocalName()), fieldType, fieldName));
@@ -95,7 +97,8 @@ public class FormEditorService {
                 form, "targetsOntology");
 
         // Set targetsClass
-        var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyClass"));
+        var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyName"),
+                formInput.getFirst("ontologyClass"));
         var classIndividual = individualService.getOrAddIndividualByString(dataset, classIri, "TargetClass");
         form.addProperty(
                 propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
@@ -105,8 +108,7 @@ public class FormEditorService {
             // set targetsField for each field
             var fieldName = formInput.get("fieldName").get(i);
             var propertyName = formInput.get("propertyName").get(i);
-            var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(),
-                    ontology.getURI(), propertyName);
+            var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
             var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
                     property.getURI());
             OntIndividual field;

@@ -64,7 +64,8 @@ public class PropertyService {
                                                           String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        return (Literal) domainIndividual.getPropertyResourceValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        return domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName))
+                .getObject().asLiteral();
     }
 
     public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
@@ -98,7 +99,7 @@ public class PropertyService {
                                             String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        return ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName);
+        return ontModel.listAllOntProperties().filterKeep(property -> property.getLocalName().equals(propertyName)).next();
     }
 
     public Property getPropertyFromOntology(Dataset dataset,
@@ -112,8 +113,14 @@ public class PropertyService {
 
     public OntProperty getPropertyFromOntologyByIRI(Dataset dataset,
                                                     String propertyIRI) {
+        return getPropertyFromOntologyByIRI(dataset, "forms", propertyIRI);
+    }
+
+    public OntProperty getPropertyFromOntologyByIRI(Dataset dataset,
+                                                    String ontologyName,
+                                                    String propertyIRI) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel("forms"));
+                dataset.getNamedModel(ontologyName));
         return ontModel.getOntProperty(propertyIRI);
     }
 }

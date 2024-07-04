@@ -65,33 +65,37 @@ public class OntologyOverviewService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+        var modelName = ontologyName + "_" + UUID.randomUUID();
+        var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
+
         try {
             var fis = new FileInputStream(owlFile);
             ontModel.read(fis, null);
             fis.close();
+            var fisNew = new FileInputStream(owlFile);
+            newModel.read(fisNew, null);
+            fisNew.close();
         } catch (Exception e) {
             logger.error("Error reading file while importing new ontology", e);
             dataset.abort();
             dataset.end();
             return false;
         }
-        String ontURI = ontModel.getNsPrefixURI("");
-        if (ontURI.charAt(ontURI.length() - 1) == '#' || ontURI.charAt(ontURI.length() - 1) == '/') {
-            ontURI = ontURI.substring(0, ontURI.length() - 1);
-        }
-        var modelName = ontologyName + "_" + UUID.randomUUID();
-        var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
-
-        OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
         var ontology = newModel.createOntology(newOntURI);
-        for (var ont : ontModel.listOntologies().toList()) {
-            ontology.addImport(ont);
-        }
+        //ontModel.getOntology()
+        // String ontURI = ontModel.getNsPrefixURI("");
+        // if (ontURI.charAt(ontURI.length() - 1) == '#' || ontURI.charAt(ontURI.length() - 1) == '/') {
+        //     ontURI = ontURI.substring(0, ontURI.length() - 1);
+        // }
+        //for (var ont : ontModel.listOntologies().toList()) {
+        //    ontology.addImport(ont);
+        //}
         newModel.setNsPrefix("", newOntURI + "#");
         dataset.addNamedModel(modelName, newModel);
         var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
-        propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                ontIndiv, "hasOntologyIRI", ontURI);
+        // propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+        //         ontIndiv, "hasOntologyIRI", ontURI);
         dataset.commit();
         dataset.end();
         logger.info("Ontology {} imported successfully", modelName);

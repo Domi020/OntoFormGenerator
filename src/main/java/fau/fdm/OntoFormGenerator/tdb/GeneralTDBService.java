@@ -1,7 +1,7 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import org.apache.jena.ontapi.OntSpecification;
-import org.apache.jena.query.Dataset;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 import org.apache.jena.ontapi.OntModelFactory;
@@ -14,7 +14,12 @@ public class GeneralTDBService {
     }
 
     public String getOntologyURIByOntologyName(Dataset dataset, String ontologyName) {
-        return dataset.getNamedModel(ontologyName).getNsPrefixURI("");
+        var model = getOntModel(dataset.getNamedModel("forms"));
+        var ont = model.individuals().filter(ontIndividual -> ontIndividual.ontClass().get().getURI().equals(
+                "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#Ontology"
+        ) && ontIndividual.getLocalName().equals(ontologyName)).findFirst().get();
+        return ont.getProperty(model.getDataProperty
+                ("http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasOntologyIRI")).getObject().asLiteral().getString();
     }
 
     public String getClassURIInOntology(Dataset dataset, String ontologyName, String className) {

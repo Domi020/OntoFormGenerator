@@ -151,12 +151,12 @@
     <form th:action="@{/api/forms/{formName}(formName=${form})}" method="post">
         <div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" id="formName" name="formName" th:value="${form}" disabled>
+                <input class="mdl-textfield__input" type="text" id="formName" name="formName" th:value="${form}" readonly>
                 <label class="mdl-textfield__label" for="formName">Form name</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                 <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName"
-                       th:value="${ontology}" disabled>
+                       th:value="${ontology}" readonly>
                 <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">

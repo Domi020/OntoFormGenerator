@@ -64,10 +64,10 @@ public class OntologyContentService {
         List<OntologyProperty> properties = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        String ontologyURI = generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName);
+        String classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, className);
         OntClass ontClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                         dataset.getNamedModel(ontologyName))
-                .getOntClass(ontologyURI + className);
+                .getOntClass(classURI);
         if (ontClass == null) {
             return properties;
         }
@@ -75,7 +75,7 @@ public class OntologyContentService {
                 property -> {
                     OntologyProperty ontologyProperty = new OntologyProperty();
                     ontologyProperty.setName(property.getLocalName());
-                    ontologyProperty.setDomain(new OntologyClass(className, ontologyURI + className));
+                    ontologyProperty.setDomain(new OntologyClass(className, classURI));
                     if (property.isObjectProperty()) {
                         ontologyProperty.setObjectProperty(true);
                         if (property.getRange() != null) {
