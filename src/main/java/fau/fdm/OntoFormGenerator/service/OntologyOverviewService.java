@@ -91,8 +91,8 @@ public class OntologyOverviewService {
         //for (var ont : ontModel.listOntologies().toList()) {
         //    ontology.addImport(ont);
         //}
-        newModel.setNsPrefix("", newOntURI + "#");
-        dataset.addNamedModel(modelName, newModel);
+       // newModel.setNsPrefix("", newOntURI + "#");
+        dataset.addNamedModel(modelName, newModel.getBaseModel());
         var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
         // propertyService.addDatatypePropertyToIndividual(dataset, "forms",
         //         ontIndiv, "hasOntologyIRI", ontURI);

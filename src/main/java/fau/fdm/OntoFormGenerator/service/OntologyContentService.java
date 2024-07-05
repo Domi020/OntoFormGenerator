@@ -8,6 +8,7 @@ import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
@@ -99,11 +100,13 @@ public class OntologyContentService {
         List<Individual> individuals = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        var classIri = individualService.findIriOfClass(dataset, className);
+        var classIri = individualService.findIriOfClass(dataset, ontologyName, className);
 
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
         Reasoner reasoner = ReasonerRegistry.getOWLMicroReasoner();
-        reasoner.bindSchema(dataset.getNamedModel(ontologyName));
-        InfModel infModel = ModelFactory.createInfModel(reasoner, dataset.getNamedModel(ontologyName));
+        reasoner.bindSchema(ontModel);
+        InfModel infModel = ModelFactory.createInfModel(reasoner, ontModel);
         Resource classRes = infModel.getResource(classIri);
         var typeProp = infModel.getProperty("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
 

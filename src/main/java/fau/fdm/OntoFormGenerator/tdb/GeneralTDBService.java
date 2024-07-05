@@ -1,10 +1,13 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import org.apache.jena.ontapi.OntSpecification;
+import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 import org.apache.jena.ontapi.OntModelFactory;
+
+import org.apache.jena.rdf.model.ModelFactory;
 
 @Service
 public class GeneralTDBService {
@@ -23,16 +26,16 @@ public class GeneralTDBService {
     }
 
     public String getClassURIInOntology(Dataset dataset, String ontologyName, String className) {
-        var ontmodel = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
-                OntSpecification.OWL2_DL_MEM);
-        var namedClass = ontmodel.classes().filter(ontClass -> ontClass.getLocalName().equals(className)).findFirst().orElseThrow();
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedClass = ontmodel.listClasses().filterKeep(ontClass -> ontClass.getLocalName() != null &&
+                ontClass.getLocalName().equals(className)).next();
         return namedClass.getURI();
     }
 
     public String getPropertyURIInOntology(Dataset dataset, String ontologyName, String propertyName) {
-        var ontmodel = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
-                OntSpecification.OWL2_DL_MEM);
-        var namedProperty = ontmodel.properties().filter(ontProperty -> ontProperty.getLocalName().equals(propertyName)).findFirst().orElseThrow();
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedProperty = ontmodel.listAllOntProperties().filterKeep(ontProperty -> ontProperty.getLocalName() != null &&
+                ontProperty.getLocalName().equals(propertyName)).next();
         return namedProperty.getURI();
     }
 
@@ -44,9 +47,8 @@ public class GeneralTDBService {
     }
 
     public boolean checkIfObjectProperty(Dataset dataset, String ontologyName, String propertyURI) {
-        var ontmodel = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
-                OntSpecification.OWL2_DL_MEM);
-        var namedProperty = ontmodel.objectProperties().filter(ontProperty -> ontProperty.getURI().equals(propertyURI));
-        return namedProperty.findAny().isPresent();
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedProperty = ontmodel.listObjectProperties().filterKeep(ontProperty -> ontProperty.getURI().equals(propertyURI));
+        return namedProperty.hasNext();
     }
 }

@@ -2,6 +2,7 @@ package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
+import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.query.Dataset;
@@ -21,15 +22,17 @@ public class FormFillService {
     private final IndividualService individualService;
 
     private final GeneralTDBService generalTDBService;
+    private final PropertyService propertyService;
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
     public FormFillService(IndividualService individualService,
-                           GeneralTDBService generalTDBService) {
+                           GeneralTDBService generalTDBService, PropertyService propertyService) {
         this.individualService = individualService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.generalTDBService = generalTDBService;
+        this.propertyService = propertyService;
     }
 
     public void createIndividualFromFilledForm(String formName,
@@ -40,12 +43,12 @@ public class FormFillService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
-            var ontologyURI = generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName);
-            if (ontologyURI.endsWith("#")) ontologyURI = ontologyURI.substring(0, ontologyURI.length() - 1);
             var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                     OntSpecification.OWL2_DL_MEM);
-            var individual = ontology.createIndividual(ontologyURI + "/" + targetField + "#" + instanceName,
-                    ontology.getOntClass(generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField)));
+            var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
+            var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
+            var individual = ontology.createIndividual(ontologyURI + instanceName,
+                    ontology.getOntClass(classURI));
             for (var formValue : formValues.keySet()) {
                 if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass"))
                     continue;
