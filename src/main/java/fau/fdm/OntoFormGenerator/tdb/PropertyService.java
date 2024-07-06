@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
@@ -52,9 +53,10 @@ public class PropertyService {
                                                       String ontologyName,
                                                       OntIndividual domainIndividual,
                                                       String propertyName,
-                                                      String value) {
+                                                      String value, RDFDatatype datatype) {
         var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value);
+        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value,
+                datatype);
         return domainIndividual;
     }
 

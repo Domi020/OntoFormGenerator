@@ -5,6 +5,7 @@ import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.Dataset;
@@ -60,7 +61,7 @@ public class FormEditorService {
                 "forms", form, "hasFormElement");
         var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
                 "forms", form, "targetsOntology").getLocalName();
-        List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size(), null));
+        List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size() + 50, null));
         for (var formElement : formElements) {
             var fieldName = formElement.getLocalName();
             var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
@@ -85,6 +86,12 @@ public class FormEditorService {
                         dataRangeProp.getLocalName()), fieldType, fieldName));
             }
         }
+        for (int i = 0; i < formFields.size(); i++) {
+            if (formFields.get(i) == null) {
+                formFields.remove(i);
+                i--;
+            }
+        }
         dataset.end();
         return formFields;
     }
@@ -104,9 +111,27 @@ public class FormEditorService {
                 propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
                 classIndividual
         );
+        // Get all already existing form elements
+        var alreadyInsertedElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", form, "hasFormElement");
+
+
         for (int i = 0; i < formInput.get("fieldName").size(); i++) {
-            // set targetsField for each field
+            // Check if field already exists
+            //TODO: Aktuell wird nur anhand Feldnamen geprüft, ob ein Feld schon existiert
             var fieldName = formInput.get("fieldName").get(i);
+            boolean foundElement = false;
+            for (int j = 0; j < alreadyInsertedElements.size(); j++) {
+                if (alreadyInsertedElements.get(j) != null &&
+                        alreadyInsertedElements.get(j).getLocalName().equals(fieldName)) {
+                    alreadyInsertedElements.set(j, null);
+                    foundElement = true;
+                    break;
+                }
+            }
+            if (foundElement) continue;
+
+            // set targetsField for each field
             var propertyName = formInput.get("propertyName").get(i);
             var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
             var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
@@ -116,20 +141,27 @@ public class FormEditorService {
                 // object property
                 field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                        field, "isObjectProperty", "true");
+                        field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
             } else {
                 // datatype property
                 field = individualService.createDatatypeFormElement(dataset, fieldName,
                         formInput.get("propertyRange").get(i));
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                        field, "isObjectProperty", "false");
+                        field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
             }
             propertyService.addObjectPropertyToIndividual(dataset, "forms",
                     field, "targetsField", targetField.getURI());
             propertyService.addObjectPropertyToIndividual(dataset, "forms",
                     form, "hasFormElement", field.getURI());
             propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                    field, "hasPositionInForm", String.valueOf(i));
+                    field, "hasPositionInForm", String.valueOf(i), XSDDatatype.XSDint);
+        }
+
+        // delete all old form elements that are not in the new form
+        for (var alreadyInsertedElement : alreadyInsertedElements) {
+            if (alreadyInsertedElement == null) continue;
+            individualService.deleteIndividual(dataset, "forms", alreadyInsertedElement
+                    .getLocalName());
         }
         dataset.commit();
         dataset.end();

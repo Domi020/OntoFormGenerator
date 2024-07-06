@@ -195,7 +195,7 @@
                 addNewFormElement();
                 const prop = element.ontologyProperty;
                 const field = document.getElementById(`field-${index}`);
-                field.querySelector('input[name="fieldName"]').value = prop.name;
+                field.querySelector('input[name="fieldName"]').value = element.name;
                 divs.push(field.querySelector('select[name="propertyName"]'));
                 items.push(prop.domain.name);
                 field.querySelector('input[name="isObjectProperty"]').value = prop.objectProperty;
