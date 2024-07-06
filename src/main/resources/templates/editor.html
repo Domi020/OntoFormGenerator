@@ -67,7 +67,7 @@
                     <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
                     <label class="mdl-textfield__label">Range</label>
                 </div>
-                <div class="property-field">
+                <div class="property-field property-checkbox">
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
@@ -121,7 +121,24 @@
                         maxItems: 1,
                         closeAfterSelect: true
                     });
+                    resetObjectProperties();
                 })
+        }
+
+        function resetObjectProperties() {
+            const fieldContainer = document.querySelector('.field-container');
+            let toDelete = [];
+            fieldContainer.childNodes.forEach((node) => {
+                // const id = node.id;
+                // const propertyCheckbox = node.querySelector('input[type="checkbox"]');
+                // if (propertyCheckbox.checked) {
+                //     toDelete.push(id)
+                // }
+                toDelete.push(node.id);
+            });
+            toDelete.forEach((id) => {
+                removeFormElement(id);
+            });
         }
 
         function firstRefreshAvailableProperties(divs, items) {
