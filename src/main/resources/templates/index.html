@@ -78,6 +78,10 @@
                         <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                             Fill form
                         </a>
+                        <button th:id="'show-individuals-button-' + ${form.getFormName()}"
+                                class="mdl-button mdl-js-button mdl-button--raised show-individuals-button">
+                            Show individuals
+                        </button>
                     </div>
                 </div>
             </li>
@@ -88,6 +92,19 @@
             </li>
         </ul>
     </div>
+    <dialog id="showIndividualsDialog" class="mdl-dialog">
+        <h4>Created individuals by form</h4>
+        <ul id="showIndividualsList" class="mdl-list">
+            <!--                        <li class="mdl-list__item" th:each="individual : ${}">-->
+            <!--                            <span class="mdl-list__item-primary-content" th:text="${individual.getName()}">-->
+            <!--                                Individual-->
+            <!--                            </span>-->
+            <!--                        </li>-->
+        </ul>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="close">Cancel</button>
+        </div>
+    </dialog>
     <div>
         <h2>Ontologies</h2>
         <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--raised">
@@ -151,6 +168,32 @@
         createFormDialog.querySelector('.close').addEventListener('click', function() {
             createFormDialog.close();
         });
+
+        var showIndividualsDialog = document.querySelector('#showIndividualsDialog');
+        var showIndividualsButtons = document.querySelectorAll('.show-individuals-button');
+        showIndividualsButtons.forEach(el => el.addEventListener('click', async function(event) {
+            let buttonId = event.currentTarget.id
+            let formName = buttonId.replace('show-individuals-button-', '');
+            let individuals = await fetch('/api/forms/' + formName + "/individuals").then(response => response.json());
+            let showIndividualsList = document.querySelector('#showIndividualsList');
+            showIndividualsList.innerHTML = '';
+            for (let i = 0; i < individuals.length; i++) {
+                let individual = individuals[i];
+                let listItem = document.createElement('li');
+                listItem.classList.add('mdl-list__item');
+                let span = document.createElement('span');
+                span.classList.add('mdl-list__item-primary-content');
+                span.innerText = individual.name;
+                listItem.appendChild(span);
+                showIndividualsList.appendChild(listItem);
+            }
+            showIndividualsDialog.showModal();
+        }));
+
+        showIndividualsDialog.querySelector('.close').addEventListener('click', function() {
+            showIndividualsDialog.close();
+        });
+
         function deleteOntology(ontologyName, ontologyIri) {
             // let params = new URLSearchParams();
             // params.set("iri", );

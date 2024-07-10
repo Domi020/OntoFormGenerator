@@ -1,6 +1,8 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Form;
+import fau.fdm.OntoFormGenerator.data.Individual;
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.query.Dataset;
@@ -61,5 +63,20 @@ public class FormOverviewService {
         }
         dataset.end();
         return forms;
+    }
+
+    public List<Individual> getAllIndividualsOfForm(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+        var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", formIndividual, "created");
+        List<Individual> result = new ArrayList<>();
+        for (var individual : individuals) {
+            result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                    new OntologyClass("test", "test")));
+        }
+        dataset.end();
+        return result;
     }
 }

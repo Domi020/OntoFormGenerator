@@ -80,6 +80,10 @@ public class FormFillService {
                     }
                 }
             }
+            individualService.addIndividualWithURI(dataset, "Individual", individual.getURI());
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
+                    "created", individual.getURI());
             dataset.commit();
         }  catch (Exception e) {
             dataset.abort();

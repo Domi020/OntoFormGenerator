@@ -1,14 +1,18 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.service.FormEditorService;
 import fau.fdm.OntoFormGenerator.service.FormFillService;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 public class FormController {
@@ -56,6 +60,11 @@ public class FormController {
                 form.getFirst("ontologyName"), form.getFirst("targetClass"),
                 form.getFirst("instanceName"), form);
         return loadIndexPage(model);
+    }
+
+    @RequestMapping(value = "/api/forms/{formName}/individuals", method = RequestMethod.GET)
+    public ResponseEntity<List<Individual>> getIndividualsOfForm(@PathVariable String formName) {
+        return ResponseEntity.ok(formOverviewService.getAllIndividualsOfForm(formName));
     }
 
     private String loadIndexPage(Model model) {
