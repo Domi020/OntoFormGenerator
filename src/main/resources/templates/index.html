@@ -181,10 +181,11 @@
                 let individual = individuals[i];
                 let listItem = document.createElement('li');
                 listItem.classList.add('mdl-list__item');
-                let span = document.createElement('span');
-                span.classList.add('mdl-list__item-primary-content');
-                span.innerText = individual.name;
-                listItem.appendChild(span);
+                listItem.innerHTML = `
+                <span class="mdl-list__item-primary-content">` + individual.name + `</span>
+                <a class="mdl-list__item-secondary-action clickable-button"
+                                       href="/edit/forms/` + formName + `/individuals/` + individual.name + `">
+                                        <i class="material-icons">edit</i></a>`
                 showIndividualsList.appendChild(listItem);
             }
             showIndividualsDialog.showModal();

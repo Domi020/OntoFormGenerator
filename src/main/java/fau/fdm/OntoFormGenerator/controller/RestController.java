@@ -65,4 +65,13 @@ public class RestController {
 
         return "formfill";
     }
+
+    @RequestMapping(value = "/edit/forms/{formName}/individuals/{individualName}", method = RequestMethod.GET)
+    public String editIndividual(@PathVariable String formName, @PathVariable String individualName, Model model) {
+        model.addAttribute("form", formName);
+        // model.addAttribute("individual", individualName);
+        // model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(formName));
+        // model.addAttribute("individualProperties", formEditorService.getAllPropertiesOfIndividual(formName, individualName));
+        return "individual-edit";
+    }
 }
