@@ -2,6 +2,7 @@ package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.data.Individual;
+import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
@@ -78,5 +79,18 @@ public class FormOverviewService {
         }
         dataset.end();
         return result;
+    }
+
+    public Ontology getOntologyOfForm(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        try {
+            dataset.begin(ReadWrite.READ);
+            var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+            var ontologyIndividual = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                    "forms", formIndividual, "targetsOntology");
+            return new Ontology(ontologyIndividual.getLocalName(), ontologyIndividual.getURI());
+        } finally {
+            dataset.end();
+        }
     }
 }

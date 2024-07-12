@@ -3,8 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <title>Individual editor</title>
+    <link rel="stylesheet" href="../../../../material.min.css">
+    <link rel="stylesheet" href="../../../../selectize.default.min.css">
+    <script src="../../../../jquery-3.7.1.min.js"></script>
+    <script src="../../../../selectize.min.js"></script>
+    <script src="../../../../material.min.js"></script>
+    <script src="../../../../functions.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .ontology-list {
+            width: 300px;
+        }
+        .property-row {
+            width: 100%;
+            padding-top: 75px;
+        }
+        .property-select {
+            /* width: 300px; */
+            /*float: left;*/
+        }
+        .property-field {
+            float: left;
+            margin-left: 5%;
+            width: 15%;
+            position: relative;
+            text-align: left;
+        }
+        .clickable-button {
+            cursor: pointer;
+        }
+    </style>
+    <!-- Quelle für autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
+    <!-- Quelle für selectize: https://selectize.dev/ -->
+    <script>
+
+        let elements = 0;
+
+        function removeFormElement(id) {
+            let item = document.getElementById(id);
+            const fieldContainer = document.querySelector('.field-container');
+            fieldContainer.removeChild(item);
+        }
+
+        function addNewFormElement() {
+            const fieldContainer = document.querySelector('.field-container');
+            const newField = document.createElement('div');
+            newField.id = `field-${elements}`;
+            newField.className = "property-row";
+            newField.innerHTML = `
+                <div class="property-field">
+                    <label>Property</label>
+                    <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
+                </div>
+                <div class="property-field">
+                    <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
+                    <label class="mdl-textfield__label">Range</label>
+                </div>
+                <div class="property-field property-checkbox">
+                    <label>Object property</label>
+                    <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
+                    <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
+                </div>
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+                    <input class="mdl-textfield__input" type="text" name="fieldValue">
+                    <label class="mdl-textfield__label">Value</label>
+                </div>
+                <div class="property-field">
+                    <button type="button" class="mdl-button delete-form-element"
+                    onclick="removeFormElement('field-` + elements + `')">Remove</button>
+                </div>
+            `;
+            fieldContainer.appendChild(newField);
+            const currentElement = elements;
+            $('#prop-select-' + elements).selectize({
+                options: availableProperties,
+                valueField: 'name',
+                labelField: 'name',
+                searchField: 'name',
+                maxItems: 1,
+                closeAfterSelect: true,
+                onChange: function(value) {
+                    const rangeField = document.getElementById('range-field-' + currentElement);
+                    const objectPropertyCheckbox = document.getElementById('object-property-checkbox-' + currentElement);
+                    const hiddenObjectPropertyCheckbox = document.getElementById('hidden-object-property-checkbox-' + currentElement);
+                    const prop = availableProperties.find(prop => prop.name === value);
+                    if (prop.objectProperty) {
+                        objectPropertyCheckbox.checked = true;
+                        hiddenObjectPropertyCheckbox.value = true;
+                        rangeField.value = prop.objectRange.name;
+                    } else {
+                        objectPropertyCheckbox.checked = false;
+                        hiddenObjectPropertyCheckbox.value = false;
+                        rangeField.value = prop.datatypeRange;
+                    }
+                }
+            });
+            elements++;
+        }
+
+        let availableProperties = [];
+
+    </script>
 </head>
 <body>
+<h1>Individual editor</h1>
+<form th:action="@{/api/forms/{formName}(formName=${form})}" method="post">
+    <div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="individualName" name="individualName"
+                   th:value="${individual.name}" readonly>
+            <label class="mdl-textfield__label" for="individualName">Individual</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName"
+                   th:value="${ontology.name}" readonly>
+            <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass"
+                   th:value="${individual.ontologyClass.name}" readonly>
+            <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
+        </div>
+    </div>
+    <div>
+        <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
+        <div class="field-container"></div>
+    </div>
+    <div style="padding-top: 70px">
+        <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+    </div>
+</form>
+<div style="padding-top: 100px">
+    <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
+        Cancel
+    </a>
+</div>
+<script th:inline="javascript">
+    availableProperties = [[${classProperties}]];
+    function initEditorForm() {
+        const individual = [[${individual}]];
+        if (individual.ontologyClass.name != null) {
+            document.getElementById("ontologyClass").value = individual.ontologyClass.name;
+        }
+        const formElements = [[${individualProperties}]];
+        let divs = [];
+        let items = [];
+        formElements.forEach((element, index) => {
+            addNewFormElement();
+            const prop = element.property;
+            const field = document.getElementById(`field-${index}`);
+            field.querySelector('input[name="fieldValue"]').value = element.value;
+            divs.push(field.querySelector('select[name="propertyName"]'));
+            items.push(prop.name);
+            field.querySelector('input[name="isObjectProperty"]').value = prop.objectProperty;
+            field.querySelector('input[type="checkbox"]').checked = prop.objectProperty;
+            if (prop.objectProperty) {
+                field.querySelector('input[name="propertyRange"]').value = prop.objectRange.name;
+            } else {
+                field.querySelector('input[name="propertyRange"]').value = prop.datatypeRange;
+            }
 
+        });
+        for (let i = 0; i < divs.length; i++) {
+            availableProperties.forEach((prop) => {
+                divs[i].selectize.addOption(prop);
+            });
+            divs[i].selectize.refreshOptions(false);
+            divs[i].selectize.setValue(items[i], false);
+        }
+    }
+    initEditorForm();
+</script>
 </body>
 </html>

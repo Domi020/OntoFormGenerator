@@ -68,10 +68,17 @@ public class RestController {
 
     @RequestMapping(value = "/edit/forms/{formName}/individuals/{individualName}", method = RequestMethod.GET)
     public String editIndividual(@PathVariable String formName, @PathVariable String individualName, Model model) {
+        var ontology = formOverviewService.getOntologyOfForm(formName);
+        var individual = ontologyContentService.getIndividualByString(individualName,
+                ontology.getName());
         model.addAttribute("form", formName);
-        // model.addAttribute("individual", individualName);
+        model.addAttribute("ontology", ontology);
+        model.addAttribute("individual", individual);
+        model.addAttribute("classProperties", ontologyContentService.getAllPropertiesOfDomain(ontology.getName(),
+                individual.getOntologyClass().getName()));
         // model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(formName));
-        // model.addAttribute("individualProperties", formEditorService.getAllPropertiesOfIndividual(formName, individualName));
+        model.addAttribute("individualProperties", ontologyContentService.getAllSetPropertiesByIndividual(
+                individualName, ontology.getName()));
         return "individual-edit";
     }
 }

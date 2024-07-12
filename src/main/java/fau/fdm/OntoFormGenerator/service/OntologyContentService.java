@@ -1,10 +1,7 @@
 package fau.fdm.OntoFormGenerator.service;
 
 
-import fau.fdm.OntoFormGenerator.data.Individual;
-import fau.fdm.OntoFormGenerator.data.Ontology;
-import fau.fdm.OntoFormGenerator.data.OntologyClass;
-import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import org.apache.jena.ontology.OntClass;
@@ -120,5 +117,49 @@ public class OntologyContentService {
                 }
         );
         return individuals;
+    }
+
+    public Individual getIndividualByString(String individualName, String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        try {
+            dataset.begin(ReadWrite.READ);
+            var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
+            return new Individual(individual.getLocalName(), individual.getURI(),
+                    new OntologyClass(individual.getOntClass().getLocalName(), individual.getOntClass().getURI()));
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public List<SetProperty> getAllSetPropertiesByIndividual(String individualName, String ontologyName) {
+        List<SetProperty> setProperties = new ArrayList<>();
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
+        individual.listProperties().forEachRemaining(
+                stmt -> {
+                    if (stmt.getPredicate().getLocalName().equals("type"))
+                        return;
+                    var setProperty = new SetProperty();
+                    var ontClass = new OntologyClass(individual.getOntClass().getLocalName(),
+                            individual.getOntClass().getURI());
+                    var isObjectProperty = generalTDBService.checkIfObjectProperty(dataset, ontologyName,
+                            stmt.getPredicate().getURI());
+                    setProperty.setProperty(new OntologyProperty(
+                            stmt.getPredicate().getLocalName(),
+                            ontClass,
+                            isObjectProperty,
+                            isObjectProperty ? new OntologyClass(stmt.getObject().asResource().getLocalName(),
+                                    stmt.getObject().asResource().getURI()) : null,
+                            isObjectProperty ? null : stmt.getObject().asLiteral().getDatatype().getJavaClass().getSimpleName()
+                    ));
+                    setProperty.setIndividual(new Individual(individual.getLocalName(), individual.getURI(),
+                            ontClass));
+                    setProperty.setValue(stmt.getObject().toString());
+                    setProperties.add(setProperty);
+                }
+        );
+        dataset.end();
+        return setProperties;
     }
 }
