@@ -1,10 +1,7 @@
 package fau.fdm.OntoFormGenerator.controller;
 
 import fau.fdm.OntoFormGenerator.data.Individual;
-import fau.fdm.OntoFormGenerator.service.FormEditorService;
-import fau.fdm.OntoFormGenerator.service.FormFillService;
-import fau.fdm.OntoFormGenerator.service.FormOverviewService;
-import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import fau.fdm.OntoFormGenerator.service.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,13 +21,15 @@ public class FormController {
     private final FormFillService formFillService;
 
     private final OntologyOverviewService ontologyOverviewService;
+    private final OntologyContentService ontologyContentService;
 
     public FormController(FormOverviewService formOverviewService, FormEditorService formEditorService,
-                          FormFillService formFillService, OntologyOverviewService ontologyOverviewService) {
+                          FormFillService formFillService, OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService) {
         this.formOverviewService = formOverviewService;
         this.formEditorService = formEditorService;
         this.formFillService = formFillService;
         this.ontologyOverviewService = ontologyOverviewService;
+        this.ontologyContentService = ontologyContentService;
     }
 
     @RequestMapping(value = "/api/forms", method = RequestMethod.POST)
@@ -59,6 +58,13 @@ public class FormController {
         formFillService.createIndividualFromFilledForm(formName,
                 form.getFirst("ontologyName"), form.getFirst("targetClass"),
                 form.getFirst("instanceName"), form);
+        return loadIndexPage(model);
+    }
+
+    @RequestMapping(value = "/api/forms/{formName}/individuals/{individualName}", method = RequestMethod.POST)
+    public String editIndividual(@PathVariable String formName, @PathVariable String individualName,
+                                 @RequestBody MultiValueMap<String, String> form, Model model) {
+        ontologyContentService.editIndividual(formName, individualName, form);
         return loadIndexPage(model);
     }
 

@@ -117,6 +117,13 @@ public class IndividualService {
         return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
     }
 
+    public OntIndividual findOntIndividualInOntology(Dataset dataset,
+                                               String ontologyName,
+                                               String individualName) {
+        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        return ontModel.individuals().filter(individual -> individual.getLocalName().equals(individualName)).findFirst().get();
+    }
+
     public OntIndividual getOrAddIndividualByString(Dataset dataset,
                                                     String iri,
                                                     String className) {

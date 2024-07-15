@@ -83,6 +83,26 @@ public class PropertyService {
         }
     }
 
+    public boolean checkIfPropertyValueExists(Dataset dataset,
+                                              String ontologyName,
+                                              OntIndividual domainIndividual,
+                                              String propertyName) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getPropertyResourceValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        return prop != null;
+    }
+
+    public void removePropertyValueFromIndividual(Dataset dataset,
+                                                 String ontologyName,
+                                                 OntIndividual domainIndividual,
+                                                 String propertyName) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop != null) {
+            prop.remove();
+        }
+    }
+
 
     public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
                                                                         String ontologyName,

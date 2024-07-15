@@ -107,12 +107,18 @@
 </head>
 <body>
 <h1>Individual editor</h1>
-<form th:action="@{/api/forms/{formName}(formName=${form})}" method="post">
+<form th:action="@{/api/forms/{formName}/individuals/{individualName}
+(formName=${form}, individualName=${individual.name})}" method="post">
     <div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="individualName" name="individualName"
                    th:value="${individual.name}" readonly>
             <label class="mdl-textfield__label" for="individualName">Individual</label>
+        </div>
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="text" id="individualURI" name="individualURI"
+               th:value="${individual.iri}" readonly>
+        <label class="mdl-textfield__label" for="individualURI">Individual</label>
         </div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName"
