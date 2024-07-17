@@ -10,6 +10,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class FormController {
@@ -58,6 +59,17 @@ public class FormController {
         formFillService.createIndividualFromFilledForm(formName,
                 form.getFirst("ontologyName"), form.getFirst("targetClass"),
                 form.getFirst("instanceName"), form);
+        return loadIndexPage(model);
+    }
+
+    @RequestMapping(value = "/api/forms/{formName}/draft", method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    public String fillFormDraft(@PathVariable String formName,
+                           @RequestBody Map<String, Object> form,
+                           Model model) {
+        formFillService.createDraftFromFilledForm(formName,
+                form.get("ontologyName").toString(), form.get("targetClass").toString(),
+                form.get("instanceName").toString(), form);
         return loadIndexPage(model);
     }
 

@@ -13,7 +13,7 @@
 </head>
 <body>
     <h1 th:text="${form}"></h1>
-    <form th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
+    <form id="fillform" th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
         <div class="mdl-textfield mdl-js-textfield">
             <input id="ontologyName" class="mdl-textfield__input" type="text" name="ontologyName"
                    th:value="${ontology}" readonly>
@@ -44,6 +44,11 @@
         </div>
     </form>
     <div style="padding-top: 100px">
+        <a onclick="createDraft()" id="create-draft-button" class="mdl-button mdl-js-button mdl-button--raised">
+            Create draft
+        </a>
+    </div>
+    <div style="padding-top: 100px">
         <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
             Cancel
         </a>
@@ -51,6 +56,30 @@
     <script th:inline="javascript">
         const ontologyName = [[${ontology}]];
         const allFormElements = [[${formElements}]];
+        const formName = [[${form}]];
+
+        function createDraft() {
+            const form = document.querySelector('#fillform');
+            const formData = new FormData(form);
+            let formString = {};
+            formData.forEach(function(value, key){
+                formString[key] = value;
+            });
+            let formJSON = JSON.stringify(formString);
+            fetch(`/api/forms/${formName}/draft`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: formJSON,
+            })
+                .then(() => {
+                    location.href = '/';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
 
         $(".object-select").each(function(index, element) {
             const fieldName = element.name;

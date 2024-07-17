@@ -1,8 +1,14 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import com.google.gson.Gson;
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.data.SetProperty;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import jakarta.json.Json;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.query.Dataset;
@@ -13,6 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class FormFillService {
@@ -33,6 +43,44 @@ public class FormFillService {
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.generalTDBService = generalTDBService;
         this.propertyService = propertyService;
+    }
+
+    public void createDraftFromFilledForm(String formName,
+                                          String ontologyName,
+                                          String targetField,
+                                          String instanceName,
+                                          Map<String, Object> formValues) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
+            var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
+            var individualURI = ontologyURI + instanceName;
+
+            StringBuilder json = new StringBuilder("{\n");
+
+            for (var formValue : formValues.keySet()) {
+                if (formValues.get(formValue) == null || formValues.get(formValue).equals(""))
+                    continue;
+                json.append("\"%s\": \"%s\",\n".formatted(formValue, formValues.get(formValue).toString()));
+            }
+
+            json.append("}");
+
+            var indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
+                    "created", individualURI);
+            propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
+                    "isDraft", "true", XSDDatatype.XSDboolean);
+            propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
+                    "hasDraft", json.toString(), XSDDatatype.XSDstring);
+            dataset.commit();
+        }  catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
     }
 
     public void createIndividualFromFilledForm(String formName,

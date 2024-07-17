@@ -77,6 +77,15 @@
     
 
 
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasDraft -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasDraft">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#Ontology"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasOntologyIRI -->
 
     <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasOntologyIRI">
@@ -91,6 +100,15 @@
     <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasPositionInForm">
         <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
         <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#isDraft -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#isDraft">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#Individual"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
     </owl:DatatypeProperty>
     
 
