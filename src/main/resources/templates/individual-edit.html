@@ -15,17 +15,18 @@
             width: 300px;
         }
         .property-row {
-            width: 100%;
+            /* width: 100%; */
             padding-top: 75px;
         }
         .property-select {
             /* width: 300px; */
             /*float: left;*/
         }
+        .hideextra { white-space: nowrap; overflow: hidden; text-overflow:ellipsis; }
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 15%;
+            /* width: 300px; */
             position: relative;
             text-align: left;
         }
@@ -51,31 +52,31 @@
 
         function addNewFormElement() {
             const fieldContainer = document.querySelector('.field-container');
-            const newField = document.createElement('div');
+            const newField = document.createElement('tr');
             newField.id = `field-${elements}`;
             newField.className = "property-row";
             newField.innerHTML = `
-                <div class="property-field">
+                <th class="property-field">
                     <label>Property</label>
                     <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
-                </div>
-                <div class="property-field">
+                </th>
+                <th class="property-field">
                     <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
                     <label class="mdl-textfield__label">Range</label>
-                </div>
-                <div class="property-field property-checkbox">
+                </th>
+                <th class="property-field property-checkbox">
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
-                </div>
-                <div id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+                </th>
+                <th id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
                     <input id="value-field-select-` + elements + `" class="mdl-textfield__input" type="text"  name="fieldValue">
                     <label class="mdl-textfield__label">Value</label>
-                </div>
-                <div class="property-field">
+                </th>
+                <th class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
-                </div>
+                </th>
             `;
             fieldContainer.appendChild(newField);
             const currentElement = elements;
@@ -161,7 +162,7 @@
     </div>
     <div>
         <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
-        <div class="field-container"></div>
+        <table style="width: 1800px" class="field-container"></table>
     </div>
     <div style="padding-top: 70px">
         <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
