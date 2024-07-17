@@ -5,7 +5,6 @@ import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntIndividual;
@@ -171,7 +170,11 @@ public class OntologyContentService {
                     ));
                     setProperty.setIndividual(new Individual(individual.getLocalName(), individual.getURI(),
                             ontClass));
-                    setProperty.setValue(stmt.getObject().toString());
+                    if (isObjectProperty) {
+                        setProperty.setValue(stmt.getObject().asResource().getLocalName());
+                    } else {
+                        setProperty.setValue(stmt.getObject().toString());
+                    }
                     setProperties.add(setProperty);
                 }
         );

@@ -35,6 +35,10 @@
     </style>
     <!-- Quelle für autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
     <!-- Quelle für selectize: https://selectize.dev/ -->
+
+    <script th:inline="javascript">
+        let ontology = [[${ontology}]];
+    </script>
     <script>
 
         let elements = 0;
@@ -64,8 +68,8 @@
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </div>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
-                    <input class="mdl-textfield__input" type="text" name="fieldValue">
+                <div id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+                    <input id="value-field-select-` + elements + `" class="mdl-textfield__input" type="text"  name="fieldValue">
                     <label class="mdl-textfield__label">Value</label>
                 </div>
                 <div class="property-field">
@@ -82,19 +86,43 @@
                 searchField: 'name',
                 maxItems: 1,
                 closeAfterSelect: true,
-                onChange: function(value) {
+                onChange: async function(value) {
                     const rangeField = document.getElementById('range-field-' + currentElement);
                     const objectPropertyCheckbox = document.getElementById('object-property-checkbox-' + currentElement);
+                    const valueField = document.getElementById('value-field-' + currentElement);
                     const hiddenObjectPropertyCheckbox = document.getElementById('hidden-object-property-checkbox-' + currentElement);
                     const prop = availableProperties.find(prop => prop.name === value);
                     if (prop.objectProperty) {
+                        let individuals = await fetch("/api/ontologies/" + ontology.name + "" +
+                            "/classes/" + prop.objectRange.name + "/individuals").then(response => response.json());
                         objectPropertyCheckbox.checked = true;
                         hiddenObjectPropertyCheckbox.value = true;
                         rangeField.value = prop.objectRange.name;
+                        let value = document.getElementById("value-field-select-" + currentElement).value;
+                        valueField.innerHTML = `
+                        <select id="value-field-select-` + currentElement + `" class="property-select" name="fieldValue"></select>
+                        <label>Value</label>
+                        `;
+                        $("#value-field-select-" + currentElement).selectize({
+                            options: individuals,
+                            valueField: 'name',
+                            labelField: 'name',
+                            searchField: 'name',
+                            maxItems: 1,
+                            closeAfterSelect: true,
+                        });
+                        document.getElementById("value-field-select-" + currentElement)
+                            .selectize.setValue(value);
                     } else {
                         objectPropertyCheckbox.checked = false;
                         hiddenObjectPropertyCheckbox.value = false;
                         rangeField.value = prop.datatypeRange;
+                        let value = document.getElementById("value-field-select-" + currentElement).value;
+                        valueField.innerHTML = `
+                        <input id="value-field-select-` + currentElement + `" class="mdl-textfield__input" type="text"  name="fieldValue">
+                        <label class="mdl-textfield__label">Value</label>
+                        `;
+                        document.getElementById("value-field-select-" + currentElement).value = value;
                     }
                 }
             });
