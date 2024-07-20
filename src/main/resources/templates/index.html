@@ -82,6 +82,10 @@
                                 class="mdl-button mdl-js-button mdl-button--raised show-individuals-button">
                             Show individuals
                         </button>
+                        <button th:id="'show-drafts-button-' + ${form.getFormName()}"
+                                class="mdl-button mdl-js-button mdl-button--raised show-drafts-button">
+                            Show drafts
+                        </button>
                     </div>
                 </div>
             </li>
@@ -95,11 +99,14 @@
     <dialog id="showIndividualsDialog" class="mdl-dialog">
         <h4>Created individuals by form</h4>
         <ul id="showIndividualsList" class="mdl-list">
-            <!--                        <li class="mdl-list__item" th:each="individual : ${}">-->
-            <!--                            <span class="mdl-list__item-primary-content" th:text="${individual.getName()}">-->
-            <!--                                Individual-->
-            <!--                            </span>-->
-            <!--                        </li>-->
+        </ul>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="close">Cancel</button>
+        </div>
+    </dialog>
+    <dialog id="showDraftsDialog" class="mdl-dialog">
+        <h4>Current drafts by form</h4>
+        <ul id="showDraftsList" class="mdl-list">
         </ul>
         <div class="mdl-dialog__actions">
             <button type="button" class="close">Cancel</button>
@@ -193,6 +200,32 @@
 
         showIndividualsDialog.querySelector('.close').addEventListener('click', function() {
             showIndividualsDialog.close();
+        });
+
+        var showDraftsDialog = document.querySelector('#showDraftsDialog');
+        var showDraftsButtons = document.querySelectorAll('.show-drafts-button');
+        showDraftsButtons.forEach(el => el.addEventListener('click', async function(event) {
+            let buttonId = event.currentTarget.id
+            let formName = buttonId.replace('show-drafts-button-', '');
+            let drafts = await fetch('/api/forms/' + formName + "/drafts").then(response => response.json());
+            let showDraftsList = document.querySelector('#showDraftsList');
+            showDraftsList.innerHTML = '';
+            for (let i = 0; i < drafts.length; i++) {
+                let individual = drafts[i];
+                let listItem = document.createElement('li');
+                listItem.classList.add('mdl-list__item');
+                listItem.innerHTML = `
+                <span class="mdl-list__item-primary-content">` + individual.name + `</span>
+                <a class="mdl-list__item-secondary-action clickable-button"
+                                       href="/fill/` + formName + `/draft/` + individual.name + `">
+                                        <i class="material-icons">edit</i></a>`
+                showDraftsList.appendChild(listItem);
+            }
+            showDraftsDialog.showModal();
+        }));
+
+        showDraftsDialog.querySelector('.close').addEventListener('click', function() {
+            showDraftsDialog.close();
         });
 
         function deleteOntology(ontologyName, ontologyIri) {

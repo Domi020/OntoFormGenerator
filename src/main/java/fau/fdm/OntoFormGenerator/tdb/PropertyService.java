@@ -62,7 +62,7 @@ public class PropertyService {
 
     public Literal getDatatypePropertyValueFromIndividual(Dataset dataset,
                                                           String ontologyName,
-                                                          OntIndividual domainIndividual,
+                                                          Resource domainIndividual,
                                                           String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
@@ -108,8 +108,9 @@ public class PropertyService {
                                                                         String ontologyName,
                                                                         OntIndividual domainIndividual,
                                                                         String propertyName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        //OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+        //        dataset.getNamedModel(ontologyName));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         var values = domainIndividual.listProperties(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
         List<Resource> resources = new ArrayList<>();
         values.forEachRemaining(val -> resources.add(val.getObject().asResource()));

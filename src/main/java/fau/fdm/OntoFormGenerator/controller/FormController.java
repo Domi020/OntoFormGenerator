@@ -85,6 +85,11 @@ public class FormController {
         return ResponseEntity.ok(formOverviewService.getAllIndividualsOfForm(formName));
     }
 
+    @RequestMapping(value = "/api/forms/{formName}/drafts", method = RequestMethod.GET)
+    public ResponseEntity<List<Individual>> getDraftsOfForm(@PathVariable String formName) {
+        return ResponseEntity.ok(formOverviewService.getAllDraftsOfForm(formName));
+    }
+
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());

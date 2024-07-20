@@ -74,6 +74,27 @@ public class FormOverviewService {
                 "forms", formIndividual, "created");
         List<Individual> result = new ArrayList<>();
         for (var individual : individuals) {
+            var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                    individual, "isDraft");
+            if (isDraft != null && isDraft.getBoolean()) continue;
+            result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                    new OntologyClass("test", "test")));
+        }
+        dataset.end();
+        return result;
+    }
+
+    public List<Individual> getAllDraftsOfForm(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+        var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", formIndividual, "created");
+        List<Individual> result = new ArrayList<>();
+        for (var individual : individuals) {
+            var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                    individual, "isDraft");
+            if (isDraft == null || !isDraft.getBoolean()) continue;
             result.add(new Individual(individual.getLocalName(), individual.getURI(),
                     new OntologyClass("test", "test")));
         }
