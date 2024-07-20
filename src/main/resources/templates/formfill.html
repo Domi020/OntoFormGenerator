@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Fill form</title>
-    <link rel="stylesheet" href="../material.min.css">
-    <link rel="stylesheet" href="../selectize.default.min.css">
-    <script src="../jquery-3.7.1.min.js"></script>
-    <script src="../selectize.min.js"></script>
-    <script src="../material.min.js"></script>
-    <script src="../functions.js"></script>
+    <link rel="stylesheet" href="/material.min.css">
+    <link rel="stylesheet" href="/selectize.default.min.css">
+    <script src="/jquery-3.7.1.min.js"></script>
+    <script src="/selectize.min.js"></script>
+    <script src="/material.min.js"></script>
+    <script src="/functions.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body>
@@ -35,6 +35,9 @@
             <div th:if="${field.fieldType == 'Number'}">
                 <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
+            <div th:if="${field.fieldType == 'Datetime'}">
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+            </div>
             <div th:if="${field.fieldType == 'ObjectSelect'}">
                 <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
@@ -57,6 +60,7 @@
         const ontologyName = [[${ontology}]];
         const allFormElements = [[${formElements}]];
         const formName = [[${form}]];
+        const setElements = [[${setElements}]];
 
         function createDraft() {
             const form = document.querySelector('#fillform');
@@ -81,6 +85,7 @@
                 });
         }
 
+        let promises = [];
         $(".object-select").each(function(index, element) {
             const fieldName = element.name;
             const fieldId = element.id;
@@ -88,7 +93,7 @@
                 .find(formElement => formElement.ontologyProperty.name === fieldName)
             const className = currentFormElement.ontologyProperty.objectRange.name;
 
-            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
+            promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
                 .then(async function(response) {
                     let allIndividuals = await response.json();
                     $('#' + fieldId).selectize({
@@ -98,8 +103,37 @@
                         maxItems: 1,
                         options: allIndividuals,
                     });
-                })
+                }));
         });
+
+        if (setElements) {
+            Promise.all(promises).then(() => {
+                loadDraft();
+            });
+        }
+
+        function loadDraft() {
+            document.getElementById('instanceName').value = [[${individualName}]];
+            for (let i = 0; i < setElements.length; i++) {
+                const element = setElements[i];
+                for (let j = 0; j < allFormElements.length; j++) {
+                    if (allFormElements[j].ontologyProperty.name === element.fieldName) {
+                        const input = document.getElementById('input-' + allFormElements[j].name);
+                        if (input) {
+                            input.value = element.value;
+                            break;
+                        }
+                        const objectSelect = document.getElementById("object-select-" + allFormElements[j].name);
+                        if (objectSelect) {
+                            objectSelect.selectize.setValue(element.value);
+                            break;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
     </script>
 </body>
 </html>

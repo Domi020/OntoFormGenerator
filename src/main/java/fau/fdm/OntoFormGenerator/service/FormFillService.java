@@ -1,13 +1,10 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import com.google.gson.Gson;
-import fau.fdm.OntoFormGenerator.data.OntologyClass;
-import fau.fdm.OntoFormGenerator.data.OntologyProperty;
-import fau.fdm.OntoFormGenerator.data.SetProperty;
+import fau.fdm.OntoFormGenerator.data.SetField;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
-import jakarta.json.Json;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
@@ -50,6 +47,7 @@ public class FormFillService {
                                           String targetField,
                                           String instanceName,
                                           Map<String, Object> formValues) {
+        //TODO: mehrmaliges Speichern von Drafts ermöglichen
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -64,7 +62,7 @@ public class FormFillService {
                     continue;
                 json.append("\"%s\": \"%s\",\n".formatted(formValue, formValues.get(formValue).toString()));
             }
-
+            json.deleteCharAt(json.lastIndexOf(","));
             json.append("}");
 
             var indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
@@ -78,6 +76,25 @@ public class FormFillService {
             dataset.commit();
         }  catch (Exception e) {
             dataset.abort();
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public List<SetField> getSetFieldsByDraft(String formName, String individualName, String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+            var gson = new Gson();
+            var draftMap = gson.fromJson(draft.getString(), Map.class);
+            var setFields = new ArrayList<SetField>();
+            for (var key : draftMap.keySet()) {
+                setFields.add(new SetField(key.toString(), draftMap.get(key.toString()).toString()));
+            }
+            return setFields;
         } finally {
             dataset.end();
         }

@@ -155,7 +155,7 @@ public class IndividualService {
             case "string" -> addIndividual(dataset, "Input", name);
             case "boolean" -> addIndividual(dataset, "Select", name);
             case "date" -> addIndividual(dataset, "Date", name);
-            case "dateTime" -> addIndividual(dataset, "Datetime", name);
+            case "dateTime", "dateTimeStamp" -> addIndividual(dataset, "Datetime", name);
             case "int", "integer" -> addIndividual(dataset, "Number", name);
             default -> null;
         };

@@ -1,9 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
-import fau.fdm.OntoFormGenerator.service.FormEditorService;
-import fau.fdm.OntoFormGenerator.service.FormOverviewService;
-import fau.fdm.OntoFormGenerator.service.OntologyContentService;
-import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import fau.fdm.OntoFormGenerator.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class RestController {
 
+    private final FormFillService formFillService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -24,11 +22,12 @@ public class RestController {
     private final FormEditorService formEditorService;
 
     public RestController(OntologyOverviewService ontologyOverviewService,
-                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService) {
+                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService, FormFillService formFillService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.formOverviewService = formOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formEditorService = formEditorService;
+        this.formFillService = formFillService;
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -62,6 +61,23 @@ public class RestController {
 
         model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
+
+        return "formfill";
+    }
+
+    @RequestMapping(value = "/fill/{form}/draft/{individualName}", method = RequestMethod.GET)
+    public String loadFilloutPageWithDraft(Model model, @PathVariable String form, @PathVariable String individualName) {
+        model.addAttribute("form", form);
+        var ontology = formOverviewService.getOntologyOfForm(form);
+        model.addAttribute("ontology", ontology.getName());
+        model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology.getName()));
+
+        model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
+        model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
+
+        model.addAttribute("setElements", formFillService.getSetFieldsByDraft(form, individualName,
+                ontology.getName()));
+        model.addAttribute("individualName", individualName);
 
         return "formfill";
     }
