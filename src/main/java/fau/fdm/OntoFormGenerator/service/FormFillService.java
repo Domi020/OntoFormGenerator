@@ -8,6 +8,7 @@ import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
+import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb2.TDB2Factory;
@@ -47,7 +48,6 @@ public class FormFillService {
                                           String targetField,
                                           String instanceName,
                                           Map<String, Object> formValues) {
-        //TODO: mehrmaliges Speichern von Drafts ermöglichen
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -65,12 +65,23 @@ public class FormFillService {
             json.deleteCharAt(json.lastIndexOf(","));
             json.append("}");
 
-            var indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
-            propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
-                    "created", individualURI);
-            propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
-                    "isDraft", "true", XSDDatatype.XSDboolean);
+            OntIndividual indiv = individualService.getIndividualByIri(dataset, individualURI);
+            boolean alreadyCreated = true;
+            if (indiv == null) {
+                indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
+                alreadyCreated = false;
+            }
+
+            if (alreadyCreated) {
+                propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
+                        "hasDraft");
+            } else {
+                var form = individualService.getIndividualByString(dataset, "forms", formName);
+                propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
+                        "created", individualURI);
+                propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
+                        "isDraft", "true", XSDDatatype.XSDboolean);
+            }
             propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
                     "hasDraft", json.toString(), XSDDatatype.XSDstring);
             dataset.commit();
@@ -145,10 +156,20 @@ public class FormFillService {
                     }
                 }
             }
-            individualService.addIndividualWithURI(dataset, "Individual", individual.getURI());
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
-            propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
-                    "created", individual.getURI());
+            OntIndividual indiv = individualService.getOntIndividualByIri(dataset, individual.getURI());
+            if (indiv == null) {
+                // no draft exists
+                individualService.addIndividualWithURI(dataset, "Individual", individual.getURI());
+                var form = individualService.getIndividualByString(dataset, "forms", formName);
+                propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
+                        "created", individual.getURI());
+            } else {
+                // draft already exists
+                propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
+                        "hasDraft");
+                propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
+                        "isDraft");
+            }
             dataset.commit();
         }  catch (Exception e) {
             dataset.abort();
