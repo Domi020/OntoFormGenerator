@@ -43,63 +43,77 @@ public class FormOverviewService {
     public void addNewForm(String formName, String ontologyName, String ontologyURI) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
-        var individual = individualService.addIndividual(dataset, "Form", formName);
-        propertyService.addObjectPropertyToIndividual(dataset,
-                "forms", individual, "targetsOntology", ontologyURI);
-        dataset.commit();
-        dataset.end();
+        try {
+            var individual = individualService.addIndividual(dataset, "Form", formName);
+            propertyService.addObjectPropertyToIndividual(dataset,
+                    "forms", individual, "targetsOntology", ontologyURI);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
     }
 
     public List<Form> getAllForms() {
         List<Form> forms = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        var individuals = individualService.getAllIndividualsOfClass(dataset, "forms", "Form");
-        for (var individual : individuals) {
-            var formName = individual.getLocalName();
-            var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
-                    "forms", individual, "targetsOntology").getLocalName();
-            var form = new Form(formName, ontologyName);
-            forms.add(form);
+        try {
+            var individuals = individualService.getAllIndividualsOfClass(dataset, "forms", "Form");
+            for (var individual : individuals) {
+                var formName = individual.getLocalName();
+                var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                        "forms", individual, "targetsOntology").getLocalName();
+                var form = new Form(formName, ontologyName);
+                forms.add(form);
+            }
+            return forms;
+        } finally {
+            dataset.end();
         }
-        dataset.end();
-        return forms;
     }
 
     public List<Individual> getAllIndividualsOfForm(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
-        var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                "forms", formIndividual, "created");
-        List<Individual> result = new ArrayList<>();
-        for (var individual : individuals) {
-            var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
-                    individual, "isDraft");
-            if (isDraft != null && isDraft.getBoolean()) continue;
-            result.add(new Individual(individual.getLocalName(), individual.getURI(),
-                    new OntologyClass("test", "test")));
+        try {
+            var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+            var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                    "forms", formIndividual, "created");
+            List<Individual> result = new ArrayList<>();
+            for (var individual : individuals) {
+                var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                        individual, "isDraft");
+                if (isDraft != null && isDraft.getBoolean()) continue;
+                result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                        new OntologyClass("test", "test")));
+            }
+            return result;
+        } finally {
+            dataset.end();
         }
-        dataset.end();
-        return result;
     }
 
     public List<Individual> getAllDraftsOfForm(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
-        var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                "forms", formIndividual, "created");
-        List<Individual> result = new ArrayList<>();
-        for (var individual : individuals) {
-            var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
-                    individual, "isDraft");
-            if (isDraft == null || !isDraft.getBoolean()) continue;
-            result.add(new Individual(individual.getLocalName(), individual.getURI(),
-                    new OntologyClass("test", "test")));
+        try {
+            var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+            var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                    "forms", formIndividual, "created");
+            List<Individual> result = new ArrayList<>();
+            for (var individual : individuals) {
+                var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                        individual, "isDraft");
+                if (isDraft == null || !isDraft.getBoolean()) continue;
+                result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                        new OntologyClass("test", "test")));
+            }
+            return result;
+        } finally {
+            dataset.end();
         }
-        dataset.end();
-        return result;
     }
 
     public Ontology getOntologyOfForm(String formName) {

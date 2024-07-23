@@ -56,114 +56,123 @@ public class FormEditorService {
     public List<FormField> getAllFormElementsOfForm(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        var form = individualService.getIndividualByString(dataset, "forms", formName);
-        var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                "forms", form, "hasFormElement");
-        var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
-                "forms", form, "targetsOntology").getLocalName();
-        List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size() + 50, null));
-        for (var formElement : formElements) {
-            var fieldName = formElement.getLocalName();
-            var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
-            var fieldType = formElementIndividual.ontClass().get().getLocalName();
-            var isObjectProperty = propertyService.getDatatypePropertyValueFromIndividual(dataset,
-                    "forms", formElementIndividual, "isObjectProperty").getBoolean();
-            var position = propertyService.getDatatypePropertyValueFromIndividual(dataset,
-                    "forms", formElementIndividual, "hasPositionInForm").getInt();
-            var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
-                    "forms", formElementIndividual, "targetsField");
-            var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
-            if (isObjectProperty) {
-                var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
-                var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
-                formFields.set(position, new FormField(
-                        new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
-                        fieldType, fieldName));
-            } else {
-                var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
-                formFields.set(position, new FormField(
-                        new OntologyProperty(targetField.getLocalName(), domain, false, null,
-                        dataRangeProp.getLocalName()), fieldType, fieldName));
+        try {
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                    "forms", form, "hasFormElement");
+            var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                    "forms", form, "targetsOntology").getLocalName();
+            List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size() + 50, null));
+            for (var formElement : formElements) {
+                var fieldName = formElement.getLocalName();
+                var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
+                var fieldType = formElementIndividual.ontClass().get().getLocalName();
+                var isObjectProperty = propertyService.getDatatypePropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "isObjectProperty").getBoolean();
+                var position = propertyService.getDatatypePropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "hasPositionInForm").getInt();
+                var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "targetsField");
+                var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
+                if (isObjectProperty) {
+                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
+                    var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                    formFields.set(position, new FormField(
+                            new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
+                            fieldType, fieldName));
+                } else {
+                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
+                    formFields.set(position, new FormField(
+                            new OntologyProperty(targetField.getLocalName(), domain, false, null,
+                                    dataRangeProp.getLocalName()), fieldType, fieldName));
+                }
             }
-        }
-        for (int i = 0; i < formFields.size(); i++) {
-            if (formFields.get(i) == null) {
-                formFields.remove(i);
-                i--;
+            for (int i = 0; i < formFields.size(); i++) {
+                if (formFields.get(i) == null) {
+                    formFields.remove(i);
+                    i--;
+                }
             }
+            return formFields;
+        } finally {
+            dataset.end();
         }
-        dataset.end();
-        return formFields;
     }
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
-        var form = individualService.getIndividualByString(dataset, "forms", formName);
-        var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
-                form, "targetsOntology");
+        try {
+            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
+                    form, "targetsOntology");
 
-        // Set targetsClass
-        var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyName"),
-                formInput.getFirst("ontologyClass"));
-        var classIndividual = individualService.getOrAddIndividualByString(dataset, classIri, "TargetClass");
-        form.addProperty(
-                propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
-                classIndividual
-        );
-        // Get all already existing form elements
-        var alreadyInsertedElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                "forms", form, "hasFormElement");
+            // Set targetsClass
+            var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyName"),
+                    formInput.getFirst("ontologyClass"));
+            var classIndividual = individualService.getOrAddIndividualByString(dataset, classIri, "TargetClass");
+            form.addProperty(
+                    propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
+                    classIndividual
+            );
+            // Get all already existing form elements
+            var alreadyInsertedElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                    "forms", form, "hasFormElement");
 
 
-        for (int i = 0; i < formInput.get("fieldName").size(); i++) {
-            // Check if field already exists
-            //TODO: Aktuell wird nur anhand Feldnamen geprüft, ob ein Feld schon existiert
-            var fieldName = formInput.get("fieldName").get(i);
-            boolean foundElement = false;
-            for (int j = 0; j < alreadyInsertedElements.size(); j++) {
-                if (alreadyInsertedElements.get(j) != null &&
-                        alreadyInsertedElements.get(j).getLocalName().equals(fieldName)) {
-                    alreadyInsertedElements.set(j, null);
-                    foundElement = true;
-                    break;
+            for (int i = 0; i < formInput.get("fieldName").size(); i++) {
+                // Check if field already exists
+                //TODO: Aktuell wird nur anhand Feldnamen geprüft, ob ein Feld schon existiert
+                var fieldName = formInput.get("fieldName").get(i);
+                boolean foundElement = false;
+                for (int j = 0; j < alreadyInsertedElements.size(); j++) {
+                    if (alreadyInsertedElements.get(j) != null &&
+                            alreadyInsertedElements.get(j).getLocalName().equals(fieldName)) {
+                        alreadyInsertedElements.set(j, null);
+                        foundElement = true;
+                        break;
+                    }
                 }
-            }
-            if (foundElement) continue;
+                if (foundElement) continue;
 
-            // set targetsField for each field
-            var propertyName = formInput.get("propertyName").get(i);
-            var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
-            var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
-                    property.getURI());
-            OntIndividual field;
-            if (formInput.get("isObjectProperty").get(i).equals("true")) {
-                // object property
-                field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
+                // set targetsField for each field
+                var propertyName = formInput.get("propertyName").get(i);
+                var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
+                var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
+                        property.getURI());
+                OntIndividual field;
+                if (formInput.get("isObjectProperty").get(i).equals("true")) {
+                    // object property
+                    field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
+                    propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                            field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
+                } else {
+                    // datatype property
+                    field = individualService.createDatatypeFormElement(dataset, fieldName,
+                            formInput.get("propertyRange").get(i));
+                    propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                            field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
+                }
+                propertyService.addObjectPropertyToIndividual(dataset, "forms",
+                        field, "targetsField", targetField.getURI());
+                propertyService.addObjectPropertyToIndividual(dataset, "forms",
+                        form, "hasFormElement", field.getURI());
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                        field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
-            } else {
-                // datatype property
-                field = individualService.createDatatypeFormElement(dataset, fieldName,
-                        formInput.get("propertyRange").get(i));
-                propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                        field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
+                        field, "hasPositionInForm", String.valueOf(i), XSDDatatype.XSDint);
             }
-            propertyService.addObjectPropertyToIndividual(dataset, "forms",
-                    field, "targetsField", targetField.getURI());
-            propertyService.addObjectPropertyToIndividual(dataset, "forms",
-                    form, "hasFormElement", field.getURI());
-            propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-                    field, "hasPositionInForm", String.valueOf(i), XSDDatatype.XSDint);
-        }
 
-        // delete all old form elements that are not in the new form
-        for (var alreadyInsertedElement : alreadyInsertedElements) {
-            if (alreadyInsertedElement == null) continue;
-            individualService.deleteIndividual(dataset, "forms", alreadyInsertedElement
-                    .getLocalName());
+            // delete all old form elements that are not in the new form
+            for (var alreadyInsertedElement : alreadyInsertedElements) {
+                if (alreadyInsertedElement == null) continue;
+                individualService.deleteIndividual(dataset, "forms", alreadyInsertedElement
+                        .getLocalName());
+            }
+            dataset.commit();
+        } catch (Exception e) {
+            logger.error("Error while updating form", e);
+            dataset.abort();
+        } finally {
+            dataset.end();
         }
-        dataset.commit();
-        dataset.end();
     }
 }

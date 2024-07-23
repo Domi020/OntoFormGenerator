@@ -186,12 +186,13 @@
             showIndividualsList.innerHTML = '';
             for (let i = 0; i < individuals.length; i++) {
                 let individual = individuals[i];
+                let n = individual.name;
                 let listItem = document.createElement('li');
                 listItem.classList.add('mdl-list__item');
                 listItem.innerHTML = `
                 <span class="mdl-list__item-primary-content">` + individual.name + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
-                                       href="/edit/forms/` + formName + `/individuals/` + individual.name`">
+                                       href="/edit/forms/` + formName + `/individuals/` + n + `">
                                         <i class="material-icons">edit</i></a>`
                 showIndividualsList.appendChild(listItem);
             }

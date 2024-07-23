@@ -66,8 +66,9 @@ public class PropertyService {
                                                           String propertyName) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
-        return domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName))
-                .getObject().asLiteral();
+        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop == null) return null;
+        return prop.getObject().asLiteral();
     }
 
     public Resource getObjectPropertyValueFromIndividual(Dataset dataset,

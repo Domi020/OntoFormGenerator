@@ -64,93 +64,97 @@ public class OntologyOverviewService {
     public boolean importOntology(File owlFile, String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-        OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-        var modelName = ontologyName + "_" + UUID.randomUUID();
-        var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
-
         try {
-            var fis = new FileInputStream(owlFile);
-            ontModel.read(fis, null);
-            fis.close();
-            var fisNew = new FileInputStream(owlFile);
-            newModel.read(fisNew, null);
-            fisNew.close();
-        } catch (Exception e) {
-            logger.error("Error reading file while importing new ontology", e);
-            dataset.abort();
+            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+            OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+            var modelName = ontologyName + "_" + UUID.randomUUID();
+            var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
+
+            try {
+                var fis = new FileInputStream(owlFile);
+                ontModel.read(fis, null);
+                fis.close();
+                var fisNew = new FileInputStream(owlFile);
+                newModel.read(fisNew, null);
+                fisNew.close();
+            } catch (Exception e) {
+                logger.error("Error reading file while importing new ontology", e);
+                dataset.abort();
+                return false;
+            }
+            var ontology = newModel.createOntology(newOntURI);
+            dataset.addNamedModel(modelName, newModel.getBaseModel());
+            var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
+            dataset.commit();
             dataset.end();
+            logger.info("Ontology {} imported successfully", modelName);
+            return true;
+        } catch (Exception e) {
+            dataset.abort();
             return false;
+        } finally {
+            dataset.end();
         }
-        var ontology = newModel.createOntology(newOntURI);
-        //ontModel.getOntology()
-        // String ontURI = ontModel.getNsPrefixURI("");
-        // if (ontURI.charAt(ontURI.length() - 1) == '#' || ontURI.charAt(ontURI.length() - 1) == '/') {
-        //     ontURI = ontURI.substring(0, ontURI.length() - 1);
-        // }
-        //for (var ont : ontModel.listOntologies().toList()) {
-        //    ontology.addImport(ont);
-        //}
-       // newModel.setNsPrefix("", newOntURI + "#");
-        dataset.addNamedModel(modelName, newModel.getBaseModel());
-        var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
-        // propertyService.addDatatypePropertyToIndividual(dataset, "forms",
-        //         ontIndiv, "hasOntologyIRI", ontURI);
-        dataset.commit();
-        dataset.end();
-        logger.info("Ontology {} imported successfully", modelName);
-        return true;
     }
 
     public List<Ontology> getImportedOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        OntClass ontologyClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel("forms")).getOntClass(formsIRI + "#Ontology");
-        ontologyClass.listInstances().forEach(
-                res -> {
-                    var ontName = res.getLocalName();
-                    var ontIRI = res.getURI();
-                    ontologies.add(new Ontology(ontName, ontIRI));
-                }
-        );
-        dataset.end();
-        return ontologies;
+        try {
+            OntClass ontologyClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel("forms")).getOntClass(formsIRI + "#Ontology");
+            ontologyClass.listInstances().forEach(
+                    res -> {
+                        var ontName = res.getLocalName();
+                        var ontIRI = res.getURI();
+                        ontologies.add(new Ontology(ontName, ontIRI));
+                    }
+            );
+            return ontologies;
+        } finally {
+            dataset.end();
+        }
     }
 
     public void deleteOntology(String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
-        dataset.removeNamedModel(ontologyName);
-        individualService.selectIndividualsInSPARQLQuery(dataset, "forms",
-                """
-                        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                            PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                            PREFIX form: <http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#>
-
-                            SELECT ?f WHERE {
-                          ?f form:targetsOntology form:%s .
-                            }
-                        """.formatted(ontologyName))
-                .forEach(individual -> individualService.deleteIndividual(dataset, "forms",
-                        individual.getLocalName()));
-        var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
-        individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
-        dataset.commit();
-        dataset.end();
+        try {
+            dataset.removeNamedModel(ontologyName);
+            individualService.selectIndividualsInSPARQLQuery(dataset, "forms",
+                            """
+                                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                                        PREFIX form: <http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#>
+            
+                                        SELECT ?f WHERE {
+                                      ?f form:targetsOntology form:%s .
+                                        }
+                                    """.formatted(ontologyName))
+                    .forEach(individual -> individualService.deleteIndividual(dataset, "forms",
+                            individual.getLocalName()));
+            var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
+            individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
     }
 
     public ByteArrayResource downloadOntology(String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        //RDFDataMgr.write(outputStream, ontModel, org.apache.jena.riot.RDFFormat.RDFXML);
-        ontModel.write(outputStream, "RDF/XML");
-        ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
-        dataset.end();
-        return resource;
+        try {
+            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ontModel.write(outputStream, "RDF/XML");
+            return new ByteArrayResource(outputStream.toByteArray());
+        } finally {
+            dataset.end();
+        }
     }
 
 }

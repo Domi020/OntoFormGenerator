@@ -182,23 +182,28 @@ public class IndividualService {
     public void initFormOntology() {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
-        Model model = dataset.getNamedModel("forms");
-        if (model.isEmpty()) {
-            try {
-                OntModel m = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-                var fis = new FileInputStream("owl/forms.rdf");
-                m.read(fis, null);
-                model = m;
-                dataset.addNamedModel("forms", model);
-            } catch (FileNotFoundException e) {
-                logger.error("Error reading forms ontology file while importing new ontology", e);
-                dataset.abort();
-                dataset.end();
-                System.exit(1);
+        try {
+            Model model = dataset.getNamedModel("forms");
+            if (model.isEmpty()) {
+                try {
+                    OntModel m = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+                    var fis = new FileInputStream("owl/forms.rdf");
+                    m.read(fis, null);
+                    model = m;
+                    dataset.addNamedModel("forms", model);
+                } catch (FileNotFoundException e) {
+                    logger.error("Error reading forms ontology file while importing new ontology", e);
+                    dataset.abort();
+                    dataset.end();
+                    System.exit(1);
+                }
             }
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
         }
-        dataset.commit();
-        dataset.end();
     }
 
 
