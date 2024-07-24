@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Individual editor</title>
-    <link rel="stylesheet" href="../../../../material.min.css">
-    <link rel="stylesheet" href="../../../../selectize.default.min.css">
-    <script src="../../../../jquery-3.7.1.min.js"></script>
-    <script src="../../../../selectize.min.js"></script>
-    <script src="../../../../material.min.js"></script>
-    <script src="../../../../functions.js"></script>
+    <link rel="stylesheet" href="/material.min.css">
+    <link rel="stylesheet" href="/selectize.default.min.css">
+    <script src="/jquery-3.7.1.min.js"></script>
+    <script src="/selectize.min.js"></script>
+    <script src="/material.min.js"></script>
+    <script src="/functions.js"></script>
+    <script src="/js-loading-overlay.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
         .ontology-list {
@@ -181,6 +182,8 @@
             document.getElementById("ontologyClass").value = individual.ontologyClass.name;
         }
         const formElements = [[${individualProperties}]];
+        let numFormElements = formElements.length;
+        let currentlyLoadedElements = 0;
         let divs = [];
         let items = [];
         formElements.forEach((element, index) => {

@@ -9,6 +9,7 @@
     <script src="/selectize.min.js"></script>
     <script src="/material.min.js"></script>
     <script src="/functions.js"></script>
+    <script src="/js-loading-overlay.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body>
@@ -61,6 +62,7 @@
         const allFormElements = [[${formElements}]];
         const formName = [[${form}]];
         const setElements = [[${setElements}]];
+        JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
 
         function createDraft() {
             const form = document.querySelector('#fillform');
@@ -106,11 +108,13 @@
                 }));
         });
 
-        if (setElements) {
-            Promise.all(promises).then(() => {
+        Promise.all(promises).then(() => {
+            if (setElements) {
                 loadDraft();
-            });
-        }
+            }
+            JsLoadingOverlay.hide();
+        });
+
 
         function loadDraft() {
             document.getElementById('instanceName').value = [[${individualName}]];
