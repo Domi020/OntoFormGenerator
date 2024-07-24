@@ -107,6 +107,28 @@ public class OntologyContentService {
 
     }
 
+    public List<Individual> getAllIndividualsOfOntology(String ontologyName) {
+        List<Individual> individuals = new ArrayList<>();
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+            ontModel.listIndividuals().forEach(
+                    individual -> {
+                        var individualName = individual.getLocalName();
+                        var individualIri = individual.getURI();
+                        var ontClass = individual.getOntClass();
+                        var ontologyClass = new OntologyClass(ontClass.getLocalName(), ontClass.getURI());
+                        individuals.add(new Individual(individualName, individualIri, ontologyClass));
+                    }
+            );
+            return individuals;
+        } finally {
+            dataset.end();
+        }
+    }
+
     public List<Individual> getAllIndividualsOfClass(String ontologyName, String className) {
         List<Individual> individuals = new ArrayList<>();
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);

@@ -95,11 +95,19 @@
                     const hiddenObjectPropertyCheckbox = document.getElementById('hidden-object-property-checkbox-' + currentElement);
                     const prop = availableProperties.find(prop => prop.name === value);
                     if (prop.objectProperty) {
-                        let individuals = await fetch("/api/ontologies/" + ontology.name + "" +
-                            "/classes/" + prop.objectRange.name + "/individuals").then(response => response.json());
+                        let individuals;
+                        if (prop.objectRange) {
+                            individuals = await fetch("/api/ontologies/" + ontology.name + "" +
+                                "/classes/" + prop.objectRange.name + "/individuals").then(response => response.json());
+                            rangeField.value = prop.objectRange.name;
+                        } else {
+                            individuals = await fetch("/api/ontologies/" + ontology.name + "/individuals").
+                            then(response => response.json());
+                            rangeField.value = "---";
+                        }
                         objectPropertyCheckbox.checked = true;
                         hiddenObjectPropertyCheckbox.value = true;
-                        rangeField.value = prop.objectRange.name;
+
                         let value = document.getElementById("value-field-select-" + currentElement).value;
                         valueField.innerHTML = `
                         <select id="value-field-select-` + currentElement + `" class="property-select" name="fieldValue"></select>

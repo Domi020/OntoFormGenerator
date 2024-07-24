@@ -97,6 +97,12 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals", method = RequestMethod.GET)
+    public ResponseEntity<List<Individual>> getAllIndividualsOfOntology(@PathVariable String ontologyName) {
+        return new ResponseEntity<>(ontologyContentService.getAllIndividualsOfOntology(ontologyName),
+                HttpStatus.OK);
+    }
+
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());

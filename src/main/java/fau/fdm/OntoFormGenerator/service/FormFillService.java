@@ -126,7 +126,8 @@ public class FormFillService {
             var individual = ontology.createIndividual(ontologyURI + instanceName,
                     ontology.getOntClass(classURI));
             for (var formValue : formValues.keySet()) {
-                if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass"))
+                if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass") ||
+                formValue.equals("create-individual-dialog-option"))
                     continue;
                 var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
                 var prop = ontology.getProperty(propUri);

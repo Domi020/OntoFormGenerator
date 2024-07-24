@@ -74,7 +74,7 @@
         </div>
     </form>
     <div style="padding-top: 100px">
-        <a onclick="createDraft()" id="create-draft-button" class="mdl-button mdl-js-button mdl-button--raised">
+        <a onclick="createDraftAndGoToHomepage()" id="create-draft-button" class="mdl-button mdl-js-button mdl-button--raised">
             Create draft
         </a>
     </div>
@@ -90,27 +90,44 @@
         const setElements = [[${setElements}]];
         JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
 
-        function createDraft() {
+        // noinspection JSUnusedGlobalSymbols
+        function editIndividual(id) {
+            createDraft().then(
+                () => {
+                    let indivName = $('#' + id)[0].value;
+                    if (indivName === '') {
+                        return;
+                    }
+                    location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + indivName;
+                }
+            );
+        }
+
+        function createDraftAndGoToHomepage() {
+            createDraft().then(
+                () => location.href = '/'
+            ).catch();
+        }
+
+        async function createDraft() {
             const form = document.querySelector('#fillform');
             const formData = new FormData(form);
             let formString = {};
             formData.forEach(function(value, key){
                 formString[key] = value;
             });
+            if (formString['instanceName'] === '') {
+                alert('Instance name cannot be empty');
+                throw 0;
+            }
             let formJSON = JSON.stringify(formString);
-            fetch(`/api/forms/${formName}/draft`, {
+            return fetch(`/api/forms/${formName}/draft`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: formJSON,
-            })
-                .then(() => {
-                    location.href = '/';
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
+            });
         }
 
         let promises = [];
