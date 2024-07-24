@@ -117,6 +117,11 @@ public class OntologyOverviewService {
         }
     }
 
+    public Ontology getOntologyByName(String ontologyName) {
+        var ontologyList = getImportedOntologies();
+        return ontologyList.stream().filter(ontology -> ontology.getName().equals(ontologyName)).findFirst().orElse(null);
+    }
+
     public void deleteOntology(String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);

@@ -137,8 +137,8 @@
 </head>
 <body>
 <h1>Individual editor</h1>
-<form th:action="@{/api/forms/{formName}/individuals/{individualName}
-(formName=${form}, individualName=${individual.name})}" method="post">
+<form th:action="@{/api/ontologies/{ontologyName}/individuals/{individualName}
+(ontologyName=${ontology.name}, individualName=${individual.name})}" method="post">
     <div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="individualName" name="individualName"

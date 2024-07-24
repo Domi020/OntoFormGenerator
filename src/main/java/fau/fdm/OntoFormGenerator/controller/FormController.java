@@ -73,10 +73,10 @@ public class FormController {
         return loadIndexPage(model);
     }
 
-    @RequestMapping(value = "/api/forms/{formName}/individuals/{individualName}", method = RequestMethod.POST)
-    public String editIndividual(@PathVariable String formName, @PathVariable String individualName,
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST)
+    public String editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
                                  @RequestBody MultiValueMap<String, String> form, Model model) {
-        ontologyContentService.editIndividual(formName, individualName, form);
+        ontologyContentService.editIndividual(ontologyName, individualName, form);
         return loadIndexPage(model);
     }
 

@@ -78,7 +78,7 @@
                         <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                             Fill form
                         </a>
-                        <button th:id="'show-individuals-button-' + ${form.getFormName()}"
+                        <button th:id="'show-individuals-button--' + ${form.getOntologyName()} + '--' + ${form.getFormName()}"
                                 class="mdl-button mdl-js-button mdl-button--raised show-individuals-button">
                             Show individuals
                         </button>
@@ -180,7 +180,9 @@
         var showIndividualsButtons = document.querySelectorAll('.show-individuals-button');
         showIndividualsButtons.forEach(el => el.addEventListener('click', async function(event) {
             let buttonId = event.currentTarget.id
-            let formName = buttonId.replace('show-individuals-button-', '');
+            let ontologyAndFormName = buttonId.replace('show-individuals-button--', '');
+            let ontologyName = ontologyAndFormName.split('--')[0];
+            let formName = ontologyAndFormName.split('--')[1];
             let individuals = await fetch('/api/forms/' + formName + "/individuals").then(response => response.json());
             let showIndividualsList = document.querySelector('#showIndividualsList');
             showIndividualsList.innerHTML = '';
@@ -192,7 +194,7 @@
                 listItem.innerHTML = `
                 <span class="mdl-list__item-primary-content">` + individual.name + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
-                                       href="/edit/forms/` + formName + `/individuals/` + n + `">
+                                       href="/edit/ontologies/` + ontologyName + `/individuals/` + n + `">
                                         <i class="material-icons">edit</i></a>`
                 showIndividualsList.appendChild(listItem);
             }

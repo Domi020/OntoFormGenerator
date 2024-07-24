@@ -82,12 +82,12 @@ public class RestController {
         return "formfill";
     }
 
-    @RequestMapping(value = "/edit/forms/{formName}/individuals/{individualName}", method = RequestMethod.GET)
-    public String editIndividual(@PathVariable String formName, @PathVariable String individualName, Model model) {
-        var ontology = formOverviewService.getOntologyOfForm(formName);
+    @RequestMapping(value = "/edit/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.GET)
+    public String editIndividual(@PathVariable String ontologyName, @PathVariable String individualName, Model model) {
+        var ontology = ontologyOverviewService.getOntologyByName(ontologyName);
         var individual = ontologyContentService.getIndividualByString(individualName,
                 ontology.getName());
-        model.addAttribute("form", formName);
+        // model.addAttribute("form", formName);
         model.addAttribute("ontology", ontology);
         model.addAttribute("individual", individual);
         model.addAttribute("classProperties", ontologyContentService.getAllPropertiesOfDomain(ontology.getName(),

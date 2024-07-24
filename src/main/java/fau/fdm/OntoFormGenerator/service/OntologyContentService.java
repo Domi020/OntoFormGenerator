@@ -192,13 +192,10 @@ public class OntologyContentService {
         return setProperties;
     }
 
-    public void editIndividual(String formName, String individualName, MultiValueMap<String, String> form) {
+    public void editIndividual(String ontologyName, String individualName, MultiValueMap<String, String> form) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
-            var formIndividual = individualService.findOntIndividualInOntology(dataset, "forms", formName);
-            var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms", formIndividual, "targetsOntology")
-                    .getLocalName();
             var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                     OntSpecification.OWL2_DL_MEM);
 
