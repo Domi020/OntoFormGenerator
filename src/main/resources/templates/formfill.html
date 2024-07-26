@@ -29,32 +29,6 @@
             <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
             <label class="mdl-textfield__label" for="instanceName">Instance name</label>
         </div>
-        <dialog>
-            <h2>Create new individual</h2>
-            <p>How do you want to create a new individual for the following class?</p>
-            <p id="create-individual-dialog-ontology-class"></p>
-            <fieldset>
-                <legend>Select a creation option.</legend>
-                <div>
-                    <input type="radio" id="create-individual-dialog-option-1" name="create-individual-dialog-option"
-                           value="1" checked>
-                    <label for="create-individual-dialog-option-1">Empty individual</label>
-                </div>
-                <div>
-                    <input type="radio" id="create-individual-dialog-option-2" name="create-individual-dialog-option"
-                           value="2">
-                    <label for="create-individual-dialog-option-2">Create from form</label>
-                </div>
-                <div>
-                    <input type="radio" id="create-individual-dialog-option-3" name="create-individual-dialog-option"
-                           value="3">
-                    <label for="create-individual-dialog-option-3">Create in Individual editor</label>
-                </div>
-            </fieldset>
-            <button>
-                <a onclick="createIndividual()">Create individual</a>
-            </button>
-        </dialog>
         <div th:each="field: ${formElements}">
             <div th:if="${field.fieldType == 'Input'}">
                 <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
@@ -73,6 +47,39 @@
             <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
         </div>
     </form>
+    <dialog id="add-individual-dialog">
+        <h2>Create new individual</h2>
+        <p>How do you want to create a new individual for the following class?</p>
+        <p id="create-individual-dialog-ontology-class"></p>
+        <fieldset>
+            <legend>Select a creation option.</legend>
+            <div>
+                <input type="radio" id="create-individual-dialog-option-1" name="create-individual-dialog-option"
+                       value="1" checked>
+                <label for="create-individual-dialog-option-1">Empty individual</label>
+                <input type="text" name="create-individual-name" id="create-individual-name">
+                <label for="create-individual-name">Individual name</label>
+            </div>
+            <div>
+                <input type="radio" id="create-individual-dialog-option-2" name="create-individual-dialog-option"
+                       value="2">
+                <label for="create-individual-dialog-option-2">Create from form</label>
+                <select id="create-individual-form-list"></select>
+                <label for="create-individual-form-list">Forms</label>
+            </div>
+            <div>
+                <input type="radio" id="create-individual-dialog-option-3" name="create-individual-dialog-option"
+                       value="3">
+                <label for="create-individual-dialog-option-3">Create in Individual editor</label>
+            </div>
+        </fieldset>
+        <button>
+            <a onclick="createIndividual()">Create individual</a>
+        </button>
+        <button class="close">
+            <a>Cancel</a>
+        </button>
+    </dialog>
     <div style="padding-top: 100px">
         <a onclick="createDraftAndGoToHomepage()" id="create-draft-button" class="mdl-button mdl-js-button mdl-button--raised">
             Create draft
@@ -101,6 +108,25 @@
                     location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + indivName;
                 }
             );
+        }
+
+        function addIndividual(propName) {
+            let rangeName = allFormElements.find(formElement => formElement.ontologyProperty.name === propName).
+                ontologyProperty.objectRange.name;
+            document.getElementById('create-individual-dialog-ontology-class').innerText = rangeName;
+            fetch(`/api/forms?ontologyName=${ontologyName}&targetClass=${rangeName}`)
+                .then(async function(response) {
+                    let allForms = await response.json();
+                    let select = document.getElementById('create-individual-form-list');
+                    for (let i = 0; i < allForms.length; i++) {
+                        let option = document.createElement('option');
+                        option.value = allForms[i].formName;
+                        option.text = allForms[i].formName;
+                        select.add(option);
+                    }
+                });
+            const dialog = document.querySelector('#add-individual-dialog');
+            dialog.showModal();
         }
 
         function createDraftAndGoToHomepage() {
@@ -180,6 +206,11 @@
                 }
             }
         }
+
+        const dialog = document.querySelector('#add-individual-dialog');
+        dialog.querySelector('.close').addEventListener('click', function() {
+            dialog.close();
+        });
 
     </script>
 </body>

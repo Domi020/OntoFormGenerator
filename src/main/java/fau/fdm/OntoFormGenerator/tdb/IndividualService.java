@@ -25,6 +25,7 @@ import java.util.List;
 @Service
 public class IndividualService {
 
+    private final GeneralTDBService generalTDBService;
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
@@ -33,8 +34,24 @@ public class IndividualService {
 
     private final Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
+    public IndividualService(GeneralTDBService generalTDBService) {
+        this.generalTDBService = generalTDBService;
+    }
+
     private org.apache.jena.ontapi.model.OntModel getOntModel(Model model) {
         return OntModelFactory.createModel(model.getGraph(), OntSpecification.OWL2_DL_MEM);
+    }
+
+    public List<OntIndividual> getAllIndividualsOfClass(Dataset dataset,
+                                                        String ontologyName,
+                                                        String className) {
+        List<OntIndividual> individuals = new ArrayList<>();
+        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, className);
+        var ontClass = ontModel.getOntClass(classURI);
+        ontModel.individuals().filter(individual -> individual.hasOntClass(ontClass, true))
+                .forEach(individuals::add);
+        return individuals;
     }
 
     public OntIndividual addIndividual(Dataset dataset,
@@ -76,18 +93,6 @@ public class IndividualService {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         ontModel.getIndividual(iri).remove();
-    }
-
-    public List<OntIndividual> getAllIndividualsOfClass(Dataset dataset,
-                                                     String ontologyName,
-                                                     String className) {
-        List<OntIndividual> individuals = new ArrayList<>();
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
-        var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
-        var iter = ontModel.namedIndividuals();
-        iter.filter(individual -> individual.hasOntClass(ontClass, true))
-                .forEach(individuals::add);
-        return individuals;
     }
 
     public OntIndividual getIndividualByString(Dataset dataset,

@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.service.*;
 import org.springframework.http.MediaType;
@@ -40,6 +41,12 @@ public class FormController {
                              Model model) {
         formOverviewService.addNewForm(formName, ontologyName, ontologyURIInFormCreate);
         return loadIndexPage(model);
+    }
+
+    @RequestMapping(value = "/api/forms", method = RequestMethod.GET)
+    public ResponseEntity<List<Form>> getFormsWithTargetClass(@RequestParam("ontologyName") String ontologyName,
+                                                              @RequestParam("targetClass") String targetClass) {
+        return ResponseEntity.ok(formOverviewService.getFormsWithTargetClass(ontologyName, targetClass));
     }
 
     @RequestMapping(value = "/api/forms/{formName}", method = RequestMethod.POST, consumes =

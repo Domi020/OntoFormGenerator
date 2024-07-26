@@ -40,6 +40,21 @@ public class FormOverviewService {
         this.individualService = individualService;
     }
 
+    public List<Form> getFormsWithTargetClass(String ontologyName, String targetClass) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var allForms = individualService.getAllIndividualsOfClass(dataset, "forms", "Form");
+            return allForms.stream()
+                    .filter(form -> propertyService.getObjectPropertyValueFromIndividual(dataset, "forms", form, "targetsClass")
+                    .getLocalName().equals(targetClass))
+                    .map(form -> new Form(form.getLocalName(), ontologyName))
+                    .toList();
+        } finally {
+            dataset.end();
+        }
+    }
+
     public void addNewForm(String formName, String ontologyName, String ontologyURI) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
