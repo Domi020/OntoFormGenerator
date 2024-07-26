@@ -104,6 +104,17 @@ public class PropertyService {
         }
     }
 
+    public void removePropertyValueFromIndividual(Dataset dataset,
+                                                  String ontologyName,
+                                                  Individual domainIndividual,
+                                                  String propertyName) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop != null) {
+            prop.remove();
+        }
+    }
+
 
     public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
                                                                         String ontologyName,

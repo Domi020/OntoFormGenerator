@@ -103,6 +103,15 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals/{individualName}",
+            method = RequestMethod.POST)
+    public ResponseEntity<Boolean> addEmptyIndividual(@PathVariable String ontologyName,
+                                                      @PathVariable String className,
+                                                      @PathVariable String individualName) {
+        return new ResponseEntity<>(ontologyContentService.addEmptyIndividual(ontologyName, className, individualName),
+                HttpStatus.OK);
+    }
+
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());

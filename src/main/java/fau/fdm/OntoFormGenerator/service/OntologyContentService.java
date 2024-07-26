@@ -214,6 +214,25 @@ public class OntologyContentService {
         return setProperties;
     }
 
+    public Boolean addEmptyIndividual(String ontologyName, String className, String individualName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+            var ontClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, className));
+            var ontologyURI = ontClass.getURI().substring(0, ontClass.getURI().lastIndexOf("#") + 1);
+            ontModel.createIndividual(ontologyURI + individualName, ontClass);
+            dataset.commit();
+            return true;
+        } catch (Exception e) {
+            dataset.abort();
+            return false;
+        } finally {
+            dataset.end();
+        }
+    }
+
     public void editIndividual(String ontologyName, String individualName, MultiValueMap<String, String> form) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
@@ -221,7 +240,7 @@ public class OntologyContentService {
             var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                     OntSpecification.OWL2_DL_MEM);
 
-            var individual = ontology.getIndividual(form.getFirst("individualURI"));
+            var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
 
             var setProperties = getSetProperties(dataset, individualName, ontologyName);
 
