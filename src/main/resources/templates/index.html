@@ -61,7 +61,7 @@
             </div>
         </dialog>
         <ul class="mdl-list ontology-list">
-            <li class="mdl-list__item" th:each="form : ${forms}">
+            <li class="mdl-list__item" th:each="form, iter : ${forms}">
                 <div class="mdl-card mdl-shadow--2dp">
                     <div class="mdl-card__title">
                         <h3 class="mdl-card__title-text" th:text="${form.getFormName()}">
@@ -72,7 +72,7 @@
                         Wines and Meals
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                        <a th:if="${formDrafts.get(iter.index).size == 0}" th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                             Edit form
                         </a>
                         <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
@@ -157,7 +157,9 @@
             </li>
         </ul>
     </div>
-    <script>
+    <script th:inline="javascript">
+        var formDrafts = [[${formDrafts}]];
+        var forms = [[${forms}]];
         var importOntologyDialog = document.querySelector('#importOntologyDialog');
         var showDialogButton = document.querySelector('#show-ontology-import-dialog');
         showDialogButton.addEventListener('click', function() {
@@ -210,7 +212,8 @@
         showDraftsButtons.forEach(el => el.addEventListener('click', async function(event) {
             let buttonId = event.currentTarget.id
             let formName = buttonId.replace('show-drafts-button-', '');
-            let drafts = await fetch('/api/forms/' + formName + "/drafts").then(response => response.json());
+            let i = forms.findIndex(form => form.formName === formName);
+            let drafts = formDrafts[i];
             let showDraftsList = document.querySelector('#showDraftsList');
             showDraftsList.innerHTML = '';
             for (let i = 0; i < drafts.length; i++) {
@@ -257,6 +260,9 @@
             }
         }
         autoFillURI();
+
+
+
     </script>
 </body>
 </html>

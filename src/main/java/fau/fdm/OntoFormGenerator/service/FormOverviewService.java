@@ -110,6 +110,14 @@ public class FormOverviewService {
         }
     }
 
+    public List<List<Individual>> getAllDraftsOfForms(List<Form> forms) {
+        List<List<Individual>> drafts = new ArrayList<>();
+        for (var form : forms) {
+            drafts.add(getAllDraftsOfForm(form.getFormName()));
+        }
+        return drafts;
+    }
+
     public List<Individual> getAllDraftsOfForm(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);

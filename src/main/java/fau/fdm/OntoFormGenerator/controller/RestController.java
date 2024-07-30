@@ -34,7 +34,9 @@ public class RestController {
     public String loadMainPage(Model model) {
 
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
-        model.addAttribute("forms", formOverviewService.getAllForms());
+        var allForms = formOverviewService.getAllForms();
+        model.addAttribute("forms", allForms);
+        model.addAttribute("formDrafts", formOverviewService.getAllDraftsOfForms(allForms));
 
         return "index";
     }
