@@ -9,8 +9,10 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntIndividual;
+import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,8 +121,7 @@ public class FormFillService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
-            var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
-                    OntSpecification.OWL2_DL_MEM);
+            var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
             var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
             var individual = ontology.createIndividual(ontologyURI + instanceName,
@@ -137,7 +138,7 @@ public class FormFillService {
                     individual.addProperty(prop, objectIndividual);
                 } else {
                     var dataValue = formValues.getFirst(formValue);
-                    var dtype = ontology.getDataProperty(propUri).ranges().findFirst().get().getLocalName();
+                    var dtype = ontology.getDatatypeProperty(propUri).getRange().getLocalName();
                     switch (dtype) {
                         case "int":
                             individual.addLiteral(prop, Integer.parseInt(dataValue));

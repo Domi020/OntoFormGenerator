@@ -144,7 +144,15 @@
                     );
                 });
             } else {
-
+                // Create from form
+                let formName = document.getElementById('create-individual-form-list').value;
+                if (formName === '') {
+                    alert('Please select a form');
+                    return;
+                }
+                createDraft().then(
+                    () => location.href = '/fill/' + formName + "?ontology=" + ontologyName
+                )
             }
         }
 
