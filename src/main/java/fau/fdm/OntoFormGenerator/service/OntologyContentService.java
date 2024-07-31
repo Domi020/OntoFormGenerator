@@ -11,8 +11,7 @@ import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -27,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OntologyContentService {
@@ -304,6 +305,46 @@ public class OntologyContentService {
             dataset.commit();
         }  catch (Exception e) {
             dataset.abort();
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public SubclassGraph buildSubclassGraph(String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        SubclassGraph subclassGraph = new SubclassGraph();
+        try {
+            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+
+
+            var subClassQuery =
+                    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                            "SELECT ?class ?subclass WHERE { " +
+                            "  ?subclass rdfs:subClassOf ?class . " +
+                            "}";
+            Query query = QueryFactory.create(subClassQuery);
+            try (QueryExecution qexec = QueryExecutionFactory.create(query, ontModel)) {
+                ResultSet results = qexec.execSelect();
+
+                // Build the graph structure
+                while (results.hasNext()) {
+                    QuerySolution soln = results.nextSolution();
+                    if (soln.getResource("class").getLocalName() == null) {
+                        subclassGraph.addClass(new OntologyClass(soln.getResource("subclass").getLocalName(), soln.getResource("subclass").getURI()));
+                    } else if (soln.getResource("subclass").getLocalName() == null) {
+                        subclassGraph.addClass(new OntologyClass(soln.getResource("class").getLocalName(), soln.getResource("class").getURI()));
+                    } else {
+                        SubclassRelation rel = new SubclassRelation(
+                                new OntologyClass(soln.getResource("class").getLocalName(), soln.getResource("class").getURI()),
+                                new OntologyClass(soln.getResource("subclass").getLocalName(), soln.getResource("subclass").getURI())
+                        );
+                        subclassGraph.addEdge(rel);
+                    }
+                }
+            }
+            return subclassGraph;
         } finally {
             dataset.end();
         }

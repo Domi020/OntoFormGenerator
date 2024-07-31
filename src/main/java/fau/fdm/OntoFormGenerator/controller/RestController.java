@@ -99,4 +99,12 @@ public class RestController {
                 individualName, ontology.getName()));
         return "individual-edit";
     }
+
+    @RequestMapping(value = "/view/ontologies/{ontologyName}", method = RequestMethod.GET)
+    public String loadClassViewer(@PathVariable String ontologyName,
+                                  Model model) {
+        model.addAttribute("ontology", ontologyOverviewService.getOntologyByName(ontologyName));
+        model.addAttribute("subclassGraph", ontologyContentService.buildSubclassGraph(ontologyName));
+        return "class-viewer";
+    }
 }
