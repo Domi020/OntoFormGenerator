@@ -2,8 +2,23 @@
 <html lang="en">
 <head>
     <title>Class viewer</title>
+    <script src="/sigma.min.js"> </script>
+    <script src="/graphology.umd.min.js"> </script>
+    <script src="/bundle.js"></script>
 </head>
 <body>
+    <h1>Classes of ontology</h1>
+    <h2 th:text="${ontology.getName()}"></h2>
+    <div id="container" style="width: 800px; height: 600px; background: white"></div>
+    <script th:inline="javascript">
 
+
+        const ontology = [[${ontology}]];
+        const subclassGraph = [[${subclassGraph}]];
+
+
+        myFuncs.buildSubclassGraph();
+
+    </script>
 </body>
 </html>

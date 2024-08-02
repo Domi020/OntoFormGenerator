@@ -1,8 +1,13 @@
 package fau.fdm.OntoFormGenerator.data;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class SubclassGraph {
 
     private List<OntologyClass> classes = new ArrayList<>();
