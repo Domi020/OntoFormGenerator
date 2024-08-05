@@ -344,6 +344,7 @@ public class OntologyContentService {
                     }
                 }
             }
+            subclassGraph.addEdgesToOwlThing();
             return subclassGraph;
         } finally {
             dataset.end();

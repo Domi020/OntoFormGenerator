@@ -2,3 +2,5 @@
 target/
 ontologies/
 temp/
+node_modules/
+package-lock.json

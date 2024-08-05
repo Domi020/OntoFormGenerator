@@ -14,6 +14,12 @@ public class SubclassGraph {
 
     private List<SubclassRelation> edges = new ArrayList<>();
 
+    private final OntologyClass owlThing = new OntologyClass("owl:Thing", "http://www.w3.org/2002/07/owl#Thing");
+
+    public SubclassGraph() {
+        addClass(owlThing);
+    }
+
     public boolean addClass(OntologyClass c) {
         if (classes.contains(c)) {
             return false;
@@ -31,5 +37,22 @@ public class SubclassGraph {
         }
         edges.add(e);
         return true;
+    }
+
+    public void addEdgesToOwlThing() {
+        for (var ontClass : classes) {
+            if (!ontClass.equals(owlThing) && !checkIfClassHasSuperclass(ontClass)) {
+                addEdge(new SubclassRelation(classes.get(0), ontClass));
+            }
+        }
+    }
+
+    private boolean checkIfClassHasSuperclass(OntologyClass ontClass) {
+        for (var rel : edges) {
+            if (rel.getSubClass().equals(ontClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
