@@ -350,4 +350,28 @@ public class OntologyContentService {
             dataset.end();
         }
     }
+
+    public OntologyClass addNewClass(String ontologyName, String className,
+                                     String superClassName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+            var uri = generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName)
+                    + "#" + className;
+            var newClass = ontModel.createClass(uri);
+            if (superClassName != null) {
+                var superClassURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, superClassName);
+                newClass.addSuperClass(ontModel.getOntClass(superClassURI));
+            }
+            dataset.commit();
+            return new OntologyClass(className, uri);
+        } catch (Exception e) {
+            dataset.abort();
+            throw e;
+        } finally {
+            dataset.end();
+        }
+    }
 }

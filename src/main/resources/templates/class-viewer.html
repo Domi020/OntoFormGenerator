@@ -2,23 +2,51 @@
 <html lang="en">
 <head>
     <title>Class viewer</title>
-    <script src="/sigma.min.js"> </script>
-    <script src="/graphology.umd.min.js"> </script>
+    <script src="/sigma.min.js"></script>
+    <script src="/graphology.umd.min.js"></script>
     <script src="/bundle.js"></script>
 </head>
 <body>
-    <h1>Classes of ontology</h1>
-    <h2 th:text="${ontology.getName()}"></h2>
-    <div id="container" style="width: 800px; height: 600px; background: white"></div>
-    <script th:inline="javascript">
+<h1>Classes of ontology</h1>
+<h2 th:text="${ontology.getName()}"></h2>
+<dialog id="add-subclass-dialog">
+    <h2>Add new subclass</h2>
+    <p>Enter a name for the class. The class will be created as a subclass of </p>
+    <p id="add-subclass-dialog-superclass"></p>
+    <div class="mdl-textfield mdl-js-textfield">
+        <input id="newClassName" class="mdl-textfield__input" type="text" name="newClassName">
+        <label class="mdl-textfield__label" for="newClassName">Class name</label>
+    </div>
+    <button>
+        <a onclick="createSubclass()">Create subclass</a>
+    </button>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
+</dialog>
+<div id="container" style="width: 800px; height: 600px; background: white"></div>
+<script th:inline="javascript">
 
 
-        const ontology = [[${ontology}]];
-        const subclassGraph = [[${subclassGraph}]];
+    const ontology = [[${ontology}]];
+    const subclassGraph = [[${subclassGraph}]];
+
+    function createSubclass() {
+        const newClassName = document.getElementById('newClassName').value;
+        const superclass = document.getElementById('add-subclass-dialog-superclass').textContent;
+        fetch('/api/ontologies/' + ontology.name + '/classes/' + newClassName + '?superClass=' + superclass, {
+            method: 'POST'
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
 
 
-        myFuncs.buildSubclassGraph();
 
-    </script>
+    myFuncs.buildSubclassGraph();
+
+</script>
 </body>
 </html>

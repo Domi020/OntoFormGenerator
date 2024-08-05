@@ -1483,8 +1483,11 @@ module.exports = function isGraph(value) {
 };
 
 },{}],9:[function(require,module,exports){
+// build with
+// browserify src/main/resources/static/class-viewer.js --standalone myFuncs -o src/main/resources/static/bundle.js
+
 const forceLayout = require("graphology-layout-forceatlas2");
-const random = require("graphology-layout/circular")
+const circ = require("graphology-layout/circular")
 
 function buildSubclassGraph() {
     const graph = new graphology.DirectedGraph();
@@ -1496,11 +1499,19 @@ function buildSubclassGraph() {
         graph.addEdge(edge.subClass.name, edge.superClass.name, {size: 1, color: "purple",
         type: 'arrow'});
     }
-    random.assign(graph)
+    circ.assign(graph)
     // const positions = forceLayout(graph, {maxIterations: 100});
     forceLayout.assign(graph, 1000);
     const sigmaInstance = new Sigma(graph, document.getElementById("container"));
-    // https://graphology.github.io/standard-library/layout-force.html
+    sigmaInstance.on("clickNode", (e) => {
+        const dialogSuperclassName = document.getElementById("add-subclass-dialog-superclass");
+        dialogSuperclassName.innerHTML = e.node;
+        const dialog = document.getElementById("add-subclass-dialog")
+        dialog.showModal();
+        dialog.querySelector('.close').addEventListener('click', function() {
+            dialog.close();
+        });
+    });
 }
 
 module.exports = {'buildSubclassGraph': buildSubclassGraph};

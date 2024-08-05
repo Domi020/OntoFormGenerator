@@ -17,12 +17,11 @@ public class GeneralTDBService {
     }
 
     public String getOntologyURIByOntologyName(Dataset dataset, String ontologyName) {
-        var model = getOntModel(dataset.getNamedModel("forms"));
-        var ont = model.individuals().filter(ontIndividual -> ontIndividual.ontClass().get().getURI().equals(
+        var model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel("forms"));
+        var ont = model.listIndividuals().filterKeep(ontIndividual -> ontIndividual.getOntClass().getURI().equals(
                 "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#Ontology"
-        ) && ontIndividual.getLocalName().equals(ontologyName)).findFirst().get();
-        return ont.getProperty(model.getDataProperty
-                ("http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasOntologyIRI")).getObject().asLiteral().getString();
+        ) && ontIndividual.getLocalName().equals(ontologyName)).next();
+        return ont.getURI();
     }
 
     public String getClassURIInOntology(Dataset dataset, String ontologyName, String className) {

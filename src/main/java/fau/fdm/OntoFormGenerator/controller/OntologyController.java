@@ -103,6 +103,14 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}", method = RequestMethod.POST)
+    public ResponseEntity<OntologyClass> addNewClass(@PathVariable String ontologyName,
+                                                    @PathVariable String className,
+                                                     @RequestParam("superClass") String superClassName) {
+        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClassName),
+                HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals/{individualName}",
             method = RequestMethod.POST)
     public ResponseEntity<Boolean> addEmptyIndividual(@PathVariable String ontologyName,
