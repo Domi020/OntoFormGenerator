@@ -59,7 +59,7 @@
             newField.innerHTML = `
                 <th class="property-field">
                     <label>Property</label>
-                    <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
+                    <select id="prop-select-` + elements + `" class="edit-object property-select" name="propertyName"></select>
                 </th>
                 <th class="property-field">
                     <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
@@ -71,11 +71,11 @@
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </th>
                 <th id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
-                    <input id="value-field-select-` + elements + `" class="mdl-textfield__input" type="text"  name="fieldValue">
+                    <input id="value-field-select-` + elements + `" class="edit-object mdl-textfield__input" type="text"  name="fieldValue">
                     <label class="mdl-textfield__label">Value</label>
                 </th>
                 <th class="property-field">
-                    <button type="button" class="mdl-button delete-form-element"
+                    <button type="button" class="edit-object-button mdl-button delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
                 </th>
             `;
@@ -123,6 +123,9 @@
                         });
                         document.getElementById("value-field-select-" + currentElement)
                             .selectize.setValue(value);
+                        if (readOnly) {
+                            document.getElementById("value-field-select-" + currentElement).selectize.lock();
+                        }
                     } else {
                         objectPropertyCheckbox.checked = false;
                         hiddenObjectPropertyCheckbox.value = false;
@@ -133,6 +136,9 @@
                         <label class="mdl-textfield__label">Value</label>
                         `;
                         document.getElementById("value-field-select-" + currentElement).value = value;
+                        if (readOnly) {
+                            $("#value-field-select-" + currentElement).prop('readonly', true);
+                        }
                     }
                 }
             });
@@ -170,11 +176,11 @@
         </div>
     </div>
     <div>
-        <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
+        <button type="button" class="edit-object-button mdl-button" onclick="addNewFormElement()">Add new field</button>
         <table style="width: 1800px" class="field-container"></table>
     </div>
     <div style="padding-top: 70px">
-        <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+        <button type="submit" class="edit-object-button mdl-button mdl-js-button mdl-button--raised">Save</button>
     </div>
 </form>
 <div style="padding-top: 100px">
@@ -184,8 +190,11 @@
 </div>
 <script th:inline="javascript">
     availableProperties = [[${classProperties}]];
+
+    const individual = [[${individual}]];
+    let readOnly = individual.imported;
+
     function initEditorForm() {
-        const individual = [[${individual}]];
         if (individual.ontologyClass.name != null) {
             document.getElementById("ontologyClass").value = individual.ontologyClass.name;
         }
@@ -216,9 +225,16 @@
             });
             divs[i].selectize.refreshOptions(false);
             divs[i].selectize.setValue(items[i], false);
+            if (readOnly) {
+                divs[i].selectize.lock();
+            }
         }
     }
     initEditorForm();
+    if (readOnly) {
+        $('.edit-object').prop('readonly', true);
+        $('.edit-object-button').prop('disabled', true);
+    }
 </script>
 </body>
 </html>

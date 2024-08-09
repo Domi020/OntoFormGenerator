@@ -102,7 +102,7 @@ public class FormOverviewService {
                         individual, "isDraft");
                 if (isDraft != null && isDraft.getBoolean()) continue;
                 result.add(new Individual(individual.getLocalName(), individual.getURI(),
-                        new OntologyClass("test", "test")));
+                        new OntologyClass("test", "test"), true));
             }
             return result;
         } finally {
@@ -131,7 +131,7 @@ public class FormOverviewService {
                         individual, "isDraft");
                 if (isDraft == null || !isDraft.getBoolean()) continue;
                 result.add(new Individual(individual.getLocalName(), individual.getURI(),
-                        new OntologyClass("test", "test")));
+                        new OntologyClass("test", "test"), true));
             }
             return result;
         } finally {

@@ -200,6 +200,23 @@
                         searchField: 'name',
                         maxItems: 1,
                         options: allIndividuals,
+                        render: {
+                            option: function(item, escape) {
+                                if (item.imported) {
+                                    return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                                } else {
+                                    return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                                }
+                            },
+                            item: function(item, escape) {
+                                if (item.imported) {
+                                    return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                                } else {
+                                    return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                                }
+                            }
+                        }
+
                     });
                 }));
         });

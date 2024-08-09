@@ -122,6 +122,19 @@ public class IndividualService {
         return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
     }
 
+    public boolean checkIfIndividualIsImported(Dataset dataset,
+                                               String ontologyName,
+                                               String individualIri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        var baseModelWithoutImports = ontModel.getBaseModel();
+        var filtered = baseModelWithoutImports.listStatements().filterKeep(
+                statement -> statement.getSubject().getURI().equals(individualIri) &&
+                        statement.getPredicate().getURI().equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+        );
+        return !filtered.hasNext();
+    }
+
     public OntIndividual findOntIndividualInOntology(Dataset dataset,
                                                String ontologyName,
                                                String individualName) {

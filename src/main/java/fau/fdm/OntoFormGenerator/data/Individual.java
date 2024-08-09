@@ -13,4 +13,5 @@ public class Individual {
     private String name;
     private String iri;
     private OntologyClass ontologyClass;
+    private boolean isImported;
 }

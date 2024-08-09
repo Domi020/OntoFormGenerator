@@ -121,7 +121,8 @@ public class OntologyContentService {
                         var individualIri = individual.getURI();
                         var ontClass = individual.getOntClass();
                         var ontologyClass = new OntologyClass(ontClass.getLocalName(), ontClass.getURI());
-                        individuals.add(new Individual(individualName, individualIri, ontologyClass));
+                        individuals.add(new Individual(individualName, individualIri, ontologyClass,
+                                individualService.checkIfIndividualIsImported(dataset, ontologyName, individualIri)));
                     }
             );
             return individuals;
@@ -151,6 +152,7 @@ public class OntologyContentService {
                         individual.setName(stmt.getSubject().getLocalName());
                         individual.setIri(stmt.getSubject().getURI());
                         individual.setOntologyClass(new OntologyClass(className, classIri));
+                        individual.setImported(individualService.checkIfIndividualIsImported(dataset, ontologyName, stmt.getSubject().getURI()));
                         individuals.add(individual);
                     }
             );
@@ -166,7 +168,8 @@ public class OntologyContentService {
             dataset.begin(ReadWrite.READ);
             var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
             return new Individual(individual.getLocalName(), individual.getURI(),
-                    new OntologyClass(individual.getOntClass().getLocalName(), individual.getOntClass().getURI()));
+                    new OntologyClass(individual.getOntClass().getLocalName(), individual.getOntClass().getURI()),
+                    individualService.checkIfIndividualIsImported(dataset, ontologyName, individual.getURI()));
         } finally {
             dataset.end();
         }
@@ -203,7 +206,7 @@ public class OntologyContentService {
                             isObjectProperty ? null : stmt.getObject().asLiteral().getDatatype().getJavaClass().getSimpleName()
                     ));
                     setProperty.setIndividual(new Individual(individual.getLocalName(), individual.getURI(),
-                            ontClass));
+                            ontClass, individualService.checkIfIndividualIsImported(dataset, ontologyName, individual.getURI())));
                     if (isObjectProperty) {
                         setProperty.setValue(stmt.getObject().asResource().getLocalName());
                     } else {
@@ -234,6 +237,7 @@ public class OntologyContentService {
         }
     }
 
+    // TODO: backend check if individual is imported / read only
     public void editIndividual(String ontologyName, String individualName, MultiValueMap<String, String> form) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
