@@ -104,7 +104,7 @@ public class OntologyOverviewService {
         try {
             OntClass ontologyClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                     dataset.getNamedModel("forms")).getOntClass(formsIRI + "#Ontology");
-            ontologyClass.listInstances().forEach(
+            ontologyClass.listInstances().forEachRemaining(
                     res -> {
                         var ontName = res.getLocalName();
                         var ontIRI = res.getURI();

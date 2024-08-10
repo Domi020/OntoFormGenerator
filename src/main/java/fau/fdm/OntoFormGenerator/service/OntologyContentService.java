@@ -1,6 +1,9 @@
 package fau.fdm.OntoFormGenerator.service;
 
 
+import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
+import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
+import com.clarkparsia.owlapi.explanation.util.ExplanationProgressMonitor;
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
@@ -17,18 +20,25 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
+import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.tdb2.TDB2Factory;
+import org.semanticweb.HermiT.Configuration;
+import org.semanticweb.HermiT.ReasonerFactory;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.util.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
 
 @Service
 public class OntologyContentService {
@@ -374,6 +384,63 @@ public class OntologyContentService {
         } catch (Exception e) {
             dataset.abort();
             throw e;
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public void validateOntology(String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var tdbModel = dataset.getNamedModel(ontologyName);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            tdbModel.write(outputStream, "RDF/XML");
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+            OWLDataFactory dataFactory = manager.getOWLDataFactory();
+            var owlApiOntology = manager.loadOntologyFromOntologyDocument(inputStream);
+            ReasonerFactory reasonerFactory = new ReasonerFactory();
+            Configuration config = new Configuration();
+            config.throwInconsistentOntologyException = false;
+            var reasoner = reasonerFactory.createReasoner(owlApiOntology, config);
+            reasoner.isConsistent();
+            reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
+                @Override
+                public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration,OWLOntology o) {
+                    configuration.throwInconsistentOntologyException = false;
+                    return new org.semanticweb.HermiT.Reasoner(config, o);
+                }
+            };
+            BlackBoxExplanation x = new BlackBoxExplanation(owlApiOntology, reasonerFactory, reasoner);
+            HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
+            // explanationGenerator.setProgressMonitor(new ExplanationProgressMonitor() {
+            //     @Override
+            //     public boolean isCancelled() {
+            //         return ExplanationProgressMonitor.super.isCancelled();
+            //     }
+//
+            //     @Override
+            //     public void foundExplanation(Set<OWLAxiom> axioms) {
+            //         ExplanationProgressMonitor.super.foundExplanation(axioms);
+            //     }
+//
+            //     @Override
+            //     public void foundAllExplanations() {
+            //         ExplanationProgressMonitor.super.foundAllExplanations();
+            //     }
+            // });
+            var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
+            // var expl = explanationGenerator.getSingleExplanationGenerator().getExplanation(dataFactory.getOWLThing());
+            // var explains = explanationGenerator.getExplanations(dataFactory.getOWLThing());
+                System.out.println("------------------");
+                System.out.println("Axioms causing the inconsistency: ");
+                for (OWLAxiom causingAxiom : expl) {
+                    System.out.println(causingAxiom);
+                }
+                System.out.println("------------------");
+        } catch (OWLOntologyCreationException e) {
+            throw new RuntimeException(e);
         } finally {
             dataset.end();
         }

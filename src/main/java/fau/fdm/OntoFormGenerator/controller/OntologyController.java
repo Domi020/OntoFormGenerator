@@ -7,6 +7,7 @@ import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.commons.io.FileUtils;
+import org.apache.jena.reasoner.ValidityReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -120,11 +122,29 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/validate", method = RequestMethod.GET)
+    public ResponseEntity<String> validateOntology(@PathVariable String ontologyName) {
+        ontologyContentService.validateOntology(ontologyName);
+        // StringBuilder result = new StringBuilder();
+        // if (report.isValid()) {
+        //     result.append("Ontology is valid");
+        // } else {
+        //     for (Iterator<ValidityReport.Report> i = report.getReports(); i.hasNext(); ) {
+        //         ValidityReport.Report rep = i.next();
+        //         result.append(" - ").append(rep).append("\n");
+        //     }
+        // }
+        // return new ResponseEntity<>(result.toString(), HttpStatus.OK);
+        return new ResponseEntity<>("", HttpStatus.OK);
+    }
+
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());
 
         return "index";
     }
+
+
 
 }
