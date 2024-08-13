@@ -74,9 +74,11 @@ public class FormController {
     public String fillFormDraft(@PathVariable String formName,
                            @RequestBody Map<String, Object> form,
                            Model model) {
+        var normalFields = (Map<String, Object>) form.get("normalFields");
+        var additionalFields = (Map<String, Object>) form.get("additionalFields");
         formFillService.createDraftFromFilledForm(formName,
-                form.get("ontologyName").toString(), form.get("targetClass").toString(),
-                form.get("instanceName").toString(), form);
+                normalFields.get("ontologyName").toString(), normalFields.get("targetClass").toString(),
+                normalFields.get("instanceName").toString(), normalFields, additionalFields);
         return loadIndexPage(model);
     }
 
@@ -95,6 +97,13 @@ public class FormController {
     @RequestMapping(value = "/api/forms/{formName}/drafts", method = RequestMethod.GET)
     public ResponseEntity<List<Individual>> getDraftsOfForm(@PathVariable String formName) {
         return ResponseEntity.ok(formOverviewService.getAllDraftsOfForm(formName));
+    }
+
+    @RequestMapping(value = "/api/forms/{formName}/drafts/{individualName}/field/{propertyName}", method = RequestMethod.POST)
+    public ResponseEntity<Boolean> addFieldToDraft(@PathVariable String formName, @PathVariable String individualName,
+                                                   @PathVariable String propertyName) {
+        formFillService.addFieldElementToInstance(formName, individualName, propertyName);
+        return ResponseEntity.ok(true);
     }
 
     private String loadIndexPage(Model model) {

@@ -43,10 +43,47 @@
                 <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
             </div>
         </div>
+        <div th:each="field: ${additionalElements}">
+            <div th:if="${field.fieldType == 'Input'}">
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+            </div>
+            <div th:if="${field.fieldType == 'Number'}">
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+            </div>
+            <div th:if="${field.fieldType == 'Datetime'}">
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+            </div>
+            <div th:if="${field.fieldType == 'ObjectSelect'}">
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+            </div>
+        </div>
+        <div>
+            <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Add new field</button>
+        </div>
         <div style="padding-top: 70px">
             <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
         </div>
     </form>
+    <dialog id="add-property-dialog">
+        <h2>Add field to form</h2>
+        <p>Add a new field to this form instance. How do you want to call your field?
+        </p>
+        <div>
+            <label for="new-property-class-select">Property</label>
+            <select id="new-property-class-select" name="new-property-class-select">
+            </select>
+        </div>
+
+        <p>Content of this field:</p>
+        <p id="new-property-class-range"></p>
+
+        <button>
+            <a onclick="createField()">Create field</a>
+        </button>
+        <button class="close">
+            <a>Cancel</a>
+        </button>
+    </dialog>
     <dialog id="add-individual-dialog">
         <h2>Create new individual</h2>
         <p>How do you want to create a new individual for the following class?
@@ -89,9 +126,12 @@
     </div>
     <script th:inline="javascript">
         const ontologyName = [[${ontology}]];
-        const allFormElements = [[${formElements}]];
+        const formElements = [[${formElements}]];
+        const additionalElements = [[${additionalElements}]];
+        const allFormElements = formElements.concat(additionalElements);
         const formName = [[${form}]];
         const setElements = [[${setElements}]];
+        const targetClass = [[${targetClass}]];
         JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
 
         // noinspection JSUnusedGlobalSymbols
@@ -162,14 +202,34 @@
             ).catch();
         }
 
+        function createField() {
+            let propName = document.getElementById('new-property-class-select').value;
+            let draftName = document.getElementById('instanceName').value;
+            createDraft()
+                .then(() => fetch(`/api/forms/${formName}/drafts/${draftName}/field/${propName}`, {
+                    method: 'POST'
+                })
+                    .then(() => location.reload())
+            );
+        }
+
         async function createDraft() {
             const form = document.querySelector('#fillform');
             const formData = new FormData(form);
-            let formString = {};
+            let normalFields = {};
+            let additionalFields = {};
             formData.forEach(function(value, key){
-                formString[key] = value;
+                if (additionalElements.find(field => field.name === key)) {
+                    additionalFields[key] = value;
+                } else {
+                    normalFields[key] = value;
+                }
             });
-            if (formString['instanceName'] === '') {
+            let formString = {
+                'normalFields': normalFields,
+                'additionalFields': additionalFields
+            };
+            if (normalFields['instanceName'] === '') {
                 alert('Instance name cannot be empty');
                 throw 0;
             }
@@ -254,6 +314,43 @@
         const dialog = document.querySelector('#add-individual-dialog');
         dialog.querySelector('.close').addEventListener('click', function() {
             dialog.close();
+        });
+
+        const newFieldDialog = document.querySelector('#add-property-dialog');
+        const newFieldButton = document.querySelector('#new-field-button');
+        newFieldButton.addEventListener('click', function() {
+            JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
+            fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties`)
+                .then(async function(response) {
+                    let allProperties = await response.json();
+                    $('#new-property-class-select').selectize({
+                        valueField: 'name',
+                        labelField: 'name',
+                        searchField: 'name',
+                        maxItems: 1,
+                        options: allProperties,
+                        onChange: value => {
+                            let string;
+                            let objectProp = allProperties.find(property => property.name === value).objectProperty;
+                            if (objectProp) {
+                                let range = allProperties.find(property => property.name === value).objectRange;
+                                if (range) {
+                                    string = "Another instance: " + range.name;
+                                } else {
+                                    string = "Another instance";
+                                }
+                            } else {
+                                string = allProperties.find(property => property.name === value).datatypeRange;
+                            }
+                            document.getElementById('new-property-class-range').innerText = string;
+                        }
+                    });
+                    JsLoadingOverlay.hide();
+                    newFieldDialog.showModal();
+                });
+        });
+        newFieldDialog.querySelector('.close').addEventListener('click', function() {
+            newFieldDialog.close();
         });
 
     </script>

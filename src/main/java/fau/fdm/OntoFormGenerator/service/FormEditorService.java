@@ -1,8 +1,10 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import com.google.gson.Gson;
 import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -20,6 +22,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class FormEditorService {
@@ -29,14 +32,16 @@ public class FormEditorService {
     private final IndividualService individualService;
 
     private final PropertyService propertyService;
+    private final GeneralTDBService generalTDBService;
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    public FormEditorService(IndividualService individualService, PropertyService propertyService) {
+    public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService) {
         this.individualService = individualService;
         this.propertyService = propertyService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+        this.generalTDBService = generalTDBService;
     }
 
     public String getSelectedEditorClass(String formName) {
@@ -48,6 +53,45 @@ public class FormEditorService {
                     "forms", form, "targetsClass");
             if (classValue == null) return null;
             return classValue.getLocalName();
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
+                                                           String individualName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+            var gson = new Gson();
+            var draftMap = gson.fromJson(draft.getString(), Map.class);
+            var formFields = new ArrayList<FormField>();
+            var fields = (Map) draftMap.get("additionalFields");
+            // var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
+            //         "forms", individual, "targetsClass");
+            for (var field : fields.keySet()) {
+                var fieldName = (String) field;
+
+                var property = propertyService.getPropertyFromOntology(dataset, ontologyName, fieldName);
+                var isObjectProperty = generalTDBService.checkIfObjectProperty(dataset, ontologyName, property.getURI());
+                if (isObjectProperty) {
+                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
+                    var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                    formFields.add(new FormField(
+                            new OntologyProperty(fieldName,
+                                    new OntologyClass(null, null),
+                                    true, objectRange, null), "ObjectSelect", fieldName));
+                } else {
+                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
+                    formFields.add(new FormField(
+                            new OntologyProperty(fieldName, new OntologyClass(null, null),
+                                    false, null, dataRangeProp.getLocalName()),
+                            getFormType(dataRangeProp.getLocalName()), fieldName));
+                }
+            }
+            return formFields;
         } finally {
             dataset.end();
         }
@@ -148,8 +192,8 @@ public class FormEditorService {
                             field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
                 } else {
                     // datatype property
-                    field = individualService.createDatatypeFormElement(dataset, fieldName,
-                            formInput.get("propertyRange").get(i));
+                    var fieldType = getFormType(formInput.get("propertyRange").get(i));
+                    field = individualService.addIndividual(dataset, fieldType, fieldName);
                     propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                             field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
                 }
@@ -173,6 +217,29 @@ public class FormEditorService {
             dataset.abort();
         } finally {
             dataset.end();
+        }
+    }
+
+    private String getFormType(String datatype) {
+        switch (datatype) {
+            case "string" -> {
+                return "Input";
+            }
+            case "boolean" -> {
+                return "Select";
+            }
+            case "date" -> {
+                return "Date";
+            }
+            case "dateTime", "dateTimeStamp" -> {
+                return "Datetime";
+            }
+            case "int", "integer" -> {
+                return "Number";
+            }
+            default -> {
+                return null;
+            }
         }
     }
 }

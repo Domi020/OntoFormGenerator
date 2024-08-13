@@ -49,7 +49,8 @@ public class FormFillService {
                                           String ontologyName,
                                           String targetField,
                                           String instanceName,
-                                          Map<String, Object> formValues) {
+                                          Map<String, Object> formValues,
+                                          Map<String, Object> additionalValues) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -58,13 +59,23 @@ public class FormFillService {
             var individualURI = ontologyURI + instanceName;
 
             StringBuilder json = new StringBuilder("{\n");
-
+            json.append("\"normalFields\": {\n");
             for (var formValue : formValues.keySet()) {
                 if (formValues.get(formValue) == null || formValues.get(formValue).equals(""))
                     continue;
                 json.append("\"%s\": \"%s\",\n".formatted(formValue, formValues.get(formValue).toString()));
             }
-            json.deleteCharAt(json.lastIndexOf(","));
+            if (!formValues.isEmpty()) json.deleteCharAt(json.lastIndexOf(","));
+            json.append("},\n");
+
+            json.append("\"additionalFields\": {\n");
+            for (var formValue : additionalValues.keySet()) {
+                if (additionalValues.get(formValue) == null || additionalValues.get(formValue).equals(""))
+                    continue;
+                json.append("\"%s\": \"%s\",\n".formatted(formValue, additionalValues.get(formValue).toString()));
+            }
+            if (!additionalValues.isEmpty()) json.deleteCharAt(json.lastIndexOf(","));
+            json.append("}\n");
             json.append("}");
 
             OntIndividual indiv = individualService.getIndividualByIri(dataset, individualURI);
@@ -87,7 +98,7 @@ public class FormFillService {
             propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
                     "hasDraft", json.toString(), XSDDatatype.XSDstring);
             dataset.commit();
-        }  catch (Exception e) {
+        } catch (Exception e) {
             dataset.abort();
         } finally {
             dataset.end();
@@ -104,10 +115,37 @@ public class FormFillService {
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var setFields = new ArrayList<SetField>();
-            for (var key : draftMap.keySet()) {
-                setFields.add(new SetField(key.toString(), draftMap.get(key.toString()).toString()));
+            var additionalFields = (Map) draftMap.get("additionalFields");
+            var normalFields = (Map) draftMap.get("normalFields");
+            normalFields.putAll(additionalFields);
+            for (var key : normalFields.keySet()) {
+                setFields.add(new SetField(key.toString(), normalFields.get(key.toString()).toString()));
             }
             return setFields;
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public void addFieldElementToInstance(String formName, String individualName,
+                                          String propertyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+            var gson = new Gson();
+            var draftMap = gson.fromJson(draft.getString(), Map.class);
+            var additionalField = (Map) draftMap.get("additionalFields");
+            additionalField.put(propertyName, "");
+            var json = gson.toJson(draftMap);
+            propertyService.removePropertyValueFromIndividual(dataset, "forms", individual,
+                    "hasDraft");
+            propertyService.addDatatypePropertyToIndividual(dataset, "forms", individual,
+                    "hasDraft", json, XSDDatatype.XSDstring);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
         } finally {
             dataset.end();
         }
@@ -128,7 +166,7 @@ public class FormFillService {
                     ontology.getOntClass(classURI));
             for (var formValue : formValues.keySet()) {
                 if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass") ||
-                formValue.equals("create-individual-dialog-option"))
+                        formValue.equals("create-individual-dialog-option"))
                     continue;
                 var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
                 var prop = ontology.getProperty(propUri);
@@ -173,7 +211,7 @@ public class FormFillService {
                         "isDraft");
             }
             dataset.commit();
-        }  catch (Exception e) {
+        } catch (Exception e) {
             dataset.abort();
         } finally {
             dataset.end();

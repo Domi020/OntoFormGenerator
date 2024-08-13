@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.ArrayList;
 
 @Controller
 public class RestController {
@@ -63,12 +66,16 @@ public class RestController {
 
         model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
+        model.addAttribute("additionalElements", new ArrayList<FormField>());
 
         return "formfill";
     }
 
     @RequestMapping(value = "/fill/{form}/draft/{individualName}", method = RequestMethod.GET)
     public String loadFilloutPageWithDraft(Model model, @PathVariable String form, @PathVariable String individualName) {
+        // formElements => all fields from original form
+        // additionalElements => all additional set fields for this draft
+        // setElements => all values
         model.addAttribute("form", form);
         var ontology = formOverviewService.getOntologyOfForm(form);
         model.addAttribute("ontology", ontology.getName());
@@ -76,6 +83,8 @@ public class RestController {
 
         model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
+        model.addAttribute("additionalElements", formEditorService.getAllAdditionalElementsOfDraft(form,
+                ontology.getName(), individualName));
 
         model.addAttribute("setElements", formFillService.getSetFieldsByDraft(form, individualName,
                 ontology.getName()));
