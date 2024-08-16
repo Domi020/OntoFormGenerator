@@ -61,7 +61,10 @@
             <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Add new field</button>
         </div>
         <div style="padding-top: 70px">
-            <button type="submit" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+            <button id="save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+        </div>
+        <div style="padding-top: 70px">
+            <button id="validate-save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Validate and save</button>
         </div>
     </form>
     <dialog id="add-property-dialog">
@@ -351,6 +354,57 @@
         });
         newFieldDialog.querySelector('.close').addEventListener('click', function() {
             newFieldDialog.close();
+        });
+
+        const saveButton = document.querySelector('#save-button');
+        saveButton.addEventListener('click', function () {
+            const form = document.querySelector('#fillform');
+            const formData = new FormData(form);
+            let json = {};
+            formData.forEach(function(value, key){
+                json[key] = value;
+            });
+            let formJson = JSON.stringify(json);
+            fetch(`/api/forms/${formName}/fill?validate=false`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: formJson
+            })
+                .then(async function(response) {
+                    if (response.ok) {
+                        location.href = '/';
+                    } else {
+                        alert("An error has occurred");
+                    }
+                })
+        });
+
+        const validateSaveButton = document.querySelector('#validate-save-button');
+        validateSaveButton.addEventListener('click', function () {
+            const form = document.querySelector('#fillform');
+            const formData = new FormData(form);
+            let json = {};
+            formData.forEach(function(value, key){
+                json[key] = value;
+            });
+            let formJson = JSON.stringify(json);
+            fetch(`/api/forms/${formName}/fill?validate=true`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: formJson
+            })
+                .then(async function(response) {
+                    if (response.ok) {
+                        location.href = '/';
+                    } else {
+                        let allErrors = await response.text();
+                        alert(allErrors);
+                    }
+                })
         });
 
     </script>

@@ -122,21 +122,10 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/api/ontologies/{ontologyName}/validate", method = RequestMethod.GET)
-    public ResponseEntity<String> validateOntology(@PathVariable String ontologyName) {
-        ontologyContentService.validateOntology(ontologyName);
-        // StringBuilder result = new StringBuilder();
-        // if (report.isValid()) {
-        //     result.append("Ontology is valid");
-        // } else {
-        //     for (Iterator<ValidityReport.Report> i = report.getReports(); i.hasNext(); ) {
-        //         ValidityReport.Report rep = i.next();
-        //         result.append(" - ").append(rep).append("\n");
-        //     }
-        // }
-        // return new ResponseEntity<>(result.toString(), HttpStatus.OK);
-        return new ResponseEntity<>("", HttpStatus.OK);
-    }
+    // @RequestMapping(value = "/api/ontologies/{ontologyName}/validate", method = RequestMethod.GET)
+    // public ResponseEntity<String> validateOntology(@PathVariable String ontologyName) {
+    //     return new ResponseEntity<>(ontologyContentService.validateOntology(ontologyName), HttpStatus.OK);
+    // }
 
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());

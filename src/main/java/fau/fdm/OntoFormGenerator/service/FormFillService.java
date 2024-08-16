@@ -45,6 +45,19 @@ public class FormFillService {
         this.propertyService = propertyService;
     }
 
+    public void deleteIndividualByIri(String ontologyName, String individualUri) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            individualService.deleteIndividualByIri(dataset, ontologyName, individualUri);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
+    }
+
     public void createDraftFromFilledForm(String formName,
                                           String ontologyName,
                                           String targetField,
@@ -151,11 +164,11 @@ public class FormFillService {
         }
     }
 
-    public void createIndividualFromFilledForm(String formName,
+    public String createIndividualFromFilledForm(String formName,
                                                String ontologyName,
                                                String targetField,
                                                String instanceName,
-                                               MultiValueMap<String, String> formValues) {
+                                               Map<String, String> formValues) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -171,11 +184,11 @@ public class FormFillService {
                 var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
                 var prop = ontology.getProperty(propUri);
                 if (generalTDBService.checkIfObjectProperty(dataset, ontologyName, prop.getURI())) {
-                    var objectValue = formValues.getFirst(formValue);
+                    var objectValue = formValues.get(formValue);
                     var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, objectValue);
                     individual.addProperty(prop, objectIndividual);
                 } else {
-                    var dataValue = formValues.getFirst(formValue);
+                    var dataValue = formValues.get(formValue);
                     var dtype = ontology.getDatatypeProperty(propUri).getRange().getLocalName();
                     switch (dtype) {
                         case "int":
@@ -211,8 +224,10 @@ public class FormFillService {
                         "isDraft");
             }
             dataset.commit();
+            return individual.getURI();
         } catch (Exception e) {
             dataset.abort();
+            return null;
         } finally {
             dataset.end();
         }

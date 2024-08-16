@@ -389,7 +389,7 @@ public class OntologyContentService {
         }
     }
 
-    public void validateOntology(String ontologyName) {
+    public ValidationResult validateOntology(String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         try {
@@ -404,7 +404,9 @@ public class OntologyContentService {
             Configuration config = new Configuration();
             config.throwInconsistentOntologyException = false;
             var reasoner = reasonerFactory.createReasoner(owlApiOntology, config);
-            reasoner.isConsistent();
+            if (reasoner.isConsistent()) {
+                return new ValidationResult(true, "");
+            }
             reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
                 @Override
                 public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration,OWLOntology o) {
@@ -414,31 +416,13 @@ public class OntologyContentService {
             };
             BlackBoxExplanation x = new BlackBoxExplanation(owlApiOntology, reasonerFactory, reasoner);
             HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
-            // explanationGenerator.setProgressMonitor(new ExplanationProgressMonitor() {
-            //     @Override
-            //     public boolean isCancelled() {
-            //         return ExplanationProgressMonitor.super.isCancelled();
-            //     }
-//
-            //     @Override
-            //     public void foundExplanation(Set<OWLAxiom> axioms) {
-            //         ExplanationProgressMonitor.super.foundExplanation(axioms);
-            //     }
-//
-            //     @Override
-            //     public void foundAllExplanations() {
-            //         ExplanationProgressMonitor.super.foundAllExplanations();
-            //     }
-            // });
+            StringBuilder explaination = new StringBuilder("Knowledge base is inconsistent.");
             var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
-            // var expl = explanationGenerator.getSingleExplanationGenerator().getExplanation(dataFactory.getOWLThing());
-            // var explains = explanationGenerator.getExplanations(dataFactory.getOWLThing());
-                System.out.println("------------------");
-                System.out.println("Axioms causing the inconsistency: ");
-                for (OWLAxiom causingAxiom : expl) {
-                    System.out.println(causingAxiom);
-                }
-                System.out.println("------------------");
+            explaination.append("Axioms causing the inconsistency: ");
+            for (OWLAxiom causingAxiom : expl) {
+                explaination.append(causingAxiom);
+            }
+            return new ValidationResult(false, explaination.toString());
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
         } finally {
