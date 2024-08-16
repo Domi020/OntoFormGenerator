@@ -50,6 +50,7 @@ public class FormFillService {
         dataset.begin(ReadWrite.WRITE);
         try {
             individualService.deleteIndividualByIri(dataset, ontologyName, individualUri);
+            individualService.deleteIndividualByIri(dataset, "forms", individualUri);
             dataset.commit();
         } catch (Exception e) {
             dataset.abort();
