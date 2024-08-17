@@ -4,7 +4,6 @@ import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.service.*;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

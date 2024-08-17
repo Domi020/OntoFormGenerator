@@ -9,11 +9,7 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class OntologyOverviewService {
@@ -67,7 +62,7 @@ public class OntologyOverviewService {
         try {
             OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
             OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-            var modelName = ontologyName + "_" + UUID.randomUUID();
+            var modelName = ontologyName;
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
 
             try {

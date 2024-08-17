@@ -25,7 +25,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 15%;
+            width: 11.66%;
             position: relative;
             text-align: left;
         }
@@ -71,6 +71,11 @@
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
+                </div>
+                <div class="property-field">
+                    <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
+                    placeholder="1" name="maximumValues">
+                    <label class="mdl-textfield__label">Maximum values</label>
                 </div>
                 <div class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
@@ -129,11 +134,6 @@
             const fieldContainer = document.querySelector('.field-container');
             let toDelete = [];
             fieldContainer.childNodes.forEach((node) => {
-                // const id = node.id;
-                // const propertyCheckbox = node.querySelector('input[type="checkbox"]');
-                // if (propertyCheckbox.checked) {
-                //     toDelete.push(id)
-                // }
                 toDelete.push(node.id);
             });
             toDelete.forEach((id) => {
@@ -157,10 +157,6 @@
                     }
                 })
         }
-
-
-
-
     </script>
 </head>
 <body>
@@ -222,6 +218,7 @@
                 } else {
                     field.querySelector('input[name="propertyRange"]').value = prop.datatypeRange;
                 }
+                field.querySelector('input[name="maximumValues"]').value = element.maximumValues;
             });
             firstRefreshAvailableProperties(divs, items);
         }

@@ -82,13 +82,14 @@ public class FormEditorService {
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName,
                                     new OntologyClass(null, null),
-                                    true, objectRange, null), "ObjectSelect", fieldName));
+                                    true, objectRange, null), "ObjectSelect", fieldName,
+                            1));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName, new OntologyClass(null, null),
                                     false, null, dataRangeProp.getLocalName()),
-                            getFormType(dataRangeProp.getLocalName()), fieldName));
+                            getFormType(dataRangeProp.getLocalName()), fieldName, 1));
                 }
             }
             return formFields;
@@ -117,18 +118,20 @@ public class FormEditorService {
                         "forms", formElementIndividual, "hasPositionInForm").getInt();
                 var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "targetsField");
+                var maximumValues = propertyService.getDatatypePropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "hasMaximumValues").getInt();
                 var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
                 if (isObjectProperty) {
                     var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
-                            fieldType, fieldName));
+                            fieldType, fieldName, maximumValues));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, false, null,
-                                    dataRangeProp.getLocalName()), fieldType, fieldName));
+                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues));
                 }
             }
             for (int i = 0; i < formFields.size(); i++) {
@@ -203,6 +206,13 @@ public class FormEditorService {
                         form, "hasFormElement", field.getURI());
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                         field, "hasPositionInForm", String.valueOf(i), XSDDatatype.XSDint);
+                var maximumValues = formInput.get("maximumValues").get(i);
+                if (maximumValues == null || maximumValues.isEmpty()) {
+                    maximumValues = "1";
+                }
+                propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "hasMaximumValues", maximumValues,
+                        XSDDatatype.XSDpositiveInteger);
             }
 
             // delete all old form elements that are not in the new form

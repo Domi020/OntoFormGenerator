@@ -11,4 +11,5 @@ public class FormField {
     private OntologyProperty ontologyProperty;
     private String fieldType;
     private String name;
+    private int maximumValues;
 }
