@@ -65,7 +65,7 @@ public class FormController {
             "application/json;charset=UTF-8")
     public ResponseEntity<String> fillForm(@PathVariable String formName,
                                     @RequestParam(value = "validate", required = false) String validate,
-                                    @RequestBody Map<String, String[]> form) { //TODO: hier weitermachen
+                                    @RequestBody Map<String, String[]> form) {
         String ontologyName = form.get("ontologyName")[0];
         var individualUri = formFillService.createIndividualFromFilledForm(formName,
                 ontologyName, form.get("targetClass")[0],

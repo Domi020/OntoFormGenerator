@@ -20,38 +20,47 @@
     </div>
 </div>
 
-//TODO: Add the rest of the fields
 <div th:fragment="stringField (name, propName, multipleValues)">
-    <div class="mdl-textfield mdl-js-textfield">
-        <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}" th:name="${propName}">
-        <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
-    </div>
-    <div th:if="${multipleValues > 1}">
-        <a class="mdl-list__item-secondary-action clickable-button"
-           th:data-object-id="${'input-' + name}"
-           th:onclick="'removeField(this.getAttribute(\'data-object-id\'));'">
-            <i class="material-icons">remove</i></a>
-        <a class="mdl-list__item-secondary-action clickable-button"
-           th:data-object-id="${'input-' + name}"
-           th:onclick="'addField(this.getAttribute(\'data-object-id\'));'">
-            <i class="material-icons">add</i></a>
+    <div th:id="${'main-container-' + name}">
+        <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
+            <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}" th:name="${propName}">
+            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
+        </div>
+        <div th:if="${multipleValues > 1}">
+            <a class="mdl-list__item-secondary-action clickable-button"
+               th:data-object-id="${'input-' + name}"
+               th:data-main-container="${'main-container-' + name}"
+               th:onclick="'removeField(this.getAttribute(\'data-main-container\'));'">
+                <i class="material-icons">remove</i></a>
+            <a class="mdl-list__item-secondary-action clickable-button"
+               th:data-object-id="${'input-' + name}"
+               th:data-main-container="${'main-container-' + name}"
+               th:data-template="${'template-' + name}"
+               th:onclick="'addField(this.getAttribute(\'data-main-container\'), this.getAttribute(\'data-template\'));'">
+                <i class="material-icons">add</i></a>
+        </div>
     </div>
 </div>
 
 <div th:fragment="dateTimeField (name, propName, multipleValues)">
-    <div class="mdl-textfield mdl-js-textfield">
-        <input class="mdl-textfield__input" type="datetime-local" th:id="${'input-' + name}" th:name="${propName}">
-        <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
-    </div>
-    <div th:if="${multipleValues > 1}">
-        <a class="mdl-list__item-secondary-action clickable-button"
-           th:data-object-id="${'input-' + name}"
-           th:onclick="'removeField(this.getAttribute(\'data-object-id\'));'">
-            <i class="material-icons">remove</i></a>
-        <a class="mdl-list__item-secondary-action clickable-button"
-           th:data-object-id="${'input-' + name}"
-           th:onclick="'addField(this.getAttribute(\'data-object-id\'));'">
-            <i class="material-icons">add</i></a>
+    <div th:id="${'main-container-' + name}">
+        <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
+            <input class="mdl-textfield__input" type="datetime-local" th:id="${'input-' + name}" th:name="${propName}">
+            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
+        </div>
+        <div th:if="${multipleValues > 1}">
+            <a class="mdl-list__item-secondary-action clickable-button"
+               th:data-object-id="${'input-' + name}"
+               th:data-main-container="${'main-container-' + name}"
+               th:onclick="'removeField(this.getAttribute(\'data-main-container\'));'">
+                <i class="material-icons">remove</i></a>
+            <a class="mdl-list__item-secondary-action clickable-button"
+               th:data-object-id="${'input-' + name}"
+               th:data-main-container="${'main-container-' + name}"
+               th:data-template="${'template-' + name}"
+               th:onclick="'addField(this.getAttribute(\'data-main-container\'), this.getAttribute(\'data-template\'));'">
+                <i class="material-icons">add</i></a>
+        </div>
     </div>
 </div>
 Ï
