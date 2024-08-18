@@ -420,7 +420,7 @@ public class OntologyContentService {
             var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
             explaination.append("Axioms causing the inconsistency:\n");
             for (OWLAxiom causingAxiom : expl) {
-                explaination.append(causingAxiom).append("\n");
+                explaination.append(causingAxiom).append("\n\n");
             }
             return new ValidationResult(false, explaination.toString());
         } catch (OWLOntologyCreationException e) {

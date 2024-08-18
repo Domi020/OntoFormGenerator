@@ -23,6 +23,8 @@ import org.springframework.util.MultiValueMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class FormFillService {
@@ -63,8 +65,8 @@ public class FormFillService {
                                           String ontologyName,
                                           String targetField,
                                           String instanceName,
-                                          Map<String, Object> formValues,
-                                          Map<String, Object> additionalValues) {
+                                          Map<String, List<String>> formValues,
+                                          Map<String, List<String>> additionalValues) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -75,18 +77,18 @@ public class FormFillService {
             StringBuilder json = new StringBuilder("{\n");
             json.append("\"normalFields\": {\n");
             for (var formValue : formValues.keySet()) {
-                if (formValues.get(formValue) == null || formValues.get(formValue).equals(""))
+                if (formValues.get(formValue) == null || formValues.get(formValue).isEmpty())
                     continue;
-                json.append("\"%s\": \"%s\",\n".formatted(formValue, formValues.get(formValue).toString()));
+                json.append("\"%s\": [\"%s\"],\n".formatted(formValue, String.join("\", \"", formValues.get(formValue))));
             }
             if (!formValues.isEmpty()) json.deleteCharAt(json.lastIndexOf(","));
             json.append("},\n");
 
             json.append("\"additionalFields\": {\n");
             for (var formValue : additionalValues.keySet()) {
-                if (additionalValues.get(formValue) == null || additionalValues.get(formValue).equals(""))
+                if (additionalValues.get(formValue) == null || additionalValues.get(formValue).isEmpty())
                     continue;
-                json.append("\"%s\": \"%s\",\n".formatted(formValue, additionalValues.get(formValue).toString()));
+                json.append("\"%s\": [\"%s\"],\n".formatted(formValue, String.join("\", \"", additionalValues.get(formValue))));
             }
             if (!additionalValues.isEmpty()) json.deleteCharAt(json.lastIndexOf(","));
             json.append("}\n");
@@ -133,7 +135,7 @@ public class FormFillService {
             var normalFields = (Map) draftMap.get("normalFields");
             normalFields.putAll(additionalFields);
             for (var key : normalFields.keySet()) {
-                setFields.add(new SetField(key.toString(), normalFields.get(key.toString()).toString()));
+                setFields.add(new SetField(key.toString(), (List<String>) normalFields.get(key.toString())));
             }
             return setFields;
         } finally {

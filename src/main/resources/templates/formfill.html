@@ -231,9 +231,17 @@
             let additionalFields = {};
             formData.forEach(function(value, key){
                 if (additionalElements.find(field => field.name === key)) {
-                    additionalFields[key] = value;
+                    if (additionalFields[key] === undefined) {
+                        additionalFields[key] = [value];
+                    } else {
+                        additionalFields[key].push(value);
+                    }
                 } else {
-                    normalFields[key] = value;
+                    if (normalFields[key] === undefined) {
+                        normalFields[key] = [value];
+                    } else {
+                        normalFields[key].push(value);
+                    }
                 }
             });
             let formString = {
@@ -309,12 +317,19 @@
                     if (allFormElements[j].ontologyProperty.name === element.fieldName) {
                         const input = document.getElementById('input-' + allFormElements[j].name);
                         if (input) {
-                            input.value = element.value;
+                            for (let k = 0; k < element.values.length; k++) {
+                                if (k === 0) {
+                                    input.value = element.values[k];
+                                } else {
+                                    let clone = addField('main-container-' + allFormElements[j].name, 'template-' + allFormElements[j].name);
+                                    clone.value = element.values[k];
+                                }
+                            }
                             break;
                         }
                         const objectSelect = document.getElementById("object-select-" + allFormElements[j].name);
                         if (objectSelect) {
-                            objectSelect.selectize.setValue(element.value);
+                            objectSelect.selectize.setValue(element.values);
                             break;
                         }
                         break;
@@ -367,17 +382,7 @@
 
         const saveButton = document.querySelector('#save-button');
         saveButton.addEventListener('click', function () {
-            const form = document.querySelector('#fillform');
-            const formData = new FormData(form);
-            let json = {};
-            formData.forEach(function(value, key){
-                if (json[key] === undefined) {
-                    json[key] = [value];
-                } else {
-                    json[key].push(value);
-                }
-            });
-            let formJson = JSON.stringify(json);
+            const formJson = formDataToJSON();
             fetch(`/api/forms/${formName}/fill?validate=false`, {
                 method: 'POST',
                 headers: {
@@ -396,17 +401,7 @@
 
         const validateSaveButton = document.querySelector('#validate-save-button');
         validateSaveButton.addEventListener('click', function () {
-            const form = document.querySelector('#fillform');
-            const formData = new FormData(form);
-            let json = {};
-            formData.forEach(function(value, key){
-                if (json[key] === undefined) {
-                    json[key] = [value];
-                } else {
-                    json[key].push(value);
-                }
-            });
-            let formJson = JSON.stringify(json);
+            const formJson = formDataToJSON();
             fetch(`/api/forms/${formName}/fill?validate=true`, {
                 method: 'POST',
                 headers: {
@@ -424,6 +419,20 @@
                 })
         });
 
+        function formDataToJSON() {
+            const form = document.querySelector('#fillform');
+            const formData = new FormData(form);
+            let json = {};
+            formData.forEach(function(value, key){
+                if (json[key] === undefined) {
+                    json[key] = [value];
+                } else {
+                    json[key].push(value);
+                }
+            });
+            return JSON.stringify(json);
+        }
+
         function addField(containerId, templateId) {
             let container = document.getElementById(containerId);
             let copies = container.getElementsByClassName('copy-' + containerId);
@@ -439,6 +448,7 @@
                 let input = clone.querySelector('input');
                 input.value = '';
                 container.appendChild(clone);
+                return input;
             }
         }
 

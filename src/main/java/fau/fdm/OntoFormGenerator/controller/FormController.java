@@ -92,11 +92,11 @@ public class FormController {
     public String fillFormDraft(@PathVariable String formName,
                            @RequestBody Map<String, Object> form,
                            Model model) {
-        var normalFields = (Map<String, Object>) form.get("normalFields");
-        var additionalFields = (Map<String, Object>) form.get("additionalFields");
+        var normalFields = (Map<String, List<String>>) form.get("normalFields");
+        var additionalFields = (Map<String, List<String>>) form.get("additionalFields");
         formFillService.createDraftFromFilledForm(formName,
-                normalFields.get("ontologyName").toString(), normalFields.get("targetClass").toString(),
-                normalFields.get("instanceName").toString(), normalFields, additionalFields);
+                normalFields.get("ontologyName").get(0), normalFields.get("targetClass").get(0),
+                normalFields.get("instanceName").get(0), normalFields, additionalFields);
         return loadIndexPage(model);
     }
 
