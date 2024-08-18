@@ -169,7 +169,7 @@ public class FormFillService {
                                                String ontologyName,
                                                String targetField,
                                                String instanceName,
-                                               Map<String, String> formValues) {
+                                               Map<String, String[]> formValues) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -185,28 +185,30 @@ public class FormFillService {
                 var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
                 var prop = ontology.getProperty(propUri);
                 if (generalTDBService.checkIfObjectProperty(dataset, ontologyName, prop.getURI())) {
-                    var objectValue = formValues.get(formValue);
-                    var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, objectValue);
-                    individual.addProperty(prop, objectIndividual);
+                    for (var objectValue : formValues.get(formValue)) {
+                        var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, objectValue);
+                        individual.addProperty(prop, objectIndividual);
+                    }
                 } else {
-                    var dataValue = formValues.get(formValue);
                     var dtype = ontology.getDatatypeProperty(propUri).getRange().getLocalName();
-                    switch (dtype) {
-                        case "int":
-                            individual.addLiteral(prop, Integer.parseInt(dataValue));
-                            break;
-                        case "float":
-                            individual.addLiteral(prop, Float.parseFloat(dataValue));
-                            break;
-                        case "double":
-                            individual.addLiteral(prop, Double.parseDouble(dataValue));
-                            break;
-                        case "boolean":
-                            individual.addLiteral(prop, Boolean.parseBoolean(dataValue));
-                            break;
-                        default:
-                            individual.addLiteral(prop, dataValue);
-                            break;
+                    for (var dataValue : formValues.get(formValue)) {
+                        switch (dtype) {
+                            case "int":
+                                individual.addLiteral(prop, Integer.parseInt(dataValue));
+                                break;
+                            case "float":
+                                individual.addLiteral(prop, Float.parseFloat(dataValue));
+                                break;
+                            case "double":
+                                individual.addLiteral(prop, Double.parseDouble(dataValue));
+                                break;
+                            case "boolean":
+                                individual.addLiteral(prop, Boolean.parseBoolean(dataValue));
+                                break;
+                            default:
+                                individual.addLiteral(prop, dataValue);
+                                break;
+                        }
                     }
                 }
             }

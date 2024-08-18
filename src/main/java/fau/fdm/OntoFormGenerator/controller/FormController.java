@@ -65,11 +65,11 @@ public class FormController {
             "application/json;charset=UTF-8")
     public ResponseEntity<String> fillForm(@PathVariable String formName,
                                     @RequestParam(value = "validate", required = false) String validate,
-                                    @RequestBody Map<String, String> form) {
-        String ontologyName = form.get("ontologyName");
+                                    @RequestBody Map<String, String[]> form) { //TODO: hier weitermachen
+        String ontologyName = form.get("ontologyName")[0];
         var individualUri = formFillService.createIndividualFromFilledForm(formName,
-                ontologyName, form.get("targetClass"),
-                form.get("instanceName"), form);
+                ontologyName, form.get("targetClass")[0],
+                form.get("instanceName")[0], form);
         if (Boolean.parseBoolean(validate)) {
             try {
                 var res = ontologyContentService.validateOntology(ontologyName);
@@ -83,7 +83,6 @@ public class FormController {
                 formFillService.deleteIndividualByIri(ontologyName, individualUri);
                 return ResponseEntity.internalServerError().body("An error occurred while validating the ontology.");
             }
-
         }
         return ResponseEntity.ok("Instance was created");
     }

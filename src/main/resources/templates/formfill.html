@@ -31,30 +31,38 @@
         </div>
         <div th:each="field: ${formElements}">
             <div th:if="${field.fieldType == 'Input'}">
-                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'Number'}">
-                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'Datetime'}">
-                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'ObjectSelect'}">
-                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
         </div>
         <div th:each="field: ${additionalElements}">
             <div th:if="${field.fieldType == 'Input'}">
-                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'Number'}">
-                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'Datetime'}">
-                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
             <div th:if="${field.fieldType == 'ObjectSelect'}">
-                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name})"></div>
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
             </div>
         </div>
         <div>
@@ -253,6 +261,7 @@
             const currentFormElement = allFormElements
                 .find(formElement => formElement.ontologyProperty.name === fieldName)
             const className = currentFormElement.ontologyProperty.objectRange.name;
+            const maximumValues = currentFormElement.maximumValues;
 
             promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
                 .then(async function(response) {
@@ -261,7 +270,7 @@
                         valueField: 'name',
                         labelField: 'name',
                         searchField: 'name',
-                        maxItems: 1,
+                        maxItems: maximumValues,
                         options: allIndividuals,
                         render: {
                             option: function(item, escape) {
@@ -362,7 +371,11 @@
             const formData = new FormData(form);
             let json = {};
             formData.forEach(function(value, key){
-                json[key] = value;
+                if (json[key] === undefined) {
+                    json[key] = [value];
+                } else {
+                    json[key].push(value);
+                }
             });
             let formJson = JSON.stringify(json);
             fetch(`/api/forms/${formName}/fill?validate=false`, {
@@ -387,7 +400,11 @@
             const formData = new FormData(form);
             let json = {};
             formData.forEach(function(value, key){
-                json[key] = value;
+                if (json[key] === undefined) {
+                    json[key] = [value];
+                } else {
+                    json[key].push(value);
+                }
             });
             let formJson = JSON.stringify(json);
             fetch(`/api/forms/${formName}/fill?validate=true`, {
@@ -406,6 +423,32 @@
                     }
                 })
         });
+
+        function addField(containerId, templateId) {
+            let container = document.getElementById(containerId);
+            let copies = container.getElementsByClassName('copy-' + containerId);
+            let template = document.getElementById(templateId);
+            let formElementName = templateId.replace('template-', '');
+            let formElement = allFormElements.find(formElement => formElement.name === formElementName);
+            if (copies.length > formElement.maximumValues - 1) {
+                alert('Maximum number of values reached');
+            } else {
+                let clone = template.cloneNode(true);
+                clone.id = 'copy-' + templateId + Math.random().toString(36).substring(7);
+                clone.classList.add('copy-' + containerId);
+                let input = clone.querySelector('input');
+                input.value = '';
+                container.appendChild(clone);
+            }
+        }
+
+        function removeField(containerId) {
+            let container = document.getElementById(containerId);
+            let copies = container.getElementsByClassName('copy-' + containerId);
+            if (copies.length > 0) {
+                container.removeChild(copies[copies.length - 1]);
+            }
+        }
 
     </script>
 </body>
