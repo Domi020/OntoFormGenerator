@@ -247,7 +247,6 @@ public class OntologyContentService {
         }
     }
 
-    // TODO: backend check if individual is imported / read only
     public void editIndividual(String ontologyName, String individualName, MultiValueMap<String, String> form) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
@@ -259,7 +258,7 @@ public class OntologyContentService {
 
             var setProperties = getSetProperties(dataset, individualName, ontologyName);
 
-            for (int i = 0; i < form.get("propertyName").size(); i++) {
+            for (int i = 0; i < form.getOrDefault("propertyName", new ArrayList<>()).size(); i++) {
                 // Check if property already exists
                 boolean foundElement = false;
                 var propertyName = form.get("propertyName").get(i);
@@ -308,16 +307,27 @@ public class OntologyContentService {
                             break;
                     }
                 }
+            }
 
-                // delete all old form elements that are not in the new form
-                for (var alreadyInsertedElement : setProperties) {
-                    if (alreadyInsertedElement == null) continue;
+
+            // delete all old form elements that are not in the new form
+            for (var alreadyInsertedElement : setProperties) {
+                if (alreadyInsertedElement == null) continue;
+                boolean found = false;
+                for (int i = 0; i < form.getOrDefault("propertyName", new ArrayList<>()).size(); i++) {
+                    if (alreadyInsertedElement.getProperty().getName().equals(form.get("propertyName").get(i))) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
                     propertyService.removePropertyValueFromIndividual(dataset, ontologyName,
-                            individual, form.get("propertyName").get(i));
+                            individual, alreadyInsertedElement.getProperty().getName(),
+                            alreadyInsertedElement.getValue());
                 }
             }
             dataset.commit();
-        }  catch (Exception e) {
+        } catch (Exception e) {
             dataset.abort();
         } finally {
             dataset.end();
@@ -409,7 +419,7 @@ public class OntologyContentService {
             }
             reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
                 @Override
-                public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration,OWLOntology o) {
+                public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration, OWLOntology o) {
                     configuration.throwInconsistentOntologyException = false;
                     return new org.semanticweb.HermiT.Reasoner(config, o);
                 }

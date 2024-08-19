@@ -153,7 +153,7 @@ public class FormFillService {
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var additionalField = (Map) draftMap.get("additionalFields");
-            additionalField.put(propertyName, "");
+            additionalField.put(propertyName, new ArrayList<>());
             var json = gson.toJson(draftMap);
             propertyService.removePropertyValueFromIndividual(dataset, "forms", individual,
                     "hasDraft");

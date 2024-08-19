@@ -401,6 +401,7 @@
 
         const validateSaveButton = document.querySelector('#validate-save-button');
         validateSaveButton.addEventListener('click', function () {
+            JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
             const formJson = formDataToJSON();
             fetch(`/api/forms/${formName}/fill?validate=true`, {
                 method: 'POST',
@@ -410,6 +411,7 @@
                 body: formJson
             })
                 .then(async function(response) {
+                    JsLoadingOverlay.hide();
                     if (response.ok) {
                         location.href = '/';
                     } else {
@@ -439,7 +441,7 @@
             let template = document.getElementById(templateId);
             let formElementName = templateId.replace('template-', '');
             let formElement = allFormElements.find(formElement => formElement.name === formElementName);
-            if (copies.length > formElement.maximumValues - 1) {
+            if (copies.length >= formElement.maximumValues - 1) {
                 alert('Maximum number of values reached');
             } else {
                 let clone = template.cloneNode(true);

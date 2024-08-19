@@ -8,10 +8,7 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.query.Dataset;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -113,6 +110,28 @@ public class PropertyService {
         if (prop != null) {
             prop.remove();
         }
+    }
+
+    public void removePropertyValueFromIndividual(Dataset dataset,
+                                                  String ontologyName,
+                                                  Individual domainIndividual,
+                                                  String propertyName,
+                                                  Object value) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = getPropertyFromOntology(dataset, ontologyName, propertyName);
+        ontModel.listStatements(domainIndividual.asResource(), prop, (RDFNode) null).forEach(
+                stmt -> {
+                    if (stmt.getObject().isLiteral()) {
+                        if (stmt.getObject().asLiteral().getValue().equals(value)) {
+                            stmt.remove();
+                        }
+                    } else {
+                        if (stmt.getObject().asResource().getLocalName().equals(value)) {
+                            stmt.remove();
+                        }
+                    }
+                }
+        );
     }
 
 
