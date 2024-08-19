@@ -74,7 +74,7 @@
 
     <owl:DatatypeProperty rdf:about="http://ontologies.ontoformgenerator.de/MyRestaurant#hasTimestamp">
         <rdfs:domain rdf:resource="http://ontologies.ontoformgenerator.de/MyRestaurant#Order"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTimeStamp"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
     </owl:DatatypeProperty>
     
 

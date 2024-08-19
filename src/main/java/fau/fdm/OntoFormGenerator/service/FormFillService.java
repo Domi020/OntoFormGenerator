@@ -12,6 +12,7 @@ import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
@@ -206,6 +207,10 @@ public class FormFillService {
                                 break;
                             case "boolean":
                                 individual.addLiteral(prop, Boolean.parseBoolean(dataValue));
+                                break;
+                            case "dateTime":
+                                var lit = ontology.createTypedLiteral(dataValue, XSDDatatype.XSDdateTime);
+                                individual.addLiteral(prop, lit);
                                 break;
                             default:
                                 individual.addLiteral(prop, dataValue);

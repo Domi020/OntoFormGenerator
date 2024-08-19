@@ -93,6 +93,9 @@ public class OntologyContentService {
             }
             ontClass.listDeclaredProperties(false).forEachRemaining(
                     property -> {
+                        if (property.getDomain() == null) {
+                            return;
+                        }
                         OntologyProperty ontologyProperty = new OntologyProperty();
                         ontologyProperty.setName(property.getLocalName());
                         ontologyProperty.setDomain(new OntologyClass(className, classURI));

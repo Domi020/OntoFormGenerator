@@ -45,7 +45,7 @@
 <div th:fragment="dateTimeField (name, propName, multipleValues)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
-            <input class="mdl-textfield__input" type="datetime-local" th:id="${'input-' + name}" th:name="${propName}">
+            <input class="mdl-textfield__input" type="datetime-local" step="1" th:id="${'input-' + name}" th:name="${propName}">
             <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">

@@ -220,7 +220,7 @@
                 .then(() => fetch(`/api/forms/${formName}/drafts/${draftName}/field/${propName}`, {
                     method: 'POST'
                 })
-                    .then(() => location.reload())
+                    .then(() => location.href = `/fill/${formName}/draft/${draftName}`)
             );
         }
 
