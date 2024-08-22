@@ -10,6 +10,9 @@
     <script src="/material.min.js"></script>
     <script src="/functions.js"></script>
     <script src="/js-loading-overlay.min.js"></script>
+    <script src="/sigma.min.js"></script>
+    <script src="/graphology.umd.min.js"></script>
+    <script src="/bundle.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body>
@@ -131,6 +134,7 @@
                 <button>
                     <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
                 </button>
+                <input id="create-property-with-object" type="text" name="create-property-with-object" readonly>
             </div>
         </fieldset>
         <button>
@@ -140,6 +144,19 @@
             <a>Cancel</a>
         </button>
 
+    </dialog>
+    <dialog id="select-class-for-property-dialog">
+        <h1>Classes of ontology</h1>
+        <h2 th:text="${ontology}"></h2>
+        <h3>Select the range of the new property</h3>
+        <div id="class-select-container" style="width: 800px; height: 600px; background: white"></div>
+        <div>
+            <input id="new-object-property-range" type="text" name="new-object-property-range" readonly>
+            <label for="new-object-property-range">Selected class</label>
+        </div>
+        <button class="close">
+            <a>Cancel</a>
+        </button>
     </dialog>
     <dialog id="add-individual-dialog">
         <h2>Create new individual</h2>
@@ -280,6 +297,24 @@
             dialog.showModal();
         }
 
+        function selectObjectPropertyFromGraph() {
+            fetch(`/api/ontologies/${ontologyName}/classes`)
+                .then(async function(response) {
+                    const newDialog = document.querySelector('#select-class-for-property-dialog');
+                    newDialog.querySelector('.close').addEventListener('click', function() {
+                        let output = document.getElementById('new-object-property-range');
+                        let outputOnOtherDialog = document.getElementById('create-property-with-object');
+                        outputOnOtherDialog.value = output.value
+                        newDialog.close();
+                    });
+                    newDialog.showModal();
+                    let graph = await response.json();
+                    let output = document.getElementById('new-object-property-range');
+                    let container = document.getElementById('class-select-container');
+                    myFuncs.buildSubclassGraphForPropertyRangeSelection(graph, container, output);
+                });
+        }
+
         function createNewProperty_checkOption() {
             let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
             if (option === '1') {
@@ -310,6 +345,7 @@
             fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
                 method: 'POST'
             }).then(() => {
+                location.reload()
             });
         }
 

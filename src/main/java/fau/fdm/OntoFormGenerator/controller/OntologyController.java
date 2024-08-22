@@ -3,6 +3,7 @@ package fau.fdm.OntoFormGenerator.controller;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.data.SubclassGraph;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
@@ -139,6 +140,11 @@ public class OntologyController {
     // public ResponseEntity<String> validateOntology(@PathVariable String ontologyName) {
     //     return new ResponseEntity<>(ontologyContentService.validateOntology(ontologyName), HttpStatus.OK);
     // }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
+    public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {
+        return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);
+    }
 
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());

@@ -449,9 +449,12 @@ public class OntologyContentService {
             var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                     dataset.getNamedModel(ontologyName));
             var domainClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, domain));
-            OntResource fullRange = null;
+            OntResource fullRange;
             if (objectProperty) {
-
+                var property = ontModel.createObjectProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                property.addDomain(domainClass);
+                fullRange = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, range));
+                property.addRange(fullRange);
             } else {
                 var property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
                 property.addDomain(domainClass);

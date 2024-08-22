@@ -1489,6 +1489,25 @@ module.exports = function isGraph(value) {
 const forceLayout = require("graphology-layout-forceatlas2");
 const circ = require("graphology-layout/circular")
 
+function buildSubclassGraphForPropertyRangeSelection(subclassGraph, containerElement, targetElement) {
+    const graph = new graphology.DirectedGraph();
+    for (const node of subclassGraph.classes) {
+        graph.addNode(node.name, {label: node.name,
+            size: 10, color: "black"});
+    }
+    for (const edge of subclassGraph.edges) {
+        graph.addEdge(edge.subClass.name, edge.superClass.name, {size: 1, color: "purple",
+            type: 'arrow'});
+    }
+    circ.assign(graph)
+    // const positions = forceLayout(graph, {maxIterations: 100});
+    forceLayout.assign(graph, 1000);
+    const sigmaInstance = new Sigma(graph, containerElement);
+    sigmaInstance.on("clickNode", (e) => {
+        targetElement.value = e.node;
+    });
+}
+
 function buildSubclassGraph() {
     const graph = new graphology.DirectedGraph();
     for (const node of subclassGraph.classes) {
@@ -1514,6 +1533,7 @@ function buildSubclassGraph() {
     });
 }
 
-module.exports = {'buildSubclassGraph': buildSubclassGraph};
+module.exports = {'buildSubclassGraph': buildSubclassGraph,
+'buildSubclassGraphForPropertyRangeSelection': buildSubclassGraphForPropertyRangeSelection};
 },{"graphology-layout-forceatlas2":3,"graphology-layout/circular":5}]},{},[9])(9)
 });
