@@ -6,6 +6,7 @@ import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.reasoner.ValidityReport;
 import org.slf4j.Logger;
@@ -119,6 +120,18 @@ public class OntologyController {
                                                       @PathVariable String className,
                                                       @PathVariable String individualName) {
         return new ResponseEntity<>(ontologyContentService.addEmptyIndividual(ontologyName, className, individualName),
+                HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/properties/{propertyName}",
+            method = RequestMethod.POST)
+    public ResponseEntity<OntologyProperty> createNewProperty(@PathVariable String ontologyName,
+                                                             @PathVariable String propertyName,
+                                                             @RequestParam("isObjectProperty") boolean isObjectProperty,
+                                                             @RequestParam("domain") String domain,
+                                                             @RequestParam("range") String range) {
+        return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propertyName,
+                isObjectProperty, domain, range),
                 HttpStatus.OK);
     }
 

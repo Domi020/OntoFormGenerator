@@ -89,11 +89,57 @@
         <p id="new-property-class-range"></p>
 
         <button>
+            <a onclick="openNewPropertyDialog()">Create new property</a>
+        </button>
+        <button>
             <a onclick="createField()">Create field</a>
         </button>
         <button class="close">
             <a>Cancel</a>
         </button>
+    </dialog>
+    <dialog id="add-new-property-dialog">
+        <h2>Add new property to ontology</h2>
+        <p>Create a new property and add a field to this ontology.</p>
+
+        <div>
+            <label for="new-property-name">Property name</label>
+            <input type="text" name="new-property-name" id="new-property-name">
+        </div>
+        <fieldset>
+            <legend>Select a range type</legend>
+            <div>
+                <input type="radio" id="create-property-dialog-option-1" name="create-property-dialog-option"
+                       value="1" onclick="createNewProperty_checkOption()" checked>
+                <label for="create-property-dialog-option-1">Data object</label>
+            </div>
+            <div>
+                <input type="radio" id="create-property-dialog-option-2" name="create-property-dialog-option"
+                       value="2" onclick="createNewProperty_checkOption()">
+                <label for="create-property-dialog-option-2">Individual from ontology</label>
+            </div>
+            <div id="div-datatype-option" style="display:block">
+                <select id="create-property-with-datatype" name="create-property-with-datatype">
+                    <option value="string">String</option>
+                    <option value="int">Integer</option>
+                    <option value="float">Float</option>
+                    <option value="datetime">Datetime</option>
+                </select>
+                <label for="create-property-with-datatype">Datatype</label>
+            </div>
+            <div id="div-object-option" style="display:none">
+                <button>
+                    <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
+                </button>
+            </div>
+        </fieldset>
+        <button>
+            <a onclick="createNewProperty()">Create property</a>
+        </button>
+        <button class="close">
+            <a>Cancel</a>
+        </button>
+
     </dialog>
     <dialog id="add-individual-dialog">
         <h2>Create new individual</h2>
@@ -222,6 +268,49 @@
                 })
                     .then(() => location.href = `/fill/${formName}/draft/${draftName}`)
             );
+        }
+
+        function openNewPropertyDialog() {
+            const newDialog = document.querySelector('#add-property-dialog');
+            newDialog.close();
+            const dialog = document.querySelector('#add-new-property-dialog');
+            dialog.querySelector('.close').addEventListener('click', function() {
+                dialog.close();
+            });
+            dialog.showModal();
+        }
+
+        function createNewProperty_checkOption() {
+            let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
+            if (option === '1') {
+                document.getElementById('div-datatype-option').style.display = 'block';
+                document.getElementById('div-object-option').style.display = 'none';
+            } else {
+                document.getElementById('div-datatype-option').style.display = 'none';
+                document.getElementById('div-object-option').style.display = 'block';
+            }
+        }
+
+        function createNewProperty() {
+            let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
+            let propName = document.getElementById('new-property-name').value;
+            if (propName === '') {
+                alert('Property name cannot be empty');
+                return;
+            }
+            let range;
+            let isObjectProperty;
+            if (option === '1') {
+                range = document.getElementById('create-property-with-datatype').value;
+                isObjectProperty = false;
+            } else {
+                range = document.getElementById('create-property-with-object').value;
+                isObjectProperty = true;
+            }
+            fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
+                method: 'POST'
+            }).then(() => {
+            });
         }
 
         async function createDraft() {

@@ -5,15 +5,14 @@ import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import com.clarkparsia.owlapi.explanation.util.ExplanationProgressMonitor;
 import fau.fdm.OntoFormGenerator.data.*;
+import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntIndividual;
-import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.ontology.*;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -22,6 +21,7 @@ import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.tdb2.TDB2Factory;
+import org.apache.jena.vocabulary.XSD;
 import org.semanticweb.HermiT.Configuration;
 import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -93,9 +94,6 @@ public class OntologyContentService {
             }
             ontClass.listDeclaredProperties(false).forEachRemaining(
                     property -> {
-                        if (property.getDomain() == null) {
-                            return;
-                        }
                         OntologyProperty ontologyProperty = new OntologyProperty();
                         ontologyProperty.setName(property.getLocalName());
                         ontologyProperty.setDomain(new OntologyClass(className, classURI));
@@ -442,4 +440,45 @@ public class OntologyContentService {
             dataset.end();
         }
     }
+
+    public OntologyProperty createNewProperty(String ontologyName, String propertyName,
+                                              boolean objectProperty, String domain, String range) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+            var domainClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, domain));
+            OntResource fullRange = null;
+            if (objectProperty) {
+
+            } else {
+                var property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                property.addDomain(domainClass);
+                fullRange = getResourceForDatatype(ontModel, range);
+                property.addRange(fullRange);
+            }
+            dataset.commit();
+            return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()),
+                    objectProperty, objectProperty ? new OntologyClass(fullRange.getLocalName(), fullRange.getURI()) : null,
+                    objectProperty ? null : range);
+        } catch (Exception e) {
+            dataset.abort();
+            throw e;
+        } finally {
+            dataset.end();
+        }
+    }
+
+    private OntResource getResourceForDatatype(OntModel model, String datatype) {
+        return switch (datatype) {
+            case "int" -> model.getOntResource(XSD.xint.getURI());
+            case "float" -> model.getOntResource(XSD.xfloat.getURI());
+            case "double" -> model.getOntResource(XSD.xdouble.getURI());
+            case "boolean" -> model.getOntResource(XSD.xboolean.getURI());
+            case "datetime" -> model.getOntResource(XSD.dateTime.getURI());
+            default -> model.getOntResource(XSD.xstring.getURI());
+        };
+    }
+
 }
