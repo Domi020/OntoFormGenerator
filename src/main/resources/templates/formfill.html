@@ -526,24 +526,26 @@
 
         const validateSaveButton = document.querySelector('#validate-save-button');
         validateSaveButton.addEventListener('click', function () {
-            JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-            const formJson = formDataToJSON();
-            fetch(`/api/forms/${formName}/fill?validate=true`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: formJson
-            })
-                .then(async function(response) {
-                    JsLoadingOverlay.hide();
-                    if (response.ok) {
-                        location.href = '/';
-                    } else {
-                        let allErrors = await response.text();
-                        alert(allErrors);
-                    }
+            createDraft().then(async function() {
+                JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
+                const formJson = formDataToJSON();
+                fetch(`/api/forms/${formName}/fill?validate=true`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: formJson
                 })
+                    .then(async function(response) {
+                        JsLoadingOverlay.hide();
+                        if (response.ok) {
+                            location.href = '/';
+                        } else {
+                            let allErrors = await response.text();
+                            alert(allErrors);
+                        }
+                    })
+            });
         });
 
         function formDataToJSON() {

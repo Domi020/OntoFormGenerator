@@ -25,6 +25,7 @@ import org.apache.jena.vocabulary.XSD;
 import org.semanticweb.HermiT.Configuration;
 import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.util.ProgressMonitor;
@@ -429,9 +430,10 @@ public class OntologyContentService {
             HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
             StringBuilder explaination = new StringBuilder("Knowledge base is inconsistent.\n");
             var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
-            explaination.append("Axioms causing the inconsistency:\n");
+            var renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
+            explaination.append("Axioms causing the inconsistency:\n\n\n");
             for (OWLAxiom causingAxiom : expl) {
-                explaination.append(causingAxiom).append("\n\n");
+                explaination.append(renderer.render(causingAxiom)).append("\n\n");
             }
             return new ValidationResult(false, explaination.toString());
         } catch (OWLOntologyCreationException e) {
