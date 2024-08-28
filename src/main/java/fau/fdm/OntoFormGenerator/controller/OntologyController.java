@@ -136,15 +136,19 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
-    // @RequestMapping(value = "/api/ontologies/{ontologyName}/validate", method = RequestMethod.GET)
-    // public ResponseEntity<String> validateOntology(@PathVariable String ontologyName) {
-    //     return new ResponseEntity<>(ontologyContentService.validateOntology(ontologyName), HttpStatus.OK);
-    // }
-
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
     public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {
         return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);
     }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/individual", method = RequestMethod.DELETE)
+    public String deleteIndividual(@PathVariable String ontologyName,
+                                   @RequestParam("uri") String individualUri,
+                                   Model model) {
+        ontologyContentService.deleteIndividual(ontologyName, individualUri);
+        return loadIndexPage(model);
+    }
+    // TODO: Generell bei allen Löschvorgängen prüfen, ob alle Rückstände (FormElements, etc.) gelöscht werden
 
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());

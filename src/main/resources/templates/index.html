@@ -107,6 +107,12 @@
                                             Form1
                                         </h3>
                                     </div>
+                                    <div class="mdl-card__menu">
+                                        <button th:id="'delete-form-button--' + ${form.getFormName()}"
+                                                class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect delete-form-button">
+                                            <i class="material-icons">delete</i>
+                                        </button>
+                                    </div>
                                     <div class="mdl-card__supporting-text" th:text="${form.getOntologyName()}">
                                         Wines and Meals
                                     </div>
@@ -228,6 +234,19 @@
         createFormDialog.close();
     });
 
+    var deleteFormButtons = document.querySelectorAll('.delete-form-button');
+    deleteFormButtons.forEach(el => el.addEventListener('click', async function (event) {
+        let buttonId = event.currentTarget.id
+        let formName = buttonId.replace('delete-form-button--', '');
+        fetch('/api/forms/' + formName, {
+            method: 'DELETE'
+        }).then(function (response) {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }));
+
     var showIndividualsDialog = document.querySelector('#showIndividualsDialog');
     var showIndividualsButtons = document.querySelectorAll('.show-individuals-button');
     showIndividualsButtons.forEach(el => el.addEventListener('click', async function (event) {
@@ -247,7 +266,11 @@
                 <span class="mdl-list__item-primary-content">` + individual.name + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
                                        href="/edit/ontologies/` + ontologyName + `/individuals/` + n + `">
-                                        <i class="material-icons">edit</i></a>`
+                                        <i class="material-icons">edit</i></a>
+                        <button class="mdl-list__item-secondary-action clickable-button"
+                                       onclick="fetch('/api/ontologies/${ontologyName}/individual?uri=${encodeURIComponent(individual.iri)}',
+                                       {method: 'DELETE'}).then(async () => location.reload())">
+                                        <i class="material-icons">delete</i></button>`
             showIndividualsList.appendChild(listItem);
         }
         showIndividualsDialog.showModal();

@@ -132,6 +132,12 @@ public class FormController {
         return ResponseEntity.ok(true);
     }
 
+    @RequestMapping(value = "/api/forms/{formName}", method = RequestMethod.DELETE)
+    public String deleteForm(@PathVariable String formName, Model model) {
+        formOverviewService.deleteForm(formName);
+        return loadIndexPage(model);
+    }
+
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());

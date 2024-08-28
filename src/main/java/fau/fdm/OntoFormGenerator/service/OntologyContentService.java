@@ -443,6 +443,21 @@ public class OntologyContentService {
         }
     }
 
+
+    public void deleteIndividual(String ontologyName, String individualUri) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            individualService.deleteIndividualByIri(dataset, ontologyName, individualUri);
+            individualService.deleteIndividualByIri(dataset, "forms", individualUri);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
+    }
+
     public OntologyProperty createNewProperty(String ontologyName, String propertyName,
                                               boolean objectProperty, String domain, String range) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);

@@ -6,6 +6,7 @@ import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb2.TDB2Factory;
@@ -122,18 +123,44 @@ public class FormOverviewService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         try {
-            var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
-            var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                    "forms", formIndividual, "created");
-            List<Individual> result = new ArrayList<>();
-            for (var individual : individuals) {
-                var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
-                        individual, "isDraft");
-                if (isDraft == null || !isDraft.getBoolean()) continue;
-                result.add(new Individual(individual.getLocalName(), individual.getURI(),
-                        new OntologyClass("test", "test"), true));
+            return getAllDraftsOfForm(dataset, formName);
+        } finally {
+            dataset.end();
+        }
+    }
+
+    private List<Individual> getAllDraftsOfForm(Dataset dataset, String formName) {
+        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+        var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", formIndividual, "created");
+        List<Individual> result = new ArrayList<>();
+        for (var individual : individuals) {
+            var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                    individual, "isDraft");
+            if (isDraft == null || !isDraft.getBoolean()) continue;
+            result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                    new OntologyClass("test", "test"), true));
+        }
+        return result;
+    }
+
+    public void deleteForm(String formName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            for (var draft : getAllDraftsOfForm(dataset, formName)) {
+                individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
             }
-            return result;
+
+            OntIndividual formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+            propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset, "forms", formIndividual, "targetsClass")
+                    .forEach(individual -> individualService.deleteIndividualByIri(dataset, "forms", individual.getURI()));
+
+            individualService.deleteIndividual(dataset, "forms", formName);
+
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
         } finally {
             dataset.end();
         }
