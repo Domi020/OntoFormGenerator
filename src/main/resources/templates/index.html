@@ -274,7 +274,11 @@
                 <span class="mdl-list__item-primary-content">` + individual.name + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
                                        href="/fill/` + formName + `/draft/` + individual.name + `">
-                                        <i class="material-icons">edit</i></a>`
+                                        <i class="material-icons">edit</i></a>
+                <button class="mdl-list__item-secondary-action clickable-button"
+                                       onclick="fetch('/api/forms/${formName}/draft?uri=${encodeURIComponent(individual.iri)}',
+                                       {method: 'DELETE'}).then(async () => location.reload())">
+                                        <i class="material-icons">delete</i></button>`
             showDraftsList.appendChild(listItem);
         }
         showDraftsDialog.showModal();

@@ -100,6 +100,14 @@ public class FormController {
         return loadIndexPage(model);
     }
 
+    @RequestMapping(value = "/api/forms/{formName}/draft", method = RequestMethod.DELETE)
+    public String deleteFormDraft(@PathVariable String formName,
+                                @RequestParam("uri") String draftUri,
+                                Model model) {
+        formFillService.deleteDraft(formName, draftUri);
+        return loadIndexPage(model);
+    }
+
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST)
     public String editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
                                  @RequestBody MultiValueMap<String, String> form, Model model) {

@@ -62,6 +62,21 @@ public class FormFillService {
         }
     }
 
+    public void deleteDraft(String formName,
+                            String draftUri) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            individualService.deleteIndividualByIri(dataset, "forms", draftUri);
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+            throw e;
+        } finally {
+            dataset.end();
+        }
+    }
+
     public void createDraftFromFilledForm(String formName,
                                           String ontologyName,
                                           String targetField,
