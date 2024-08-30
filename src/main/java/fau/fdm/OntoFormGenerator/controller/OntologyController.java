@@ -4,34 +4,42 @@ import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.SubclassGraph;
+import fau.fdm.OntoFormGenerator.service.FormFillService;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.commons.io.FileUtils;
+import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.reasoner.ValidityReport;
+import org.apache.jena.tdb2.TDB2Factory;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
 public class OntologyController {
 
+    private final FormFillService formFillService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -40,10 +48,14 @@ public class OntologyController {
 
     private final FormOverviewService formOverviewService;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService) {
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formOverviewService = formOverviewService;
+        this.formFillService = formFillService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
@@ -139,6 +151,30 @@ public class OntologyController {
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
     public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {
         return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST,
+            consumes = "application/json;charset=UTF-8")
+    public ResponseEntity<String> editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
+                                 @RequestBody Map<String, String[]> form) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            var uri = ontologyContentService.editIndividual(dataset, ontologyName, individualName, form);
+            var res = ontologyContentService.validateOntology(dataset, ontologyName);
+            if (res.isConsistent()) {
+                dataset.commit();
+                return ResponseEntity.ok("Instance was created and validated");
+            } else {
+                dataset.abort();
+                return ResponseEntity.badRequest().body(res.getReason());
+            }
+        } catch (RuntimeException | OWLOntologyCreationException e) {
+            dataset.abort();
+            return ResponseEntity.internalServerError().body("An error occurred while validating the ontology.");
+        } finally {
+            dataset.end();
+        }
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individual", method = RequestMethod.DELETE)

@@ -90,6 +90,11 @@ public class PropertyService {
         return prop != null;
     }
 
+    public void removeAllPropertyValuesFromIndividual(Individual domainIndividual) {
+        var props = domainIndividual.listProperties();
+        props.forEachRemaining(Statement::remove);
+    }
+
     public void removePropertyValueFromIndividual(Dataset dataset,
                                                  String ontologyName,
                                                  OntIndividual domainIndividual,

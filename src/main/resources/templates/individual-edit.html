@@ -151,8 +151,7 @@
 </head>
 <body>
 <h1>Individual editor</h1>
-<form th:action="@{/api/ontologies/{ontologyName}/individuals/{individualName}
-(ontologyName=${ontology.name}, individualName=${individual.name})}" method="post">
+<form id="fillform">
     <div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="individualName" name="individualName"
@@ -180,7 +179,7 @@
         <table style="width: 1800px" class="field-container"></table>
     </div>
     <div style="padding-top: 70px">
-        <button type="submit" class="edit-object-button mdl-button mdl-js-button mdl-button--raised">Save</button>
+        <button id="save-individual" type="button" class="edit-object-button mdl-button mdl-js-button mdl-button--raised">Save</button>
     </div>
 </form>
 <div style="padding-top: 100px">
@@ -235,6 +234,45 @@
         $('.edit-object').prop('readonly', true);
         $('.edit-object-button').prop('disabled', true);
     }
+
+    function formDataToJSON() {
+        const form = document.querySelector('#fillform');
+        const formData = new FormData(form);
+        let json = {};
+        formData.forEach(function (value, key) {
+            if (json[key] === undefined) {
+                json[key] = [value];
+            } else {
+                json[key].push(value);
+            }
+        });
+        return JSON.stringify(json);
+    }
+
+    let saveButton = document.getElementById('save-individual');
+    saveButton.addEventListener('click', function () {
+        JsLoadingOverlay.show();
+        const formJson = formDataToJSON();
+        fetch(`/api/ontologies/${ontology.name}/individuals/${individual.name}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: formJson
+        })
+            .then(async function (response) {
+                JsLoadingOverlay.hide();
+                if (response.ok) {
+                    location.href = '/';
+                } else {
+                    let allErrors = await response.text();
+                    alert(allErrors);
+                }
+            })
+    });
+
+
+
 </script>
 </body>
 </html>

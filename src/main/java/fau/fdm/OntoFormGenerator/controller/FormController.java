@@ -108,12 +108,6 @@ public class FormController {
         return loadIndexPage(model);
     }
 
-    @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST)
-    public String editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
-                                 @RequestBody MultiValueMap<String, String> form, Model model) {
-        ontologyContentService.editIndividual(ontologyName, individualName, form);
-        return loadIndexPage(model);
-    }
 
     @RequestMapping(value = "/api/forms/{formName}/individuals", method = RequestMethod.GET)
     public ResponseEntity<List<Individual>> getIndividualsOfForm(@PathVariable String formName) {

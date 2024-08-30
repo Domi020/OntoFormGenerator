@@ -3,7 +3,6 @@ package fau.fdm.OntoFormGenerator.service;
 
 import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
-import com.clarkparsia.owlapi.explanation.util.ExplanationProgressMonitor;
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
@@ -19,7 +18,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
-import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.apache.jena.vocabulary.XSD;
 import org.semanticweb.HermiT.Configuration;
@@ -28,15 +26,11 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.util.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -249,91 +243,90 @@ public class OntologyContentService {
         }
     }
 
-    public void editIndividual(String ontologyName, String individualName, MultiValueMap<String, String> form) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
-            var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
-                    OntSpecification.OWL2_DL_MEM);
+    public String editIndividual(Dataset dataset,
+                                 String ontologyName,
+                                 String individualName,
+                                 Map<String, String[]> form) {
+        //TODO: Delete all old props first; create new
+        var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
+                OntSpecification.OWL2_DL_MEM);
 
-            var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
+        var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
+        var indivUri = individual.getURI();
 
-            var setProperties = getSetProperties(dataset, individualName, ontologyName);
+        var setProperties = getSetProperties(dataset, individualName, ontologyName);
 
-            for (int i = 0; i < form.getOrDefault("propertyName", new ArrayList<>()).size(); i++) {
-                // Check if property already exists
-                boolean foundElement = false;
-                var propertyName = form.get("propertyName").get(i);
-                var propertyValue = form.get("fieldValue").get(i);
+        // propertyService.removeAllPropertyValuesFromIndividual(individual);
 
-                for (int j = 0; j < setProperties.size(); j++) {
-                    if (setProperties.get(j).getProperty().getName().equals(propertyName)) {
-                        if (propertyValue.equals(setProperties.get(j).getValue())) {
-                            foundElement = true;
-                        } else {
-                            propertyService.removePropertyValueFromIndividual(dataset, ontologyName,
-                                    individual, form.get("propertyName").get(i));
-                        }
-                        setProperties.remove(j);
-                        break;
+        for (int i = 0; i < form.getOrDefault("propertyName", new String[0]).length; i++) {
+            // Check if property already exists
+            boolean foundElement = false;
+            var propertyName = form.get("propertyName")[i];
+            var propertyValue = form.get("fieldValue")[i];
+
+            for (int j = 0; j < setProperties.size(); j++) {
+                if (setProperties.get(j).getProperty().getName().equals(propertyName)) {
+                    if (propertyValue.equals(setProperties.get(j).getValue())) {
+                        foundElement = true;
+                    } else {
+                        propertyService.removePropertyValueFromIndividual(dataset, ontologyName,
+                                individual, form.get("propertyName")[i]);
                     }
-                }
-
-                if (foundElement) continue;
-
-                OntIndividual field;
-                var prop = propertyService.getPropertyFromOntology(dataset, ontologyName, propertyName);
-
-                if (form.get("isObjectProperty").get(i).equals("true")) {
-                    // object property
-                    var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, propertyValue);
-                    individual.addProperty(prop, objectIndividual);
-                } else {
-                    // datatype property
-                    var dtype = ontology.getDataProperty(prop.getURI()).ranges().findFirst().get().getLocalName();
-                    switch (dtype) {
-                        case "int":
-                            individual.addLiteral(prop, Integer.parseInt(propertyValue));
-                            break;
-                        case "float":
-                            individual.addLiteral(prop, Float.parseFloat(propertyValue));
-                            break;
-                        case "double":
-                            individual.addLiteral(prop, Double.parseDouble(propertyValue));
-                            break;
-                        case "boolean":
-                            individual.addLiteral(prop, Boolean.parseBoolean(propertyValue));
-                            break;
-                        default:
-                            individual.addLiteral(prop, propertyValue);
-                            break;
-                    }
+                    setProperties.remove(j);
+                    break;
                 }
             }
 
+            if (foundElement) continue;
 
-            // delete all old form elements that are not in the new form
-            for (var alreadyInsertedElement : setProperties) {
-                if (alreadyInsertedElement == null) continue;
-                boolean found = false;
-                for (int i = 0; i < form.getOrDefault("propertyName", new ArrayList<>()).size(); i++) {
-                    if (alreadyInsertedElement.getProperty().getName().equals(form.get("propertyName").get(i))) {
-                        found = true;
+            OntIndividual field;
+            var prop = propertyService.getPropertyFromOntology(dataset, ontologyName, propertyName);
+
+            if (form.get("isObjectProperty")[i].equals("true")) {
+                // object property
+                var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, propertyValue);
+                individual.addProperty(prop, objectIndividual);
+            } else {
+                // datatype property
+                var dtype = ontology.getDataProperty(prop.getURI()).ranges().findFirst().get().getLocalName();
+                switch (dtype) {
+                    case "int":
+                        individual.addLiteral(prop, Integer.parseInt(propertyValue));
                         break;
-                    }
-                }
-                if (!found) {
-                    propertyService.removePropertyValueFromIndividual(dataset, ontologyName,
-                            individual, alreadyInsertedElement.getProperty().getName(),
-                            alreadyInsertedElement.getValue());
+                    case "float":
+                        individual.addLiteral(prop, Float.parseFloat(propertyValue));
+                        break;
+                    case "double":
+                        individual.addLiteral(prop, Double.parseDouble(propertyValue));
+                        break;
+                    case "boolean":
+                        individual.addLiteral(prop, Boolean.parseBoolean(propertyValue));
+                        break;
+                    default:
+                        individual.addLiteral(prop, propertyValue);
+                        break;
                 }
             }
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-        } finally {
-            dataset.end();
         }
+
+
+        // delete all old form elements that are not in the new form
+        for (var alreadyInsertedElement : setProperties) {
+            if (alreadyInsertedElement == null) continue;
+            boolean found = false;
+            for (int i = 0; i < form.getOrDefault("propertyName", new String[0]).length; i++) {
+                if (alreadyInsertedElement.getProperty().getName().equals(form.get("propertyName")[i])) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                propertyService.removePropertyValueFromIndividual(dataset, ontologyName,
+                        individual, alreadyInsertedElement.getProperty().getName(),
+                        alreadyInsertedElement.getValue());
+            }
+        }
+        return indivUri;
     }
 
     public SubclassGraph buildSubclassGraph(String ontologyName) {
@@ -401,41 +394,46 @@ public class OntologyContentService {
         }
     }
 
+    public ValidationResult validateOntology(Dataset dataset, String ontologyName)
+    throws OWLOntologyCreationException {
+        var tdbModel = dataset.getNamedModel(ontologyName);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        tdbModel.write(outputStream, "RDF/XML");
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLDataFactory dataFactory = manager.getOWLDataFactory();
+        var owlApiOntology = manager.loadOntologyFromOntologyDocument(inputStream);
+        ReasonerFactory reasonerFactory = new ReasonerFactory();
+        Configuration config = new Configuration();
+        config.throwInconsistentOntologyException = false;
+        var reasoner = reasonerFactory.createReasoner(owlApiOntology, config);
+        if (reasoner.isConsistent()) {
+            return new ValidationResult(true, "");
+        }
+        reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
+            @Override
+            public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration, OWLOntology o) {
+                configuration.throwInconsistentOntologyException = false;
+                return new org.semanticweb.HermiT.Reasoner(config, o);
+            }
+        };
+        BlackBoxExplanation x = new BlackBoxExplanation(owlApiOntology, reasonerFactory, reasoner);
+        HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
+        StringBuilder explaination = new StringBuilder("Knowledge base is inconsistent.\n");
+        var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
+        var renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
+        explaination.append("Axioms causing the inconsistency:\n\n\n");
+        for (OWLAxiom causingAxiom : expl) {
+            explaination.append(renderer.render(causingAxiom)).append("\n\n");
+        }
+        return new ValidationResult(false, explaination.toString());
+    }
+
     public ValidationResult validateOntology(String ontologyName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         try {
-            var tdbModel = dataset.getNamedModel(ontologyName);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            tdbModel.write(outputStream, "RDF/XML");
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-            OWLDataFactory dataFactory = manager.getOWLDataFactory();
-            var owlApiOntology = manager.loadOntologyFromOntologyDocument(inputStream);
-            ReasonerFactory reasonerFactory = new ReasonerFactory();
-            Configuration config = new Configuration();
-            config.throwInconsistentOntologyException = false;
-            var reasoner = reasonerFactory.createReasoner(owlApiOntology, config);
-            if (reasoner.isConsistent()) {
-                return new ValidationResult(true, "");
-            }
-            reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
-                @Override
-                public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration, OWLOntology o) {
-                    configuration.throwInconsistentOntologyException = false;
-                    return new org.semanticweb.HermiT.Reasoner(config, o);
-                }
-            };
-            BlackBoxExplanation x = new BlackBoxExplanation(owlApiOntology, reasonerFactory, reasoner);
-            HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
-            StringBuilder explaination = new StringBuilder("Knowledge base is inconsistent.\n");
-            var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
-            var renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
-            explaination.append("Axioms causing the inconsistency:\n\n\n");
-            for (OWLAxiom causingAxiom : expl) {
-                explaination.append(renderer.render(causingAxiom)).append("\n\n");
-            }
-            return new ValidationResult(false, explaination.toString());
+            return validateOntology(dataset, ontologyName);
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
         } finally {
