@@ -16,579 +16,616 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 </head>
 <body>
-    <h1 th:text="${form}"></h1>
-    <form id="fillform" th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
-        <div class="mdl-textfield mdl-js-textfield">
-            <input id="ontologyName" class="mdl-textfield__input" type="text" name="ontologyName"
-                   th:value="${ontology}" readonly>
-            <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
+<h1 th:text="${form}"></h1>
+<form id="fillform" th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
+    <div class="mdl-textfield mdl-js-textfield">
+        <input id="ontologyName" class="mdl-textfield__input" type="text" name="ontologyName"
+               th:value="${ontology}" readonly>
+        <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield">
+        <input id="targetClass" class="mdl-textfield__input" type="text" name="targetClass"
+               th:value="${targetClass}" readonly>
+        <label class="mdl-textfield__label" for="targetClass">Ontology</label>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield">
+        <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
+        <label class="mdl-textfield__label" for="instanceName">Instance name</label>
+    </div>
+    <div th:each="field: ${formElements}">
+        <div th:if="${field.fieldType == 'Input'}">
+            <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
         </div>
-        <div class="mdl-textfield mdl-js-textfield">
-            <input id="targetClass" class="mdl-textfield__input" type="text" name="targetClass"
-                   th:value="${targetClass}" readonly>
-            <label class="mdl-textfield__label" for="targetClass">Ontology</label>
+        <div th:if="${field.fieldType == 'Number'}">
+            <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
         </div>
-        <div class="mdl-textfield mdl-js-textfield">
-            <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
-            <label class="mdl-textfield__label" for="instanceName">Instance name</label>
+        <div th:if="${field.fieldType == 'Datetime'}">
+            <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+                multipleValues=${field.maximumValues})"></div>
         </div>
-        <div th:each="field: ${formElements}">
-            <div th:if="${field.fieldType == 'Input'}">
-                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+        <div th:if="${field.fieldType == 'ObjectSelect'}">
+            <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'Number'}">
-                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'Datetime'}">
-                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'ObjectSelect'}">
-                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
-            </div>
         </div>
-        <div th:each="field: ${additionalElements}">
-            <div th:if="${field.fieldType == 'Input'}">
-                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+    </div>
+    <div th:each="field: ${additionalElements}">
+        <div th:if="${field.fieldType == 'Input'}">
+            <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'Number'}">
-                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+        </div>
+        <div th:if="${field.fieldType == 'Number'}">
+            <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'Datetime'}">
-                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+        </div>
+        <div th:if="${field.fieldType == 'Datetime'}">
+            <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues})"></div>
-            </div>
-            <div th:if="${field.fieldType == 'ObjectSelect'}">
-                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
+        </div>
+        <div th:if="${field.fieldType == 'ObjectSelect'}">
+            <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues})"></div>
-            </div>
+        </div>
+    </div>
+    <div>
+        <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Add new field
+        </button>
+    </div>
+    <div style="padding-top: 70px">
+        <button id="save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+    </div>
+    <div style="padding-top: 70px">
+        <button id="validate-save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Validate and
+            save
+        </button>
+    </div>
+</form>
+<dialog id="add-property-dialog">
+    <h2>Add field to form</h2>
+    <p>Add a new field to this form instance. How do you want to call your field?
+    </p>
+    <div>
+        <label for="new-property-class-select">Property</label>
+        <select id="new-property-class-select" name="new-property-class-select">
+        </select>
+    </div>
+
+    <p>Content of this field:</p>
+    <p id="new-property-class-range"></p>
+
+    <button>
+        <a onclick="openNewPropertyDialog()">Create new property</a>
+    </button>
+    <button>
+        <a onclick="createField()">Create field</a>
+    </button>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
+</dialog>
+<dialog id="add-new-property-dialog">
+    <h2>Add new property to ontology</h2>
+    <p>Create a new property and add a field to this ontology.</p>
+
+    <div>
+        <label for="new-property-name">Property name</label>
+        <input type="text" name="new-property-name" id="new-property-name">
+    </div>
+    <fieldset>
+        <legend>Select a range type</legend>
+        <div>
+            <input type="radio" id="create-property-dialog-option-1" name="create-property-dialog-option"
+                   value="1" onclick="createNewProperty_checkOption()" checked>
+            <label for="create-property-dialog-option-1">Data object</label>
         </div>
         <div>
-            <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Add new field</button>
+            <input type="radio" id="create-property-dialog-option-2" name="create-property-dialog-option"
+                   value="2" onclick="createNewProperty_checkOption()">
+            <label for="create-property-dialog-option-2">Individual from ontology</label>
         </div>
-        <div style="padding-top: 70px">
-            <button id="save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
-        </div>
-        <div style="padding-top: 70px">
-            <button id="validate-save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Validate and save</button>
-        </div>
-    </form>
-    <dialog id="add-property-dialog">
-        <h2>Add field to form</h2>
-        <p>Add a new field to this form instance. How do you want to call your field?
-        </p>
-        <div>
-            <label for="new-property-class-select">Property</label>
-            <select id="new-property-class-select" name="new-property-class-select">
+        <div id="div-datatype-option" style="display:block">
+            <select id="create-property-with-datatype" name="create-property-with-datatype">
+                <option value="string">String</option>
+                <option value="int">Integer</option>
+                <option value="float">Float</option>
+                <option value="datetime">Datetime</option>
             </select>
+            <label for="create-property-with-datatype">Datatype</label>
         </div>
-
-        <p>Content of this field:</p>
-        <p id="new-property-class-range"></p>
-
-        <button>
-            <a onclick="openNewPropertyDialog()">Create new property</a>
-        </button>
-        <button>
-            <a onclick="createField()">Create field</a>
-        </button>
-        <button class="close">
-            <a>Cancel</a>
-        </button>
-    </dialog>
-    <dialog id="add-new-property-dialog">
-        <h2>Add new property to ontology</h2>
-        <p>Create a new property and add a field to this ontology.</p>
-
-        <div>
-            <label for="new-property-name">Property name</label>
-            <input type="text" name="new-property-name" id="new-property-name">
+        <div id="div-object-option" style="display:none">
+            <button>
+                <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
+            </button>
+            <input id="create-property-with-object" type="text" name="create-property-with-object" readonly>
         </div>
-        <fieldset>
-            <legend>Select a range type</legend>
-            <div>
-                <input type="radio" id="create-property-dialog-option-1" name="create-property-dialog-option"
-                       value="1" onclick="createNewProperty_checkOption()" checked>
-                <label for="create-property-dialog-option-1">Data object</label>
-            </div>
-            <div>
-                <input type="radio" id="create-property-dialog-option-2" name="create-property-dialog-option"
-                       value="2" onclick="createNewProperty_checkOption()">
-                <label for="create-property-dialog-option-2">Individual from ontology</label>
-            </div>
-            <div id="div-datatype-option" style="display:block">
-                <select id="create-property-with-datatype" name="create-property-with-datatype">
-                    <option value="string">String</option>
-                    <option value="int">Integer</option>
-                    <option value="float">Float</option>
-                    <option value="datetime">Datetime</option>
-                </select>
-                <label for="create-property-with-datatype">Datatype</label>
-            </div>
-            <div id="div-object-option" style="display:none">
-                <button>
-                    <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
-                </button>
-                <input id="create-property-with-object" type="text" name="create-property-with-object" readonly>
-            </div>
-        </fieldset>
-        <button>
-            <a onclick="createNewProperty()">Create property</a>
-        </button>
-        <button class="close">
-            <a>Cancel</a>
-        </button>
+    </fieldset>
+    <button>
+        <a onclick="createNewProperty()">Create property</a>
+    </button>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
 
-    </dialog>
-    <dialog id="select-class-for-property-dialog">
-        <h1>Classes of ontology</h1>
-        <h2 th:text="${ontology}"></h2>
-        <h3>Select the range of the new property</h3>
-        <div id="class-select-container" style="width: 800px; height: 600px; background: white"></div>
-        <div>
-            <input id="new-object-property-range" type="text" name="new-object-property-range" readonly>
-            <label for="new-object-property-range">Selected class</label>
-        </div>
-        <button class="close">
-            <a>Cancel</a>
-        </button>
-    </dialog>
-    <dialog id="add-individual-dialog">
-        <h2>Create new individual</h2>
-        <p>How do you want to create a new individual for the following class?
+</dialog>
+<dialog id="select-class-for-property-dialog">
+    <h1>Classes of ontology</h1>
+    <h2 th:text="${ontology}"></h2>
+    <h3>Select the range of the new property</h3>
+    <div id="class-select-container" style="width: 800px; height: 600px; background: white"></div>
+    <div>
+        <input id="new-object-property-range" type="text" name="new-object-property-range" readonly>
+        <label for="new-object-property-range">Selected class</label>
+    </div>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
+</dialog>
+<dialog id="add-individual-dialog">
+    <h2>Create new individual</h2>
+    <p>How do you want to create a new individual for the following class?
         (The current form will be saved as draft)
-        </p>
-        <p id="create-individual-dialog-ontology-class"></p>
-        <fieldset>
-            <legend>Select a creation option.</legend>
-            <div>
-                <input type="radio" id="create-individual-dialog-option-1" name="create-individual-dialog-option"
-                       value="1" checked>
-                <label for="create-individual-dialog-option-1">Empty individual</label>
-                <input type="text" name="create-individual-name" id="create-individual-name">
-                <label for="create-individual-name">Individual name</label>
-            </div>
-            <div>
-                <input type="radio" id="create-individual-dialog-option-2" name="create-individual-dialog-option"
-                       value="2">
-                <label for="create-individual-dialog-option-2">Create from form</label>
-                <select id="create-individual-form-list"></select>
-                <label for="create-individual-form-list">Forms</label>
-            </div>
-        </fieldset>
-        <button>
-            <a onclick="createIndividual()">Create individual</a>
-        </button>
-        <button class="close">
-            <a>Cancel</a>
-        </button>
-    </dialog>
-    <div style="padding-top: 100px">
-        <a onclick="createDraftAndGoToHomepage()" id="create-draft-button" class="mdl-button mdl-js-button mdl-button--raised">
-            Create draft
-        </a>
-    </div>
-    <div style="padding-top: 100px">
-        <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
-            Cancel
-        </a>
-    </div>
-    <script th:inline="javascript">
-        const ontologyName = [[${ontology}]];
-        const formElements = [[${formElements}]];
-        const additionalElements = [[${additionalElements}]];
-        const allFormElements = formElements.concat(additionalElements);
-        const formName = [[${form}]];
-        const setElements = [[${setElements}]];
-        const targetClass = [[${targetClass}]];
-        JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
+    </p>
+    <p id="create-individual-dialog-ontology-class"></p>
+    <fieldset>
+        <legend>Select a creation option.</legend>
+        <div>
+            <input type="radio" id="create-individual-dialog-option-1" name="create-individual-dialog-option"
+                   value="1" checked>
+            <label for="create-individual-dialog-option-1">Empty individual</label>
+            <input type="text" name="create-individual-name" id="create-individual-name">
+            <label for="create-individual-name">Individual name</label>
+        </div>
+        <div>
+            <input type="radio" id="create-individual-dialog-option-2" name="create-individual-dialog-option"
+                   value="2">
+            <label for="create-individual-dialog-option-2">Create from form</label>
+            <select id="create-individual-form-list"></select>
+            <label for="create-individual-form-list">Forms</label>
+        </div>
+    </fieldset>
+    <button>
+        <a onclick="createIndividual()">Create individual</a>
+    </button>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
+</dialog>
+<div style="padding-top: 100px">
+    <a onclick="createDraftAndGoToHomepage()" id="create-draft-button"
+       class="mdl-button mdl-js-button mdl-button--raised">
+        Create draft
+    </a>
+</div>
+<div style="padding-top: 100px">
+    <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
+        Cancel
+    </a>
+</div>
+<script th:inline="javascript">
+    const ontologyName = [[${ontology}]];
+    const formElements = [[${formElements}]];
+    const additionalElements = [[${additionalElements}]];
+    const allFormElements = formElements.concat(additionalElements);
+    const formName = [[${form}]];
+    const setElements = [[${setElements}]];
+    const targetClass = [[${targetClass}]];
+    JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
 
-        // noinspection JSUnusedGlobalSymbols
-        function editIndividual(id) {
-            createDraft().then(
-                () => {
-                    let indivName = $('#' + id)[0].value;
-                    if (indivName === '') {
-                        return;
-                    }
-                    location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + indivName;
-                }
-            );
-        }
-
-        function addIndividual(propName) {
-            let rangeName = allFormElements.find(formElement => formElement.ontologyProperty.name === propName).
-                ontologyProperty.objectRange.name;
-            document.getElementById('create-individual-dialog-ontology-class').innerText = rangeName;
-            fetch(`/api/forms?ontologyName=${ontologyName}&targetClass=${rangeName}`)
-                .then(async function(response) {
-                    let allForms = await response.json();
-                    let select = document.getElementById('create-individual-form-list');
-                    for (let i = 0; i < allForms.length; i++) {
-                        let option = document.createElement('option');
-                        option.value = allForms[i].formName;
-                        option.text = allForms[i].formName;
-                        select.add(option);
-                    }
-                });
-            const dialog = document.querySelector('#add-individual-dialog');
-            dialog.showModal();
-        }
-
-        function createIndividual() {
-            if (document.getElementById("create-individual-dialog-option-1").checked) {
-                // Empty individual
-                let individualName = document.getElementById("create-individual-name").value;
-                let className = document.getElementById('create-individual-dialog-ontology-class').innerText
-                if (individualName === '') {
-                    alert('Individual name cannot be empty');
+    // noinspection JSUnusedGlobalSymbols
+    function editIndividual(id) {
+        createDraft().then(
+            () => {
+                let indivName = $('#' + id)[0].value;
+                if (indivName === '') {
                     return;
                 }
-                fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}`, {
-                    method: 'POST',
-                }).then(() => {
-                    let draftName = document.getElementById('instanceName').value;
-                    createDraft().then(
-                        () => location.href = '/fill/' + formName + '/draft/' + draftName
-                    );
-                });
-            } else {
-                // Create from form
-                let formName = document.getElementById('create-individual-form-list').value;
-                if (formName === '') {
-                    alert('Please select a form');
-                    return;
-                }
-                createDraft().then(
-                    () => location.href = '/fill/' + formName + "?ontology=" + ontologyName
-                )
+                location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + indivName;
             }
-        }
+        );
+    }
 
-        function createDraftAndGoToHomepage() {
+    function addIndividual(propName) {
+        let rangeName = allFormElements.find(formElement => formElement.ontologyProperty.name === propName).ontologyProperty.objectRange.name;
+        document.getElementById('create-individual-dialog-ontology-class').innerText = rangeName;
+        fetch(`/api/forms?ontologyName=${ontologyName}&targetClass=${rangeName}`)
+            .then(async function (response) {
+                let allForms = await response.json();
+                let select = document.getElementById('create-individual-form-list');
+                for (let i = 0; i < allForms.length; i++) {
+                    let option = document.createElement('option');
+                    option.value = allForms[i].formName;
+                    option.text = allForms[i].formName;
+                    select.add(option);
+                }
+            });
+        const dialog = document.querySelector('#add-individual-dialog');
+        dialog.showModal();
+    }
+
+    function createIndividual() {
+        if (document.getElementById("create-individual-dialog-option-1").checked) {
+            // Empty individual
+            let individualName = document.getElementById("create-individual-name").value;
+            let className = document.getElementById('create-individual-dialog-ontology-class').innerText
+            if (individualName === '') {
+                alert('Individual name cannot be empty');
+                return;
+            }
+            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}`, {
+                method: 'POST',
+            }).then(() => {
+                let draftName = document.getElementById('instanceName').value;
+                createDraft().then(
+                    () => location.href = '/fill/' + formName + '/draft/' + draftName
+                );
+            });
+        } else {
+            // Create from form
+            let formName = document.getElementById('create-individual-form-list').value;
+            if (formName === '') {
+                alert('Please select a form');
+                return;
+            }
             createDraft().then(
-                () => location.href = '/'
-            ).catch();
+                () => location.href = '/fill/' + formName + "?ontology=" + ontologyName
+            )
         }
+    }
 
-        function createField() {
-            let propName = document.getElementById('new-property-class-select').value;
-            let draftName = document.getElementById('instanceName').value;
-            createDraft()
-                .then(() => fetch(`/api/forms/${formName}/drafts/${draftName}/field/${propName}`, {
+    function createDraftAndGoToHomepage() {
+        createDraft().then(
+            () => location.href = '/'
+        ).catch();
+    }
+
+    function createField() {
+        let propName = document.getElementById('new-property-class-select').value;
+        let draftName = document.getElementById('instanceName').value;
+        createDraft()
+            .then(() => fetch(`/api/forms/${formName}/drafts/${draftName}/field/${propName}`, {
                     method: 'POST'
                 })
                     .then(() => location.href = `/fill/${formName}/draft/${draftName}`)
             );
-        }
+    }
 
-        function openNewPropertyDialog() {
-            const newDialog = document.querySelector('#add-property-dialog');
-            newDialog.close();
-            const dialog = document.querySelector('#add-new-property-dialog');
-            dialog.querySelector('.close').addEventListener('click', function() {
-                dialog.close();
-            });
-            dialog.showModal();
-        }
-
-        function selectObjectPropertyFromGraph() {
-            fetch(`/api/ontologies/${ontologyName}/classes`)
-                .then(async function(response) {
-                    const newDialog = document.querySelector('#select-class-for-property-dialog');
-                    newDialog.querySelector('.close').addEventListener('click', function() {
-                        let output = document.getElementById('new-object-property-range');
-                        let outputOnOtherDialog = document.getElementById('create-property-with-object');
-                        outputOnOtherDialog.value = output.value
-                        newDialog.close();
-                    });
-                    newDialog.showModal();
-                    let graph = await response.json();
-                    let output = document.getElementById('new-object-property-range');
-                    let container = document.getElementById('class-select-container');
-                    myFuncs.buildSubclassGraphForPropertyRangeSelection(graph, container, output);
-                });
-        }
-
-        function createNewProperty_checkOption() {
-            let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
-            if (option === '1') {
-                document.getElementById('div-datatype-option').style.display = 'block';
-                document.getElementById('div-object-option').style.display = 'none';
-            } else {
-                document.getElementById('div-datatype-option').style.display = 'none';
-                document.getElementById('div-object-option').style.display = 'block';
-            }
-        }
-
-        function createNewProperty() {
-            let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
-            let propName = document.getElementById('new-property-name').value;
-            if (propName === '') {
-                alert('Property name cannot be empty');
-                return;
-            }
-            let range;
-            let isObjectProperty;
-            if (option === '1') {
-                range = document.getElementById('create-property-with-datatype').value;
-                isObjectProperty = false;
-            } else {
-                range = document.getElementById('create-property-with-object').value;
-                isObjectProperty = true;
-            }
-            fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
-                method: 'POST'
-            }).then(() => {
-                location.reload()
-            });
-        }
-
-        async function createDraft() {
-            const form = document.querySelector('#fillform');
-            const formData = new FormData(form);
-            let normalFields = {};
-            let additionalFields = {};
-            formData.forEach(function(value, key){
-                if (additionalElements.find(field => field.name === key)) {
-                    if (additionalFields[key] === undefined) {
-                        additionalFields[key] = [value];
-                    } else {
-                        additionalFields[key].push(value);
-                    }
-                } else {
-                    if (normalFields[key] === undefined) {
-                        normalFields[key] = [value];
-                    } else {
-                        normalFields[key].push(value);
-                    }
-                }
-            });
-            let formString = {
-                'normalFields': normalFields,
-                'additionalFields': additionalFields
-            };
-            if (normalFields['instanceName'] === '') {
-                alert('Instance name cannot be empty');
-                throw 0;
-            }
-            let formJSON = JSON.stringify(formString);
-            return fetch(`/api/forms/${formName}/draft`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: formJSON,
-            });
-        }
-
-        let promises = [];
-        $(".object-select").each(function(index, element) {
-            const fieldName = element.name;
-            const fieldId = element.id;
-            const currentFormElement = allFormElements
-                .find(formElement => formElement.ontologyProperty.name === fieldName)
-            const className = currentFormElement.ontologyProperty.objectRange.name;
-            const maximumValues = currentFormElement.maximumValues;
-
-            promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
-                .then(async function(response) {
-                    let allIndividuals = await response.json();
-                    $('#' + fieldId).selectize({
-                        valueField: 'name',
-                        labelField: 'name',
-                        searchField: 'name',
-                        maxItems: maximumValues,
-                        options: allIndividuals,
-                        render: {
-                            option: function(item, escape) {
-                                if (item.imported) {
-                                    return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
-                                } else {
-                                    return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
-                                }
-                            },
-                            item: function(item, escape) {
-                                if (item.imported) {
-                                    return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
-                                } else {
-                                    return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
-                                }
-                            }
-                        }
-
-                    });
-                }));
-        });
-
-        Promise.all(promises).then(() => {
-            if (setElements) {
-                loadDraft();
-            }
-            JsLoadingOverlay.hide();
-        });
-
-
-        function loadDraft() {
-            document.getElementById('instanceName').value = [[${individualName}]];
-            for (let i = 0; i < setElements.length; i++) {
-                const element = setElements[i];
-                for (let j = 0; j < allFormElements.length; j++) {
-                    if (allFormElements[j].ontologyProperty.name === element.fieldName) {
-                        const input = document.getElementById('input-' + allFormElements[j].name);
-                        if (input) {
-                            for (let k = 0; k < element.values.length; k++) {
-                                if (k === 0) {
-                                    input.value = element.values[k];
-                                } else {
-                                    let clone = addField('main-container-' + allFormElements[j].name, 'template-' + allFormElements[j].name);
-                                    clone.value = element.values[k];
-                                }
-                            }
-                            break;
-                        }
-                        const objectSelect = document.getElementById("object-select-" + allFormElements[j].name);
-                        if (objectSelect) {
-                            objectSelect.selectize.setValue(element.values);
-                            break;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        const dialog = document.querySelector('#add-individual-dialog');
-        dialog.querySelector('.close').addEventListener('click', function() {
+    function openNewPropertyDialog() {
+        const newDialog = document.querySelector('#add-property-dialog');
+        newDialog.close();
+        const dialog = document.querySelector('#add-new-property-dialog');
+        dialog.querySelector('.close').addEventListener('click', function () {
             dialog.close();
         });
+        dialog.showModal();
+    }
 
-        const newFieldDialog = document.querySelector('#add-property-dialog');
-        const newFieldButton = document.querySelector('#new-field-button');
-        newFieldButton.addEventListener('click', function() {
-            JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-            fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties`)
-                .then(async function(response) {
-                    let allProperties = await response.json();
-                    $('#new-property-class-select').selectize({
-                        valueField: 'name',
-                        labelField: 'name',
-                        searchField: 'name',
-                        maxItems: 1,
-                        options: allProperties,
-                        onChange: value => {
-                            let string;
-                            let objectProp = allProperties.find(property => property.name === value).objectProperty;
-                            if (objectProp) {
-                                let range = allProperties.find(property => property.name === value).objectRange;
-                                if (range) {
-                                    string = "Another instance: " + range.name;
-                                } else {
-                                    string = "Another instance";
-                                }
-                            } else {
-                                string = allProperties.find(property => property.name === value).datatypeRange;
-                            }
-                            document.getElementById('new-property-class-range').innerText = string;
-                        }
-                    });
-                    JsLoadingOverlay.hide();
-                    newFieldDialog.showModal();
+    function selectObjectPropertyFromGraph() {
+        fetch(`/api/ontologies/${ontologyName}/classes`)
+            .then(async function (response) {
+                const newDialog = document.querySelector('#select-class-for-property-dialog');
+                newDialog.querySelector('.close').addEventListener('click', function () {
+                    let output = document.getElementById('new-object-property-range');
+                    let outputOnOtherDialog = document.getElementById('create-property-with-object');
+                    outputOnOtherDialog.value = output.value
+                    newDialog.close();
                 });
-        });
-        newFieldDialog.querySelector('.close').addEventListener('click', function() {
-            newFieldDialog.close();
-        });
+                newDialog.showModal();
+                let graph = await response.json();
+                let output = document.getElementById('new-object-property-range');
+                let container = document.getElementById('class-select-container');
+                myFuncs.buildSubclassGraphForPropertyRangeSelection(graph, container, output);
+            });
+    }
 
-        const saveButton = document.querySelector('#save-button');
-        saveButton.addEventListener('click', function () {
+    function createNewProperty_checkOption() {
+        let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
+        if (option === '1') {
+            document.getElementById('div-datatype-option').style.display = 'block';
+            document.getElementById('div-object-option').style.display = 'none';
+        } else {
+            document.getElementById('div-datatype-option').style.display = 'none';
+            document.getElementById('div-object-option').style.display = 'block';
+        }
+    }
+
+    function createNewProperty() {
+        let option = document.querySelector('input[name="create-property-dialog-option"]:checked').value;
+        let propName = document.getElementById('new-property-name').value;
+        if (propName === '') {
+            alert('Property name cannot be empty');
+            return;
+        }
+        let range;
+        let isObjectProperty;
+        if (option === '1') {
+            range = document.getElementById('create-property-with-datatype').value;
+            isObjectProperty = false;
+        } else {
+            range = document.getElementById('create-property-with-object').value;
+            isObjectProperty = true;
+        }
+        fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
+            method: 'POST'
+        }).then(() => {
+            location.reload()
+        });
+    }
+
+    async function createDraft() {
+        const form = document.querySelector('#fillform');
+        const formData = new FormData(form);
+        let normalFields = {};
+        let additionalFields = {};
+        formData.forEach(function (value, key) {
+            if (additionalElements.find(field => field.name === key)) {
+                if (additionalFields[key] === undefined) {
+                    additionalFields[key] = [value];
+                } else {
+                    additionalFields[key].push(value);
+                }
+            } else {
+                if (normalFields[key] === undefined) {
+                    normalFields[key] = [value];
+                } else {
+                    normalFields[key].push(value);
+                }
+            }
+        });
+        let formString = {
+            'normalFields': normalFields,
+            'additionalFields': additionalFields
+        };
+        if (normalFields['instanceName'] === '') {
+            alert('Instance name cannot be empty');
+            throw 0;
+        }
+        let formJSON = JSON.stringify(formString);
+        return fetch(`/api/forms/${formName}/draft`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: formJSON,
+        });
+    }
+
+    let promises = [];
+    $(".object-select").each(function (index, element) {
+        const fieldName = element.name;
+        const fieldId = element.id;
+        const currentFormElement = allFormElements
+            .find(formElement => formElement.ontologyProperty.name === fieldName)
+        const className = currentFormElement.ontologyProperty.objectRange.name;
+        const maximumValues = currentFormElement.maximumValues;
+
+        promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
+            .then(async function (response) {
+                let allIndividuals = await response.json();
+                $('#' + fieldId).selectize({
+                    valueField: 'name',
+                    labelField: 'name',
+                    searchField: 'name',
+                    maxItems: 1,
+                    options: allIndividuals,
+                    render: {
+                        option: function (item, escape) {
+                            if (item.imported) {
+                                return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                            } else {
+                                return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                            }
+                        },
+                        item: function (item, escape) {
+                            if (item.imported) {
+                                return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                            } else {
+                                return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                            }
+                        }
+                    }
+
+                });
+            }));
+    });
+
+    Promise.all(promises).then(() => {
+        if (setElements) {
+            loadDraft();
+        }
+        JsLoadingOverlay.hide();
+    });
+
+
+    function loadDraft() {
+        document.getElementById('instanceName').value = [[${individualName}]];
+        for (let i = 0; i < setElements.length; i++) {
+            const element = setElements[i];
+            for (let j = 0; j < allFormElements.length; j++) {
+                if (allFormElements[j].ontologyProperty.name === element.fieldName) {
+                    const input = document.getElementById('input-' + allFormElements[j].name);
+                    const objectSelect = document.getElementById("object-select-" + allFormElements[j].name);
+                    for (let k = 0; k < element.values.length; k++) {
+                        if (k === 0) {
+                            if (input) {
+                                input.value = element.values[k];
+                            } else {
+                                objectSelect.selectize.setValue(element.values[k]);
+                            }
+                        } else {
+                            if (input) {
+                                let clone = addField('main-container-' + allFormElements[j].name,
+                                    'template-' + allFormElements[j].name, false);
+                                clone.value = element.values[k];
+                            } else {
+                                let clone = addField('main-container-' + allFormElements[j].name,
+                                    'template-' + allFormElements[j].name, true);
+                                clone.selectize.setValue(element.values[k]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    const dialog = document.querySelector('#add-individual-dialog');
+    dialog.querySelector('.close').addEventListener('click', function () {
+        dialog.close();
+    });
+
+    const newFieldDialog = document.querySelector('#add-property-dialog');
+    const newFieldButton = document.querySelector('#new-field-button');
+    newFieldButton.addEventListener('click', function () {
+        JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties`)
+            .then(async function (response) {
+                let allProperties = await response.json();
+                $('#new-property-class-select').selectize({
+                    valueField: 'name',
+                    labelField: 'name',
+                    searchField: 'name',
+                    maxItems: 1,
+                    options: allProperties,
+                    onChange: value => {
+                        let string;
+                        let objectProp = allProperties.find(property => property.name === value).objectProperty;
+                        if (objectProp) {
+                            let range = allProperties.find(property => property.name === value).objectRange;
+                            if (range) {
+                                string = "Another instance: " + range.name;
+                            } else {
+                                string = "Another instance";
+                            }
+                        } else {
+                            string = allProperties.find(property => property.name === value).datatypeRange;
+                        }
+                        document.getElementById('new-property-class-range').innerText = string;
+                    }
+                });
+                JsLoadingOverlay.hide();
+                newFieldDialog.showModal();
+            });
+    });
+    newFieldDialog.querySelector('.close').addEventListener('click', function () {
+        newFieldDialog.close();
+    });
+
+    const saveButton = document.querySelector('#save-button');
+    saveButton.addEventListener('click', function () {
+        const formJson = formDataToJSON();
+        fetch(`/api/forms/${formName}/fill?validate=false`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: formJson
+        })
+            .then(async function (response) {
+                if (response.ok) {
+                    location.href = '/';
+                } else {
+                    alert("An error has occurred");
+                }
+            })
+    });
+
+    const validateSaveButton = document.querySelector('#validate-save-button');
+    validateSaveButton.addEventListener('click', function () {
+        createDraft().then(async function () {
+            JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
             const formJson = formDataToJSON();
-            fetch(`/api/forms/${formName}/fill?validate=false`, {
+            fetch(`/api/forms/${formName}/fill?validate=true`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: formJson
             })
-                .then(async function(response) {
+                .then(async function (response) {
+                    JsLoadingOverlay.hide();
                     if (response.ok) {
                         location.href = '/';
                     } else {
-                        alert("An error has occurred");
+                        let allErrors = await response.text();
+                        alert(allErrors);
                     }
                 })
         });
+    });
 
-        const validateSaveButton = document.querySelector('#validate-save-button');
-        validateSaveButton.addEventListener('click', function () {
-            createDraft().then(async function() {
-                JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-                const formJson = formDataToJSON();
-                fetch(`/api/forms/${formName}/fill?validate=true`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: formJson
-                })
-                    .then(async function(response) {
-                        JsLoadingOverlay.hide();
-                        if (response.ok) {
-                            location.href = '/';
-                        } else {
-                            let allErrors = await response.text();
-                            alert(allErrors);
-                        }
-                    })
-            });
-        });
-
-        function formDataToJSON() {
-            const form = document.querySelector('#fillform');
-            const formData = new FormData(form);
-            let json = {};
-            formData.forEach(function(value, key){
-                if (json[key] === undefined) {
-                    json[key] = [value];
-                } else {
-                    json[key].push(value);
-                }
-            });
-            return JSON.stringify(json);
-        }
-
-        function addField(containerId, templateId) {
-            let container = document.getElementById(containerId);
-            let copies = container.getElementsByClassName('copy-' + containerId);
-            let template = document.getElementById(templateId);
-            let formElementName = templateId.replace('template-', '');
-            let formElement = allFormElements.find(formElement => formElement.name === formElementName);
-            if (copies.length >= formElement.maximumValues - 1) {
-                alert('Maximum number of values reached');
+    function formDataToJSON() {
+        const form = document.querySelector('#fillform');
+        const formData = new FormData(form);
+        let json = {};
+        formData.forEach(function (value, key) {
+            if (json[key] === undefined) {
+                json[key] = [value];
             } else {
-                let clone = template.cloneNode(true);
-                clone.id = 'copy-' + templateId + Math.random().toString(36).substring(7);
-                clone.classList.add('copy-' + containerId);
+                json[key].push(value);
+            }
+        });
+        return JSON.stringify(json);
+    }
+
+    function addField(containerId, templateId, isObjectSelect) {
+        let container = document.getElementById(containerId);
+        let copies = container.getElementsByClassName('copy-' + containerId);
+        let template = document.getElementById(templateId);
+        let formElementName = templateId.replace('template-', '');
+        let formElement = allFormElements.find(formElement => formElement.name === formElementName);
+        if (copies.length >= formElement.maximumValues - 1) {
+            alert('Maximum number of values reached');
+        } else {
+            let clone = template.cloneNode(true);
+            clone.id = 'copy-' + templateId + Math.random().toString(36).substring(7);
+            clone.classList.add('copy-' + containerId);
+            container.appendChild(clone);
+            if (isObjectSelect) {
+                let brokenSelect = clone.querySelector('.selectize-control');
+                brokenSelect.remove();
+                let select = clone.querySelector('select');
+                select.id = 'object-select-' + formElementName + '-' + (copies.length + 1);
+                $('#' + select.id).selectize({
+                    valueField: 'name',
+                    labelField: 'name',
+                    searchField: 'name',
+                    maxItems: 1,
+                    options: Object.values($('#object-select-' + formElementName)[0].selectize.options),
+                    render: {
+                        option: function (item, escape) {
+                            if (item.imported) {
+                                return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                            } else {
+                                return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                            }
+                        },
+                        item: function (item, escape) {
+                            if (item.imported) {
+                                return '<div class="option" style="color:#FD0000">' + escape(item.name) + '</div>';
+                            } else {
+                                return '<div class="option" style="color:#000000">' + escape(item.name) + '</div>';
+                            }
+                        }
+                    }
+                });
+                return select;
+            } else {
                 let input = clone.querySelector('input');
                 input.value = '';
-                container.appendChild(clone);
                 return input;
             }
         }
+    }
 
-        function removeField(containerId) {
-            let container = document.getElementById(containerId);
-            let copies = container.getElementsByClassName('copy-' + containerId);
-            if (copies.length > 0) {
-                container.removeChild(copies[copies.length - 1]);
-            }
+    function removeField(containerId) {
+        let container = document.getElementById(containerId);
+        let copies = container.getElementsByClassName('copy-' + containerId);
+        if (copies.length > 0) {
+            container.removeChild(copies[copies.length - 1]);
         }
+    }
 
-    </script>
+</script>
 </body>
 </html>
