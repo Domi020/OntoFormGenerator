@@ -19,6 +19,10 @@
             width: 600px;
         }
 
+        .second-fab-button {
+            transform: translate(0%, -120%);
+        }
+
         .clickable-button {
             cursor: pointer;
         }
@@ -42,9 +46,7 @@
 
 </head>
 <body class="mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
-<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button " id="add">
-    <i class="material-icons">add</i>
-</button>
+
 <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
             mdl-layout--fixed-tabs">
     <header class="mdl-layout__header">
@@ -56,21 +58,20 @@
         <div class="mdl-layout__tab-bar mdl-js-ripple-effect mdl-color--primary-dark">
             <a href="#forms" class="mdl-layout__tab is-active">Forms</a>
             <a href="#ontologies" class="mdl-layout__tab">Ontologies</a>
-
+            <a href="#individuals" class="mdl-layout__tab">Individuals</a>
         </div>
 
     </header>
     <main class="mdl-layout__content">
             <section class="mdl-layout__tab-panel is-active" id="forms">
                 <div class="page-content">
+                    <button id="form-create-dialog-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
+                        <i class="material-icons">add</i>
+                    </button>
+                    <button id="export-forms" onclick="location.href='/ontologies/forms'" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button second-fab-button">
+                        <i class="material-icons">download</i>
+                    </button>
                     <div>
-                        <button onclick="location.href='/ontologies/forms'" id="export-forms"
-                                class="mdl-button mdl-js-button mdl-button--raised">
-                            Export forms
-                        </button>
-                        <button id="form-create-dialog-button" class="mdl-button mdl-js-button mdl-button--raised">
-                            Create new form
-                        </button>
                         <dialog id="formCreateDialog" class="mdl-dialog">
                             <h4>Create new form</h4>
                             <form class="mdl-dialog__content" action="/api/forms" method="post"
@@ -164,10 +165,10 @@
             </section>
             <section class="mdl-layout__tab-panel" id="ontologies">
                 <div class="page-content">
+                    <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
+                        <i class="material-icons">add</i>
+                    </button>
                     <div>
-                        <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--raised">
-                            Import new ontology
-                        </button>
                         <dialog id="importOntologyDialog" class="mdl-dialog">
                             <h4>Import new ontology</h4>
                             <form class="mdl-dialog__content" action="/ontologies" method="post"
@@ -211,6 +212,11 @@
                     </div>
                 </div>
             </section>
+        <section class="mdl-layout__tab-panel" id="individuals">
+            <div class="page-content">
+
+            </div>
+        </section>
     </main>
 </div>
 <script th:inline="javascript">
