@@ -152,10 +152,6 @@ public class FormOverviewService {
                 individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
             }
 
-            OntIndividual formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
-            propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset, "forms", formIndividual, "targetsClass")
-                    .forEach(individual -> individualService.deleteIndividualByIri(dataset, "forms", individual.getURI()));
-
             individualService.deleteIndividual(dataset, "forms", formName);
 
             dataset.commit();

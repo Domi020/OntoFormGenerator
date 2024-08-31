@@ -197,8 +197,6 @@ public class OntologyController {
     }
     // TODO: Generell bei allen Löschvorgängen prüfen, ob alle Rückstände (FormElements, etc.) gelöscht werden
 
-    // TODO: Bei Form löschen: NICHT targetClasses löschen!!!
-
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
         model.addAttribute("forms", formOverviewService.getAllForms());
