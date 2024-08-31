@@ -157,7 +157,13 @@ public class FormEditorService {
             // Set targetsClass
             var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyName"),
                     formInput.getFirst("ontologyClass"));
-            var classIndividual = individualService.getOrAddIndividualByString(dataset, classIri, "TargetClass");
+            var classIndividual = individualService.getOntIndividualByIri(dataset, classIri);
+            if (classIndividual == null) {
+                classIndividual = individualService.addIndividualWithURI(dataset, "TargetClass", classIri);
+                propertyService.addObjectPropertyToIndividual(dataset, "forms",
+                        individualService.getOntIndividualByIri(dataset, ontology.getURI()),
+                        "hasTargetClass", classIndividual.getURI());
+            }
             form.addProperty(
                     propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
                     classIndividual

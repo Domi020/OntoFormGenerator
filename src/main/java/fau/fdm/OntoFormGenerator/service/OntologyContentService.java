@@ -499,4 +499,20 @@ public class OntologyContentService {
         };
     }
 
+    public List<OntologyClass> getTargetClasses(String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var ontology = individualService.findOntIndividualInOntology(dataset, "forms", ontologyName);
+            var targetClasses = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset, "forms",
+                    ontology, "hasTargetClass");
+            List<OntologyClass> classes = new ArrayList<>();
+            targetClasses.forEach(
+                    targetClass -> classes.add(new OntologyClass(targetClass.getLocalName(), targetClass.getURI()))
+            );
+            return classes;
+        } finally {
+            dataset.end();
+        }
+    }
 }

@@ -214,7 +214,32 @@
             </section>
         <section class="mdl-layout__tab-panel" id="individuals">
             <div class="page-content">
+                <div>
+                    <h3>Select an ontology</h3>
+                    <table id="ontology-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">
+                        <tr th:each="ontology : ${ontologies}">
+                            <th th:text="${ontology.getName()}">Ontology</th>
+                            <th>
+                                <button th:id="'select-ontology-' + ${ontology.getName()}"
+                                        class="mdl-button mdl-js-button mdl-button--raised select-ontology">
+                                    Select
+                                </button>
+                            </th>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <h3>Select a target class</h3>
+                    <table id="class-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">>
 
+                    </table>
+                </div>
+                <div>
+                    <h3>Select an individual</h3>
+                    <table id="individual-table" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp">>
+
+                    </table>
+                </div>
             </div>
         </section>
     </main>
@@ -316,6 +341,75 @@
     showDraftsDialog.querySelector('.close').addEventListener('click', function () {
         showDraftsDialog.close();
     });
+
+    let selectOntologyButtons = document.querySelectorAll('.select-ontology');
+    selectOntologyButtons.forEach(el => el.addEventListener('click', async function (event) {
+        let buttonId = event.currentTarget.id;
+        let ontologyName = buttonId.replace('select-ontology-', '');
+        let classes = await fetch('/api/ontologies/' + ontologyName + '/targetClasses').then(response => response.json());
+        let classTable = document.querySelector('#class-table');
+        classTable.innerHTML = '';
+        for (let i = 0; i < classes.length; i++) {
+            let curClass = classes[i];
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td>` + curClass.name + `</td>
+                <td>
+                    <button class="mdl-button
+                                    mdl-js-button
+                                    mdl-button--raised
+                                    select-class"
+                                    data-ontology="` + ontologyName + `"
+                                    data-class="` + curClass.name + `"
+                                    onclick="onSelectClass(this.getAttribute(\'data-class\'),
+                                    this.getAttribute(\'data-ontology\'))">
+                            Select
+                    </button>
+                </td>`;
+            classTable.appendChild(row);
+        }
+    }));
+
+    async function onSelectClass(ontClass, ontName) {
+        let individuals = await fetch('/api/ontologies/' + ontName + '/classes/' + ontClass + '/individuals?withImportedIndividuals=false')
+            .then(response => response.json());
+        let individualTable = document.querySelector('#individual-table');
+        individualTable.innerHTML = '';
+        for (let i = 0; i < individuals.length; i++) {
+            let individual = individuals[i];
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td>` + individual.name + `</td>
+                <td>
+                    <button class="mdl-button
+                                    mdl-js-button
+                                    mdl-button--raised
+                                    select-individual"
+                                    data-ontology="` + ontName + `"
+                                    data-individual="` + individual.name + `"
+                                    onclick="onSelectIndividual(this.getAttribute(\'data-individual\'),
+                                    this.getAttribute(\'data-ontology\'))">
+                            Edit
+                    </button>
+                </td>
+                <td>
+                    <button class="mdl-button
+                                    mdl-js-button
+                                    mdl-button--raised
+                                    select-individual"
+                                    data-ontology="` + ontName + `"
+                                    data-individual="` + encodeURIComponent(individual.iri) + `"
+                                    onclick="fetch('/api/ontologies/' + this.getAttribute(\'data-ontology\') + '/individual?uri=' + this.getAttribute(\'data-individual\'),
+                                    {method: 'DELETE'}).then(async () => location.reload())">
+                            Delete
+                   </td>`;
+            individualTable.appendChild(row);
+        }
+    }
+
+    function onSelectIndividual(individualName, ontologyName) {
+        location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + individualName;
+    }
 
     function deleteOntology(ontologyName, ontologyIri) {
         // let params = new URLSearchParams();

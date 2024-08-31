@@ -108,9 +108,15 @@ public class OntologyController {
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals", method = RequestMethod.GET)
     public ResponseEntity<List<Individual>> getAllIndividualsFromClass(@PathVariable String ontologyName,
-                                                                      @PathVariable String className) {
-        return new ResponseEntity<>(ontologyContentService.getAllIndividualsOfClass(ontologyName, className),
-                HttpStatus.OK);
+                                                                       @PathVariable String className,
+                                                                       @RequestParam(value = "withImportedIndividuals",
+                                                                               required = false,
+                                                                               defaultValue = "true") boolean withImportedIndividuals) {
+        var individuals = ontologyContentService.getAllIndividualsOfClass(ontologyName, className);
+        if (!withImportedIndividuals) {
+            individuals.removeIf(Individual::isImported);
+        }
+        return new ResponseEntity<>(individuals, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals", method = RequestMethod.GET)
@@ -177,6 +183,11 @@ public class OntologyController {
         }
     }
 
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/targetClasses", method = RequestMethod.GET)
+    public ResponseEntity<List<OntologyClass>> getTargetClasses(@PathVariable String ontologyName) {
+        return new ResponseEntity<>(ontologyContentService.getTargetClasses(ontologyName), HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individual", method = RequestMethod.DELETE)
     public String deleteIndividual(@PathVariable String ontologyName,
                                    @RequestParam("uri") String individualUri,
@@ -185,6 +196,8 @@ public class OntologyController {
         return loadIndexPage(model);
     }
     // TODO: Generell bei allen Löschvorgängen prüfen, ob alle Rückstände (FormElements, etc.) gelöscht werden
+
+    // TODO: Bei Form löschen: NICHT targetClasses löschen!!!
 
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());

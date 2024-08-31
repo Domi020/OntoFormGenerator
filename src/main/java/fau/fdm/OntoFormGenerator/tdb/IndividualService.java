@@ -108,6 +108,13 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
+    public OntIndividual getOntIndividualByIri(Dataset dataset,
+                                               String ontologyName,
+                                               String iri) {
+        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        return ontModel.getIndividual(iri);
+    }
+
     public OntIndividual getIndividualByIri(Dataset dataset,
                                                String iri) {
         var ontModel = getOntModel(dataset.getNamedModel("forms"));
