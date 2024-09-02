@@ -9,6 +9,7 @@
     <meta charset="UTF-8">
     <title>OntoFormGenerator</title>
     <link rel="stylesheet" href="./material.min.css">
+    <script src="/js-loading-overlay.min.js"></script>
     <script src="./material.min.js"></script>
     <script th:inline="javascript">
         const ontologies = [[${ontologies}]];
@@ -73,31 +74,34 @@
                     </button>
                     <div>
                         <dialog id="formCreateDialog" class="mdl-dialog">
-                            <h4>Create new form</h4>
-                            <form class="mdl-dialog__content" action="/api/forms" method="post"
-                                  enctype="multipart/form-data">
-                                <div>
-                                    <label for="formName">Form name</label>
-                                    <input type="text" id="formName" name="formName">
-                                </div>
-                                <div>
-                                    <label for="ontologyNameInFormCreate">Ontology name</label>
-                                    <select type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate">
-                                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}"
-                                                onchange="autoFillURI()">Ontology
-                                        </option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="ontologyURIInFormCreate">Ontology IRI</label>
-                                    <input type="text" id="ontologyURIInFormCreate" name="ontologyURIInFormCreate" readonly>
-                                </div>
-                                <div>
-                                    <button type="submit">Create</button>
-                                </div>
-                            </form>
+                            <h4 class="mdl-dialog__title"> Create new form</h4>
+                            <div class="mdl-dialog__content">
+                                <form action="/api/forms" method="post"
+                                      enctype="multipart/form-data">
+                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                        <label class="mdl-textfield__label"  for="formName">Form name</label>
+                                        <input class="mdl-textfield__input" type="text" id="formName" name="formName" required>
+                                    </div>
+                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                        <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology name</label>
+                                        <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate" required>
+                                            <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}"
+                                                    onchange="autoFillURI()">Ontology
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                        <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology IRI</label>
+                                        <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate" name="ontologyURIInFormCreate" readonly>
+                                    </div>
+                                    <div>
+                                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create</button>
+                                    </div>
+                                </form>
+                            </div>
+
                             <div class="mdl-dialog__actions">
-                                <button type="button" class="close">Cancel</button>
+                                <button type="button" class="close mdl-button mdl-js-button mdl-button--raised">Cancel</button>
                             </div>
                         </dialog>
                         <ul class="mdl-list ontology-list">
@@ -120,11 +124,11 @@
                                     <div class="mdl-card__actions mdl-card--border">
                                         <a th:if="${formDrafts.get(iter.index).size == 0}"
                                            th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
-                                           class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                           class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
                                             Edit form
                                         </a>
                                         <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
-                                           class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                           class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
                                             Fill form
                                         </a>
                                         <button th:id="'show-individuals-button--' + ${form.getOntologyName()} + '--' + ${form.getFormName()}"
@@ -170,23 +174,25 @@
                     </button>
                     <div>
                         <dialog id="importOntologyDialog" class="mdl-dialog">
-                            <h4>Import new ontology</h4>
-                            <form class="mdl-dialog__content" action="/ontologies" method="post"
-                                  enctype="multipart/form-data">
-                                <div>
-                                    <label for="ontologyName">Ontology name</label>
-                                    <input type="text" id="ontologyName" name="ontologyName">
-                                </div>
-                                <div>
-                                    <label for="file">Ontology file</label>
-                                    <input type="file" id="file" name="file">
-                                </div>
-                                <div>
-                                    <button type="submit">Import</button>
-                                </div>
-                            </form>
+                            <h4 class="mdl-dialog__title">Import new ontology</h4>
+                            <div class="mdl-dialog__content">
+                                <form action="/ontologies" method="post"
+                                      enctype="multipart/form-data">
+                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                        <label class="mdl-textfield__label" for="ontologyName">Ontology name</label>
+                                        <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName" required>
+                                    </div>
+                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                        <label class="mdl-textfield__label" for="file">Ontology file</label>
+                                        <input class="mdl-textfield__input" type="file" id="file" name="file" required>
+                                    </div>
+                                    <div>
+                                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Import</button>
+                                    </div>
+                                </form>
+                            </div>
                             <div class="mdl-dialog__actions">
-                                <button type="button" class="close">Cancel</button>
+                                <button class="mdl-button mdl-js-button mdl-button--raised close" type="button">Cancel</button>
                             </div>
                         </dialog>
                         <ul class="mdl-list ontology-list">
@@ -371,6 +377,7 @@
     }));
 
     async function onSelectClass(ontClass, ontName) {
+        JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
         let individuals = await fetch('/api/ontologies/' + ontName + '/classes/' + ontClass + '/individuals?withImportedIndividuals=false')
             .then(response => response.json());
         let individualTable = document.querySelector('#individual-table');
@@ -405,6 +412,7 @@
                    </td>`;
             individualTable.appendChild(row);
         }
+        JsLoadingOverlay.hide();
     }
 
     function onSelectIndividual(individualName, ontologyName) {
