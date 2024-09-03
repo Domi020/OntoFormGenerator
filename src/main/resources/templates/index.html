@@ -9,8 +9,11 @@
     <meta charset="UTF-8">
     <title>OntoFormGenerator</title>
     <link rel="stylesheet" href="./material.min.css">
+    <link rel="stylesheet" href="/selectize.default.min.css">
     <script src="/js-loading-overlay.min.js"></script>
     <script src="./material.min.js"></script>
+    <script src="/jquery-3.7.1.min.js"></script>
+    <script src="/selectize.min.js"></script>
     <script th:inline="javascript">
         const ontologies = [[${ontologies}]];
     </script>
@@ -69,9 +72,15 @@
                     <button id="form-create-dialog-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
                         <i class="material-icons">add</i>
                     </button>
+                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="form-create-dialog-button">
+                        Create Form
+                    </div>
                     <button id="export-forms" onclick="location.href='/ontologies/forms'" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button second-fab-button">
                         <i class="material-icons">download</i>
                     </button>
+                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="export-forms">
+                        Download Forms ontology
+                    </div>
                     <div>
                         <dialog id="formCreateDialog" class="mdl-dialog">
                             <h4 class="mdl-dialog__title"> Create new form</h4>
@@ -86,13 +95,17 @@
                                         <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology name</label>
                                         <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate" required>
                                             <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}"
-                                                    onchange="autoFillURI()">Ontology
+                                                    onchange="autoFillURI();refreshAvailableClasses()">Ontology
                                             </option>
                                         </select>
                                     </div>
                                     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                                         <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology IRI</label>
                                         <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate" name="ontologyURIInFormCreate" readonly>
+                                    </div>
+                                    <div>
+                                        <select name="targetClass" id="classSelectInFormCreate"></select>
+                                        <label for="classSelectInFormCreate">Ontology class</label>
                                     </div>
                                     <div>
                                         <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create</button>
@@ -118,7 +131,7 @@
                                             <i class="material-icons">delete</i>
                                         </button>
                                     </div>
-                                    <div class="mdl-card__supporting-text" th:text="${form.getOntologyName()}">
+                                    <div class="mdl-card__supporting-text" th:text="${form.getOntologyName()} + ' --- ' + ${form.getTargetClass().name}">
                                         Wines and Meals
                                     </div>
                                     <div class="mdl-card__actions mdl-card--border">
@@ -172,6 +185,9 @@
                     <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
                         <i class="material-icons">add</i>
                     </button>
+                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="show-ontology-import-dialog">
+                        Import new ontology
+                    </div>
                     <div>
                         <dialog id="importOntologyDialog" class="mdl-dialog">
                             <h4 class="mdl-dialog__title">Import new ontology</h4>
@@ -218,7 +234,7 @@
                     </div>
                 </div>
             </section>
-        <section class="mdl-layout__tab-panel" id="individuals">
+            <section class="mdl-layout__tab-panel" id="individuals">
             <div class="page-content">
                 <div>
                     <h3>Select an ontology</h3>
@@ -266,6 +282,7 @@
     var showCreateFormDialogButton = document.querySelector('#form-create-dialog-button');
     showCreateFormDialogButton.addEventListener('click', function () {
         createFormDialog.showModal();
+
     });
     createFormDialog.querySelector('.close').addEventListener('click', function () {
         createFormDialog.close();
@@ -449,6 +466,29 @@
 
     autoFillURI();
 
+    function refreshAvailableClasses() {
+        const ontologyName = document.getElementById('ontologyNameInFormCreate').value;
+        fetch('/api/ontologies/' + ontologyName + '/class')
+            .then(response => response.json())
+            .then(classes => {
+                $('#classSelectInFormCreate')[0].selectize.clearOptions();
+                for (let i = 0; i < classes.length; i++) {
+                    $('#classSelectInFormCreate')[0].selectize.addOption(classes[i]);
+                }
+                $('#classSelectInFormCreate')[0].selectize.refreshOptions(true);
+            });
+    }
+
+    $('#classSelectInFormCreate').selectize({
+        valueField: 'name',
+        labelField: 'name',
+        searchField: 'name',
+        options: [],
+        maxItems: 1
+    });
+
+
+    refreshAvailableClasses();
 
 </script>
 </body>

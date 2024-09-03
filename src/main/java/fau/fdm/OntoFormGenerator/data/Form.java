@@ -10,4 +10,5 @@ import lombok.Setter;
 public class Form {
     private String formName;
     private String ontologyName;
+    private OntologyClass targetClass;
 }

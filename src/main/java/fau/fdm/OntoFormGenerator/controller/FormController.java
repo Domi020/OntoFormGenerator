@@ -41,8 +41,9 @@ public class FormController {
     public String addNewForm(@RequestParam("formName") String formName,
                              @RequestParam("ontologyNameInFormCreate") String ontologyName,
                              @RequestParam("ontologyURIInFormCreate") String ontologyURIInFormCreate,
+                             @RequestParam("targetClass") String targetClass,
                              Model model) {
-        formOverviewService.addNewForm(formName, ontologyName, ontologyURIInFormCreate);
+        formOverviewService.addNewForm(formName, ontologyName, ontologyURIInFormCreate, targetClass);
         return loadIndexPage(model);
     }
 

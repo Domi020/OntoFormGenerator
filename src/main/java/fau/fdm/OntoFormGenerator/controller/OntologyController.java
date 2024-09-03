@@ -159,6 +159,13 @@ public class OntologyController {
         return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);
     }
 
+    //TODO: Rename both endpoints!
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/class", method = RequestMethod.GET)
+    public ResponseEntity<List<OntologyClass>> getAllClassesOfOntology(@PathVariable String ontologyName) {
+        return new ResponseEntity<>(ontologyContentService.getAllClassesOfOntology(ontologyName), HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST,
             consumes = "application/json;charset=UTF-8")
     public ResponseEntity<String> editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
