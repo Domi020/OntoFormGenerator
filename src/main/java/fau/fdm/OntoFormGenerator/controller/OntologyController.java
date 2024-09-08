@@ -101,9 +101,15 @@ public class OntologyController {
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/properties", method = RequestMethod.GET)
     public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
-                                                                             @PathVariable String className) {
-        return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, className),
-                HttpStatus.OK);
+                                                                             @PathVariable String className,
+                                            @RequestParam(value = "query", required = false) String query) {
+        if (query != null) {
+            return new ResponseEntity<>(ontologyContentService.queryProperties(ontologyName, className, query),
+                    HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, className),
+                    HttpStatus.OK);
+        }
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals", method = RequestMethod.GET)

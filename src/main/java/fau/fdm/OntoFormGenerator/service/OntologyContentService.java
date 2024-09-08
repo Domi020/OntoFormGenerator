@@ -515,4 +515,38 @@ public class OntologyContentService {
             dataset.end();
         }
     }
+
+    public List<OntologyProperty> queryProperties(String ontologyName, String className, String query) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            // 1. Search for name (case invariant; contains)
+            // 2. Search for label (case invariant; contains)
+            // 3. Search for description (case invariant; contains)
+            var properties = propertyService.searchProperties(dataset, ontologyName, className, query);
+            List<OntologyProperty> ontologyProperties = new ArrayList<>();
+            properties.forEach(
+                    property -> {
+                        var ontologyProperty = new OntologyProperty();
+                        ontologyProperty.setName(property.getLocalName());
+                        if (property.getDomain() != null) {
+                            ontologyProperty.setDomain(new OntologyClass(property.getDomain().getLocalName(), property.getDomain().getURI()));
+                        }
+                        ontologyProperty.setObjectProperty(property.isObjectProperty());
+                        if (property.isObjectProperty()) {
+                            if (property.getRange() != null)
+                                ontologyProperty.setObjectRange(new OntologyClass(property.getRange().getLocalName(), property.getRange().getURI()));
+                        } else {
+                            ontologyProperty.setDatatypeRange(property.getRange().getLocalName());
+                        }
+                        ontologyProperty.setRdfsLabel(property.getLabel(null));
+                        ontologyProperty.setRdfsComment(property.getComment(null));
+                        ontologyProperties.add(ontologyProperty);
+                    }
+            );
+            return ontologyProperties;
+        } finally {
+            dataset.end();
+        }
+    }
 }

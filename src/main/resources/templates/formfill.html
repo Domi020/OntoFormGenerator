@@ -85,10 +85,17 @@
     <h2>Add field to form</h2>
     <p>Add a new field to this form instance. How do you want to call your field?
     </p>
+    // new-property-class-select
     <div>
-        <label for="new-property-class-select">Property</label>
-        <select id="new-property-class-select" name="new-property-class-select">
-        </select>
+        <label for="new-property-input">Property</label>
+        <input id="new-property-input" name="new-property-input"></input>
+        <button id="new-property">Search</button>
+        <button id="new-property-reset">Reset</button>
+    </div>
+
+    <div>
+        <label for="new-property-class-select">Select a property</label>
+        <select id="new-property-class-select" name="new-property-class-select"></select>
     </div>
 
     <p>Content of this field:</p>
@@ -474,6 +481,8 @@
         dialog.close();
     });
 
+    let allPropertiesOfTargetClass;
+
     const newFieldDialog = document.querySelector('#add-property-dialog');
     const newFieldButton = document.querySelector('#new-field-button');
     newFieldButton.addEventListener('click', function () {
@@ -481,6 +490,7 @@
         fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties`)
             .then(async function (response) {
                 let allProperties = await response.json();
+                allPropertiesOfTargetClass = allProperties;
                 $('#new-property-class-select').selectize({
                     valueField: 'name',
                     labelField: 'name',
@@ -489,18 +499,23 @@
                     options: allProperties,
                     onChange: value => {
                         let string;
-                        let objectProp = allProperties.find(property => property.name === value).objectProperty;
-                        if (objectProp) {
-                            let range = allProperties.find(property => property.name === value).objectRange;
-                            if (range) {
-                                string = "Another instance: " + range.name;
+                        if (value !== '') {
+                            let objectProp = allProperties.find(property => property.name === value).objectProperty;
+                            if (objectProp) {
+                                let range = allProperties.find(property => property.name === value).objectRange;
+                                if (range) {
+                                    string = "Another instance: " + range.name;
+                                } else {
+                                    string = "Another instance";
+                                }
                             } else {
-                                string = "Another instance";
+                                string = allProperties.find(property => property.name === value).datatypeRange;
                             }
+                            document.getElementById('new-property-class-range').innerText = string;
                         } else {
-                            string = allProperties.find(property => property.name === value).datatypeRange;
+                            document.getElementById('new-property-class-range').innerText = '';
                         }
-                        document.getElementById('new-property-class-range').innerText = string;
+
                     }
                 });
                 JsLoadingOverlay.hide();
@@ -509,6 +524,29 @@
     });
     newFieldDialog.querySelector('.close').addEventListener('click', function () {
         newFieldDialog.close();
+    });
+
+    const newPropertySearchButton = document.querySelector('#new-property');
+    newPropertySearchButton.addEventListener('click', function () {
+        let query = document.getElementById('new-property-input').value;
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties?query=${query}`)
+            .then(async function (response) {
+                let allProperties = await response.json();
+                let select = $('#new-property-class-select')[0].selectize;
+                select.clear();
+                select.clearOptions();
+                for (let i = 0; i < allProperties.length; i++) {
+                    select.addOption(allProperties[i]);
+                }
+            });
+    });
+
+    const newPropertyResetButton = document.querySelector('#new-property-reset');
+    newPropertyResetButton.addEventListener('click', function () {
+        let select = $('#new-property-class-select')[0].selectize;
+        select.clear();
+        select.clearOptions();
+        allPropertiesOfTargetClass.forEach(property => select.addOption(property));
     });
 
     const saveButton = document.querySelector('#save-button');

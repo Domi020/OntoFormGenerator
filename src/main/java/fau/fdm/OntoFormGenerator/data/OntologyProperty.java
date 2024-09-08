@@ -11,6 +11,8 @@ public class OntologyProperty {
     private boolean isObjectProperty;
     private OntologyClass objectRange;
     private String datatypeRange;
+    private String rdfsLabel;
+    private String rdfsComment;
 
     public OntologyProperty(String name, OntologyClass domain, boolean isObjectProperty, OntologyClass objectRange, String datatypeRange) {
         this.name = name;
