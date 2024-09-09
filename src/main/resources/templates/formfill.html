@@ -354,8 +354,16 @@
         }
         fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
             method: 'POST'
-        }).then(() => {
-            location.reload()
+        }).then(async response => {
+            if (!response.ok) {
+                if (response.status === 400) {
+                    alert(await response.text());
+                } else {
+                    alert('An error has occurred');
+                }
+            } else {
+                location.reload()
+            }
         });
     }
 

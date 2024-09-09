@@ -5,6 +5,8 @@ import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.data.Individual;
+import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
+import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
@@ -41,6 +43,7 @@ public class OntologyContentService {
 
     private final Logger logger;
     private final PropertyService propertyService;
+    private final OntologyValidationService ontologyValidationService;
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
@@ -53,11 +56,12 @@ public class OntologyContentService {
     private final GeneralTDBService generalTDBService;
 
     @Autowired
-    public OntologyContentService(IndividualService individualService, GeneralTDBService generalTDBService, PropertyService propertyService) {
+    public OntologyContentService(IndividualService individualService, GeneralTDBService generalTDBService, PropertyService propertyService, OntologyValidationService ontologyValidationService) {
         this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
         this.propertyService = propertyService;
+        this.ontologyValidationService = ontologyValidationService;
     }
 
     public List<OntologyClass> getAllClassesOfOntology(String ontologyName) {
@@ -457,10 +461,18 @@ public class OntologyContentService {
     }
 
     public OntologyProperty createNewProperty(String ontologyName, String propertyName,
-                                              boolean objectProperty, String domain, String range) {
+                                              boolean objectProperty, String domain, String range,
+                                              boolean validate) throws SimilarPropertiesExistException {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
+            if (validate) {
+                var synonyms = ontologyValidationService.findPotentialSimilarProperties(dataset, ontologyName, domain, propertyName);
+                if (!synonyms.isEmpty()) {
+                    throw new SimilarPropertiesExistException(propertyName,
+                            synonyms.stream().map(OntologyProperty::getName).toArray(String[]::new));
+                }
+            }
             var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                     dataset.getNamedModel(ontologyName));
             var domainClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, domain));

@@ -34,6 +34,11 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.textrazor</groupId>
+			<artifactId>textrazor</artifactId>
+			<version>1.0.12</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>

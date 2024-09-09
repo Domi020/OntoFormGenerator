@@ -4,6 +4,7 @@ import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.SubclassGraph;
+import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.service.FormFillService;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
 import fau.fdm.OntoFormGenerator.service.OntologyContentService;
@@ -150,14 +151,18 @@ public class OntologyController {
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/properties/{propertyName}",
             method = RequestMethod.POST)
-    public ResponseEntity<OntologyProperty> createNewProperty(@PathVariable String ontologyName,
+    public ResponseEntity<?> createNewProperty(@PathVariable String ontologyName,
                                                              @PathVariable String propertyName,
                                                              @RequestParam("isObjectProperty") boolean isObjectProperty,
                                                              @RequestParam("domain") String domain,
                                                              @RequestParam("range") String range) {
-        return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propertyName,
-                isObjectProperty, domain, range),
-                HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propertyName,
+                    isObjectProperty, domain, range, true),
+                    HttpStatus.OK);
+        } catch (SimilarPropertiesExistException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
