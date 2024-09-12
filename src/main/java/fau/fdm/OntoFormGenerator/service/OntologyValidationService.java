@@ -32,6 +32,22 @@ public class OntologyValidationService {
         this.restTemplate = new RestTemplate();
     }
 
+    public PropertyNamingValidationResult checkNaming(String newPropertyName) {
+        var toCheck = newPropertyName.toLowerCase();
+        var wordFilters = List.of("and", "or", "other", "miscellaneous");
+        var result = new PropertyNamingValidationResult();
+        result.setNewPropertyName(newPropertyName);
+        for (var filter : wordFilters) {
+            if (toCheck.contains(filter)) {
+                result.setValid(false);
+                result.setFilteredWord(filter);
+                return result;
+            }
+        }
+        result.setValid(true);
+        return result;
+    }
+
     public NamingSchemaValidationResult checkNamingSchema(Dataset dataset, String ontologyName,
                              String newPropertyName) {
         var ontologySchema = getOntologyNamingSchema(dataset, ontologyName);
@@ -108,7 +124,15 @@ public class OntologyValidationService {
 
     @Getter
     @Setter
-    public class NamingSchemaValidationResult {
+    public static class PropertyNamingValidationResult {
+        String newPropertyName;
+        boolean valid;
+        String filteredWord = null;
+    }
+
+    @Getter
+    @Setter
+    public static class NamingSchemaValidationResult {
         String newPropertyName;
         NamingSchema newPropertyNamingSchema;
         NamingSchema ontologyNamingSchema;
