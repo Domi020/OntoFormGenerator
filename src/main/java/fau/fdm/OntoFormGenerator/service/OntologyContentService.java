@@ -5,6 +5,7 @@ import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
 import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.data.Individual;
+import fau.fdm.OntoFormGenerator.exception.NamingSchemaDifferentException;
 import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
 import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
@@ -462,7 +463,7 @@ public class OntologyContentService {
 
     public OntologyProperty createNewProperty(String ontologyName, String propertyName,
                                               boolean objectProperty, String domain, String range,
-                                              boolean validate) throws SimilarPropertiesExistException {
+                                              boolean validate) throws SimilarPropertiesExistException, NamingSchemaDifferentException {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
@@ -471,6 +472,12 @@ public class OntologyContentService {
                 if (!synonyms.isEmpty()) {
                     throw new SimilarPropertiesExistException(propertyName,
                             synonyms.stream().map(OntologyProperty::getName).toArray(String[]::new));
+                }
+                var namingValidationResult = ontologyValidationService.checkNamingSchema(dataset, ontologyName, propertyName);
+                if (!namingValidationResult.isValid()) {
+                    throw new NamingSchemaDifferentException(propertyName, ontologyName,
+                            namingValidationResult.getNewPropertyNamingSchema().toString(),
+                            namingValidationResult.getOntologyNamingSchema().toString());
                 }
             }
             var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,

@@ -4,6 +4,7 @@ import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.SubclassGraph;
+import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
 import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.service.FormFillService;
 import fau.fdm.OntoFormGenerator.service.FormOverviewService;
@@ -160,7 +161,7 @@ public class OntologyController {
             return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propertyName,
                     isObjectProperty, domain, range, true),
                     HttpStatus.OK);
-        } catch (SimilarPropertiesExistException e) {
+        } catch (OntologyValidationException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
