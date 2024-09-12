@@ -156,10 +156,11 @@ public class OntologyController {
                                                              @PathVariable String propertyName,
                                                              @RequestParam("isObjectProperty") boolean isObjectProperty,
                                                              @RequestParam("domain") String domain,
-                                                             @RequestParam("range") String range) {
+                                                             @RequestParam("range") String range,
+                                                             @RequestParam("validate") boolean validate) {
         try {
             return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propertyName,
-                    isObjectProperty, domain, range, true),
+                    isObjectProperty, domain, range, validate),
                     HttpStatus.OK);
         } catch (OntologyValidationException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

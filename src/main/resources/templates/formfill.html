@@ -146,6 +146,10 @@
             </button>
             <input id="create-property-with-object" type="text" name="create-property-with-object" readonly>
         </div>
+        <div>
+            <input type="checkbox" id="create-property-skip-validate" name="create-property-skip-validate">
+            <label for="create-property-skip-validate">Skip validation (only for experienced users!)</label>
+        </div>
     </fieldset>
     <button>
         <a onclick="createNewProperty()">Create property</a>
@@ -345,6 +349,7 @@
         }
         let range;
         let isObjectProperty;
+        let validate = !document.getElementById('create-property-skip-validate').checked;
         if (option === '1') {
             range = document.getElementById('create-property-with-datatype').value;
             isObjectProperty = false;
@@ -352,7 +357,7 @@
             range = document.getElementById('create-property-with-object').value;
             isObjectProperty = true;
         }
-        fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}`, {
+        fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}&validate=${validate}`, {
             method: 'POST'
         }).then(async response => {
             if (!response.ok) {
