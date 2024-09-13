@@ -140,6 +140,15 @@
     
 
 
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#required -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#required">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#FormElement"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //

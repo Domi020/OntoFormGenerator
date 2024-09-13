@@ -9,7 +9,6 @@ import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
-import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb2.TDB2Factory;
@@ -60,6 +59,7 @@ public class FormEditorService {
 
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {
+        // TODO: properly add maximumValues and required to drafts
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         try {
@@ -83,13 +83,13 @@ public class FormEditorService {
                             new OntologyProperty(fieldName,
                                     new OntologyClass(null, null),
                                     true, objectRange, null), "ObjectSelect", fieldName,
-                            1));
+                            1, true));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName, new OntologyClass(null, null),
                                     false, null, dataRangeProp.getLocalName()),
-                            getFormType(dataRangeProp.getLocalName()), fieldName, 1));
+                            getFormType(dataRangeProp.getLocalName()), fieldName, 1, true));
                 }
             }
             return formFields;
@@ -120,18 +120,20 @@ public class FormEditorService {
                         "forms", formElementIndividual, "targetsField");
                 var maximumValues = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "hasMaximumValues").getInt();
+                var required = propertyService.getDatatypePropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "required").getBoolean();
                 var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
                 if (isObjectProperty) {
                     var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
-                            fieldType, fieldName, maximumValues));
+                            fieldType, fieldName, maximumValues, required));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, false, null,
-                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues));
+                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues, required));
                 }
             }
             for (int i = 0; i < formFields.size(); i++) {
@@ -219,6 +221,15 @@ public class FormEditorService {
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                         field, "hasMaximumValues", maximumValues,
                         XSDDatatype.XSDpositiveInteger);
+                String checked = "false";
+                for (var val : formInput.get("required-checkbox")) {
+                    if (val.equals("required-checkbox-" + i)) {
+                        checked = "true";
+                        break;
+                    }
+                }
+                propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "required", checked, XSDDatatype.XSDboolean);
             }
 
             // delete all old form elements that are not in the new form

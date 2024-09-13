@@ -25,7 +25,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 11.66%;
+            width: 9.28%;
             position: relative;
             text-align: left;
         }
@@ -69,13 +69,18 @@
                 </div>
                 <div class="property-field property-checkbox">
                     <label>Object property</label>
-                    <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
+                    <input type="checkbox" id="object-property-checkbox-` + elements + `" name="object-property-checkbox" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </div>
                 <div class="property-field">
                     <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="maximumValues">
                     <label class="mdl-textfield__label">Maximum values</label>
+                </div>
+                <div class="property-field">
+                    <input type="checkbox" id="required-checkbox-` + elements + `" name="required-checkbox"
+                     value="required-checkbox-` + elements + `" checked>
+                    <label>Required</label>
                 </div>
                 <div class="property-field">
                     <button type="button" class="mdl-button delete-form-element"
@@ -212,13 +217,14 @@
                 divs.push(field.querySelector('select[name="propertyName"]'));
                 items.push(prop.domain.name);
                 field.querySelector('input[name="isObjectProperty"]').value = prop.objectProperty;
-                field.querySelector('input[type="checkbox"]').checked = prop.objectProperty;
+                field.querySelector('input[name="object-property-checkbox"]').checked = prop.objectProperty;
                 if (prop.objectProperty) {
                     field.querySelector('input[name="propertyRange"]').value = prop.objectRange.name;
                 } else {
                     field.querySelector('input[name="propertyRange"]').value = prop.datatypeRange;
                 }
                 field.querySelector('input[name="maximumValues"]').value = element.maximumValues;
+                field.querySelector('input[name="required-checkbox"]').checked = element.required;
             });
             firstRefreshAvailableProperties(divs, items);
         }
