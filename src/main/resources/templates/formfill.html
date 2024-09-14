@@ -35,19 +35,19 @@
     <div th:each="field: ${formElements}">
         <div th:if="${field.fieldType == 'Input'}">
             <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'Number'}">
             <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'Datetime'}">
             <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'ObjectSelect'}">
             <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
     </div>
     <div th:each="field: ${additionalElements}">
@@ -584,6 +584,7 @@
     const validateSaveButton = document.querySelector('#validate-save-button');
     validateSaveButton.addEventListener('click', function () {
         createDraft().then(async function () {
+            if (!checkIfRequiredFieldsAreFilled()) return;
             JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
             const formJson = formDataToJSON();
             fetch(`/api/forms/${formName}/fill?validate=true`, {
@@ -604,6 +605,22 @@
                 })
         });
     });
+
+    function checkIfRequiredFieldsAreFilled() {
+        let form = document.querySelector('#fillform');
+        let formData = new FormData(form);
+        let requiredFields = allFormElements.filter(formElement => formElement.required);
+        for (let i = 0; i < requiredFields.length; i++) {
+            let formElement = requiredFields[i];
+            let propertyName = formElement.ontologyProperty.name;
+            let values = formData.getAll(propertyName);
+            if (values.length === 0 || values[0] === '') {
+                alert("The field " + formElement.name + " is required");
+                return false;
+            }
+        }
+        return true;
+    }
 
     function formDataToJSON() {
         const form = document.querySelector('#fillform');

@@ -1,8 +1,8 @@
-<div th:fragment="numberField (name, propName, multipleValues)">
+<div th:fragment="numberField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
             <input class="mdl-textfield__input" type="number" th:id="${'input-' + name}" th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
+            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
@@ -20,11 +20,11 @@
     </div>
 </div>
 
-<div th:fragment="stringField (name, propName, multipleValues)">
+<div th:fragment="stringField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
             <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}" th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
+            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
@@ -42,12 +42,12 @@
     </div>
 </div>
 
-<div th:fragment="dateTimeField (name, propName, multipleValues)">
+<div th:fragment="dateTimeField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
             <input class="mdl-textfield__input" type="datetime-local" step="1" th:id="${'input-' + name}"
                    th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${name}">Text...</label>
+            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
@@ -65,10 +65,10 @@
     </div>
 </div>
 Ï
-<div th:fragment="objectSelectField (name, propName, multipleValues)">
+<div th:fragment="objectSelectField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}">
-            <label th:for="${'object-select-' + name}" th:text="${name}">Property</label>
+            <label th:for="${'object-select-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">>Property</label>
             <select th:id="${'object-select-' + name}" th:name="${propName}" class="object-select">
             </select>
         </div>
