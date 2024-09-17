@@ -387,8 +387,12 @@ public class OntologyContentService {
                     + "#" + className;
             var newClass = ontModel.createClass(uri);
             if (superClassName != null) {
-                var superClassURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, superClassName);
-                newClass.addSuperClass(ontModel.getOntClass(superClassURI));
+                if (superClassName.equals("owl:Thing")) {
+                    newClass.addSuperClass(ontModel.getOntClass("http://www.w3.org/2002/07/owl#Thing"));
+                } else {
+                    var superClassURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, superClassName);
+                    newClass.addSuperClass(ontModel.getOntClass(superClassURI));
+                }
             }
             dataset.commit();
             return new OntologyClass(className, uri);

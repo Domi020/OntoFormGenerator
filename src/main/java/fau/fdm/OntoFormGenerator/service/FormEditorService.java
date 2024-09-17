@@ -57,6 +57,8 @@ public class FormEditorService {
         }
     }
 
+    // TODO: TargetClass nicht mehr änderbar
+
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {
         // TODO: properly add maximumValues and required to drafts

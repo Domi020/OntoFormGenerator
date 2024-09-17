@@ -80,6 +80,7 @@ public class FormController {
                     formFillService.deleteIndividualByIri(ontologyName, individualUri);
                     return ResponseEntity.badRequest().body(res.getReason());
                 }
+                //TODO: Bug: Datetime => braucht gerade zwingend sekunden
             } catch (RuntimeException e) {
                 formFillService.deleteIndividualByIri(ontologyName, individualUri);
                 return ResponseEntity.internalServerError().body("An error occurred while validating the ontology.");

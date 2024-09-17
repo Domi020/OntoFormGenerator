@@ -1506,6 +1506,15 @@ function buildSubclassGraphForPropertyRangeSelection(subclassGraph, containerEle
     sigmaInstance.on("clickNode", (e) => {
         targetElement.value = e.node;
     });
+    sigmaInstance.on("rightClickNode", (e) => {
+        const dialogSuperclassName = document.getElementById("add-subclass-dialog-superclass");
+        dialogSuperclassName.innerHTML = e.node;
+        const dialog = document.getElementById("add-subclass-dialog")
+        dialog.showModal();
+        dialog.querySelector('.close').addEventListener('click', function() {
+            dialog.close();
+        });
+    });
 }
 
 function buildSubclassGraph() {

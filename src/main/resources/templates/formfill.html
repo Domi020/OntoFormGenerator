@@ -53,19 +53,19 @@
     <div th:each="field: ${additionalElements}">
         <div th:if="${field.fieldType == 'Input'}">
             <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'Number'}">
             <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'Datetime'}">
             <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
         <div th:if="${field.fieldType == 'ObjectSelect'}">
             <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
-                multipleValues=${field.maximumValues})"></div>
+                multipleValues=${field.maximumValues}, required=${field.required})"></div>
         </div>
     </div>
     <div>
@@ -163,11 +163,27 @@
     <h1>Classes of ontology</h1>
     <h2 th:text="${ontology}"></h2>
     <h3>Select the range of the new property</h3>
-    <div id="class-select-container" style="width: 800px; height: 600px; background: white"></div>
+    <div id="class-select-container" style="width: 800px; height: 600px; background: white"
+         oncontextmenu="return false;"></div>
     <div>
         <input id="new-object-property-range" type="text" name="new-object-property-range" readonly>
         <label for="new-object-property-range">Selected class</label>
     </div>
+    <button class="close">
+        <a>Cancel</a>
+    </button>
+</dialog>
+<dialog id="add-subclass-dialog">
+    <h2>Add new subclass</h2>
+    <p>Enter a name for the class. The class will be created as a subclass of </p>
+    <p id="add-subclass-dialog-superclass"></p>
+    <div class="mdl-textfield mdl-js-textfield">
+        <input id="newClassName" class="mdl-textfield__input" type="text" name="newClassName">
+        <label class="mdl-textfield__label" for="newClassName">Class name</label>
+    </div>
+    <button>
+        <a onclick="createSubclass()">Create subclass</a>
+    </button>
     <button class="close">
         <a>Cancel</a>
     </button>
@@ -311,22 +327,27 @@
         dialog.showModal();
     }
 
+    let subclassGraphBuild = false;
+
     function selectObjectPropertyFromGraph() {
-        fetch(`/api/ontologies/${ontologyName}/classes`)
-            .then(async function (response) {
-                const newDialog = document.querySelector('#select-class-for-property-dialog');
-                newDialog.querySelector('.close').addEventListener('click', function () {
+        const newDialog = document.querySelector('#select-class-for-property-dialog');
+        newDialog.querySelector('.close').addEventListener('click', function () {
+            let output = document.getElementById('new-object-property-range');
+            let outputOnOtherDialog = document.getElementById('create-property-with-object');
+            outputOnOtherDialog.value = output.value
+            newDialog.close();
+        });
+        newDialog.showModal();
+        if (!subclassGraphBuild) {
+            fetch(`/api/ontologies/${ontologyName}/classes`)
+                .then(async function (response) {
+                    let graph = await response.json();
                     let output = document.getElementById('new-object-property-range');
-                    let outputOnOtherDialog = document.getElementById('create-property-with-object');
-                    outputOnOtherDialog.value = output.value
-                    newDialog.close();
+                    let container = document.getElementById('class-select-container');
+                    myFuncs.buildSubclassGraphForPropertyRangeSelection(graph, container, output);
+                    subclassGraphBuild = true;
                 });
-                newDialog.showModal();
-                let graph = await response.json();
-                let output = document.getElementById('new-object-property-range');
-                let container = document.getElementById('class-select-container');
-                myFuncs.buildSubclassGraphForPropertyRangeSelection(graph, container, output);
-            });
+        }
     }
 
     function createNewProperty_checkOption() {
@@ -692,6 +713,18 @@
         if (copies.length > 0) {
             container.removeChild(copies[copies.length - 1]);
         }
+    }
+
+    function createSubclass() {
+        const newClassName = document.getElementById('newClassName').value;
+        const superclass = document.getElementById('add-subclass-dialog-superclass').textContent;
+        fetch('/api/ontologies/' + ontologyName + '/classes/' + newClassName + '?superClass=' + superclass, {
+            method: 'POST'
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
     }
 
 </script>
