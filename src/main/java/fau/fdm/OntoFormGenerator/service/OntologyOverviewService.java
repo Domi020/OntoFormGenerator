@@ -4,6 +4,9 @@ import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import org.apache.jena.ontapi.GraphRepository;
+import org.apache.jena.ontapi.OntModelFactory;
+import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -60,29 +63,33 @@ public class OntologyOverviewService {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
-            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-            OntModel newModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
-            var modelName = ontologyName;
-            var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + modelName;
+            var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
+            var newModel = OntModelFactory.createModel(newOntURI, GraphRepository.createGraphDocumentRepositoryMem());
+            var ontModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
+
+            // var ontology = newModel.setID(newOntURI);
 
             try {
                 var fis = new FileInputStream(owlFile);
                 ontModel.read(fis, null);
+                newModel.addImport(ontModel);
                 fis.close();
-                var fisNew = new FileInputStream(owlFile);
-                newModel.read(fisNew, null);
-                fisNew.close();
+                // var fisNew = new FileInputStream(owlFile);
+                // newModel.read(fisNew, null);
+                // fisNew.close();
+                // var formFis = new FileInputStream("owl/forms.rdf");
+                // newModel.read(formFis, null);
+                // formFis.close();
             } catch (Exception e) {
                 logger.error("Error reading file while importing new ontology", e);
                 dataset.abort();
                 return false;
             }
-            var ontology = newModel.createOntology(newOntURI);
-            dataset.addNamedModel(modelName, newModel.getBaseModel());
+            dataset.addNamedModel(ontologyName, newModel);
             var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
             dataset.commit();
             dataset.end();
-            logger.info("Ontology {} imported successfully", modelName);
+            logger.info("Ontology {} imported successfully", ontologyName);
             return true;
         } catch (Exception e) {
             dataset.abort();

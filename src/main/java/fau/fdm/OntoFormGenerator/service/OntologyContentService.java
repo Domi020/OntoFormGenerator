@@ -412,6 +412,7 @@ public class OntologyContentService {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
         OWLDataFactory dataFactory = manager.getOWLDataFactory();
+        manager.getOntologyConfigurator().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
         var owlApiOntology = manager.loadOntologyFromOntologyDocument(inputStream);
         ReasonerFactory reasonerFactory = new ReasonerFactory();
         Configuration config = new Configuration();
