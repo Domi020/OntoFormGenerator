@@ -467,6 +467,9 @@ public class OntologyContentService {
         }
     }
 
+    private final String IS_USER_DEFINED = "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms" +
+            "#isUserDefined";
+
     public OntologyProperty createNewProperty(String ontologyName, String propertyName,
                                               boolean objectProperty, String domain, String range,
                                               boolean validate) throws OntologyValidationException {
@@ -494,16 +497,19 @@ public class OntologyContentService {
                     dataset.getNamedModel(ontologyName));
             var domainClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, domain));
             OntResource fullRange;
+            var isUsedDefinedProp = ontModel.getProperty(IS_USER_DEFINED);
             if (objectProperty) {
                 var property = ontModel.createObjectProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
                 property.addDomain(domainClass);
                 fullRange = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, range));
                 property.addRange(fullRange);
+                property.addProperty(isUsedDefinedProp, ontModel.createTypedLiteral(true));
             } else {
                 var property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
                 property.addDomain(domainClass);
                 fullRange = getResourceForDatatype(ontModel, range);
                 property.addRange(fullRange);
+                property.addProperty(isUsedDefinedProp, ontModel.createTypedLiteral(true));
             }
             dataset.commit();
             return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()),

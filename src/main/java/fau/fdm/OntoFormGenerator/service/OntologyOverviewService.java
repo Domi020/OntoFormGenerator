@@ -66,7 +66,7 @@ public class OntologyOverviewService {
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
             var newModel = OntModelFactory.createModel(newOntURI, GraphRepository.createGraphDocumentRepositoryMem());
             var ontModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
-
+            var formModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
             // var ontology = newModel.setID(newOntURI);
 
             try {
@@ -74,12 +74,9 @@ public class OntologyOverviewService {
                 ontModel.read(fis, null);
                 newModel.addImport(ontModel);
                 fis.close();
-                // var fisNew = new FileInputStream(owlFile);
-                // newModel.read(fisNew, null);
-                // fisNew.close();
-                // var formFis = new FileInputStream("owl/forms.rdf");
-                // newModel.read(formFis, null);
-                // formFis.close();
+                var formFis = new FileInputStream("owl/forms.rdf");
+                formModel.read(formFis, null);
+                newModel.addImport(formModel);
             } catch (Exception e) {
                 logger.error("Error reading file while importing new ontology", e);
                 dataset.abort();
