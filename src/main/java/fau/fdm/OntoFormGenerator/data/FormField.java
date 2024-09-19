@@ -12,5 +12,6 @@ public class FormField {
     private String fieldType;
     private String name;
     private int maximumValues;
+    private int minimumValues;
     private boolean required;
 }

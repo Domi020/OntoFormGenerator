@@ -85,13 +85,13 @@ public class FormEditorService {
                             new OntologyProperty(fieldName,
                                     new OntologyClass(null, null),
                                     true, objectRange, null), "ObjectSelect", fieldName,
-                            1, true));
+                            1, 1, true));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName, new OntologyClass(null, null),
                                     false, null, dataRangeProp.getLocalName()),
-                            getFormType(dataRangeProp.getLocalName()), fieldName, 1, true));
+                            getFormType(dataRangeProp.getLocalName()), fieldName, 1, 1, true));
                 }
             }
             return formFields;
@@ -122,6 +122,8 @@ public class FormEditorService {
                         "forms", formElementIndividual, "targetsField");
                 var maximumValues = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "hasMaximumValues").getInt();
+                var minimumValues = propertyService.getDatatypePropertyValueFromIndividual(dataset,
+                        "forms", formElementIndividual, "hasMinimumValues").getInt();
                 var required = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "required").getBoolean();
                 var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
@@ -130,12 +132,13 @@ public class FormEditorService {
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
-                            fieldType, fieldName, maximumValues, required));
+                            fieldType, fieldName, maximumValues, minimumValues, required));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, false, null,
-                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues, required));
+                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues,
+                            minimumValues, required));
                 }
             }
             for (int i = 0; i < formFields.size(); i++) {
@@ -220,9 +223,19 @@ public class FormEditorService {
                 if (maximumValues == null || maximumValues.isEmpty()) {
                     maximumValues = "1";
                 }
+                var minimumValues = formInput.get("minimumValues").get(i);
+                if (minimumValues == null || minimumValues.isEmpty()) {
+                    minimumValues = "1";
+                }
+                if (Integer.parseInt(maximumValues) < Integer.parseInt(minimumValues)) {
+                    throw new RuntimeException("Maximum values must be greater than minimum values");
+                }
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                         field, "hasMaximumValues", maximumValues,
                         XSDDatatype.XSDpositiveInteger);
+                propertyService.addDatatypePropertyToIndividual(dataset, "forms",
+                        field, "hasMinimumValues", minimumValues,
+                        XSDDatatype.XSDinteger);
                 String checked = "false";
                 for (var val : formInput.get("required-checkbox")) {
                     if (val.equals("required-checkbox-" + i)) {

@@ -72,11 +72,19 @@
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" name="object-property-checkbox" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </div>
-                <div class="property-field">
-                    <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
+                <div class="property-field" style="vertical-align: middle">
+                    <div>
+                    <input id="minimum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
+                    placeholder="1" name="minimumValues">
+                    <label class="mdl-textfield__label">Minimum values</label>
+                    </div>
+                    <div>
+                    <input id="maximum-values-field-\` + elements + \`" class="mdl-textfield__input" type="number"
                     placeholder="1" name="maximumValues">
                     <label class="mdl-textfield__label">Maximum values</label>
+                    </div>
                 </div>
+
                 <div class="property-field">
                     <input type="checkbox" id="required-checkbox-` + elements + `" name="required-checkbox"
                      value="required-checkbox-` + elements + `" checked>
@@ -117,23 +125,23 @@
 
         let availableProperties = [];
 
-        function refreshAvailableProperties() {
-            const ontologyClass = document.getElementById("ontologyClass").value;
-            const ontology = document.getElementById("ontologyName").value;
-            fetch(`/api/ontologies/${ontology}/classes/${ontologyClass}/properties`)
-                .then(async function (response) {
-                    availableProperties = await response.json();
-                    $('.property-select').selectize({
-                        options: availableProperties,
-                        valueField: 'name',
-                        labelField: 'name',
-                        searchField: 'name',
-                        maxItems: 1,
-                        closeAfterSelect: true
-                    });
-                    resetObjectProperties();
-                })
-        }
+        // function refreshAvailableProperties() {
+        //     const ontologyClass = document.getElementById("ontologyClass").value;
+        //     const ontology = document.getElementById("ontologyName").value;
+        //     fetch(`/api/ontologies/${ontology}/classes/${ontologyClass}/properties`)
+        //         .then(async function (response) {
+        //             availableProperties = await response.json();
+        //             $('.property-select').selectize({
+        //                 options: availableProperties,
+        //                 valueField: 'name',
+        //                 labelField: 'name',
+        //                 searchField: 'name',
+        //                 maxItems: 1,
+        //                 closeAfterSelect: true
+        //             });
+        //             resetObjectProperties();
+        //         })
+        // }
 
         function resetObjectProperties() {
             const fieldContainer = document.querySelector('.field-container');
@@ -178,13 +186,9 @@
                 <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass" onchange="refreshAvailableProperties()">
+                <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass" readonly>
                 <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
             </div>
-            <button type="button" onclick="refreshAvailableProperties()"
-                    class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
-                <i class="material-icons">refresh</i>
-            </button>
         </div>
         <div>
             <button type="button" class="mdl-button" onclick="addNewFormElement()">Add new field</button>
@@ -224,6 +228,7 @@
                     field.querySelector('input[name="propertyRange"]').value = prop.datatypeRange;
                 }
                 field.querySelector('input[name="maximumValues"]').value = element.maximumValues;
+                field.querySelector('input[name="minimumValues"]').value = element.minimumValues;
                 field.querySelector('input[name="required-checkbox"]').checked = element.required;
             });
             firstRefreshAvailableProperties(divs, items);
