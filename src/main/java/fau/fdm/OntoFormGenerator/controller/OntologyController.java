@@ -1,15 +1,9 @@
 package fau.fdm.OntoFormGenerator.controller;
 
-import fau.fdm.OntoFormGenerator.data.Individual;
-import fau.fdm.OntoFormGenerator.data.OntologyClass;
-import fau.fdm.OntoFormGenerator.data.OntologyProperty;
-import fau.fdm.OntoFormGenerator.data.SubclassGraph;
+import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
 import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
-import fau.fdm.OntoFormGenerator.service.FormFillService;
-import fau.fdm.OntoFormGenerator.service.FormOverviewService;
-import fau.fdm.OntoFormGenerator.service.OntologyContentService;
-import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
+import fau.fdm.OntoFormGenerator.service.*;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.ontology.OntModelSpec;
@@ -42,6 +36,7 @@ import java.util.UUID;
 public class OntologyController {
 
     private final FormFillService formFillService;
+    private final OntologyConstraintService ontologyConstraintService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -53,11 +48,12 @@ public class OntologyController {
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService) {
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formOverviewService = formOverviewService;
         this.formFillService = formFillService;
+        this.ontologyConstraintService = ontologyConstraintService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
@@ -216,6 +212,14 @@ public class OntologyController {
         return loadIndexPage(model);
     }
     // TODO: Generell bei allen Löschvorgängen prüfen, ob alle Rückstände (FormElements, etc.) gelöscht werden
+
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/restrictions", method = RequestMethod.GET)
+    public ResponseEntity<List<Constraint>> getConstraints(@PathVariable String ontologyName,
+                                                           @RequestParam(value = "domainUri") String domainUri,
+                                                           @RequestParam(value = "propertyUri") String propertyUri) {
+        return new ResponseEntity<>(ontologyConstraintService.getConstraints(ontologyName, domainUri, propertyUri),
+                HttpStatus.OK);
+    }
 
     private String loadIndexPage(Model model) {
         model.addAttribute("ontologies", ontologyOverviewService.getImportedOntologies());
