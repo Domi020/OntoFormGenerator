@@ -19,6 +19,7 @@ import org.apache.jena.ontology.*;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
@@ -98,6 +99,7 @@ public class OntologyContentService {
                         if (property.isAnnotationProperty()) return;
                         OntologyProperty ontologyProperty = new OntologyProperty();
                         ontologyProperty.setName(property.getLocalName());
+                        ontologyProperty.setRdfsComment(property.getComment(null));
                         ontologyProperty.setDomain(new OntologyClass(className, classURI));
                         if (property.isObjectProperty()) {
                             ontologyProperty.setObjectProperty(true);
@@ -470,8 +472,9 @@ public class OntologyContentService {
 
     private final String IS_USER_DEFINED = "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms" +
             "#isUserDefined";
+    private final String RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
 
-    public OntologyProperty createNewProperty(String ontologyName, String propertyName,
+    public OntologyProperty createNewProperty(String ontologyName, String propDescription, String propertyName,
                                               boolean objectProperty, String domain, String range,
                                               boolean validate) throws OntologyValidationException {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
@@ -499,18 +502,24 @@ public class OntologyContentService {
             var domainClass = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, domain));
             OntResource fullRange;
             var isUsedDefinedProp = ontModel.getProperty(IS_USER_DEFINED);
+            var rdfsComment = ontModel.getProperty(RDFS_COMMENT);
+            Property property;
             if (objectProperty) {
-                var property = ontModel.createObjectProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
-                property.addDomain(domainClass);
+                property = ontModel.createObjectProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                var prop = (ObjectProperty) property;
+                prop.addDomain(domainClass);
                 fullRange = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, range));
-                property.addRange(fullRange);
-                property.addProperty(isUsedDefinedProp, ontModel.createTypedLiteral(true));
+                prop.addRange(fullRange);
             } else {
-                var property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
-                property.addDomain(domainClass);
+                property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                var prop = (DatatypeProperty) property;
+                prop.addDomain(domainClass);
                 fullRange = getResourceForDatatype(ontModel, range);
-                property.addRange(fullRange);
-                property.addProperty(isUsedDefinedProp, ontModel.createTypedLiteral(true));
+                prop.addRange(fullRange);
+            }
+            property.addProperty(isUsedDefinedProp, ontModel.createTypedLiteral(true));
+            if (propDescription != null && !propDescription.isEmpty()) {
+                property.addProperty(rdfsComment, ontModel.createTypedLiteral(propDescription));
             }
             dataset.commit();
             return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()),

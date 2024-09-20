@@ -85,7 +85,6 @@
     <h2>Add field to form</h2>
     <p>Add a new field to this form instance. How do you want to call your field?
     </p>
-    // new-property-class-select
     <div>
         <label for="new-property-input">Property</label>
         <input id="new-property-input" name="new-property-input"></input>
@@ -98,8 +97,15 @@
         <select id="new-property-class-select" name="new-property-class-select"></select>
     </div>
 
-    <p>Content of this field:</p>
-    <p id="new-property-class-range"></p>
+    <div>
+        <p>Description:</p>
+        <p id="new-property-comment"></p>
+    </div>
+
+    <div>
+        <p>Content of this field:</p>
+        <p id="new-property-class-range"></p>
+    </div>
 
     <button>
         <a onclick="openNewPropertyDialog()">Create new property</a>
@@ -118,6 +124,10 @@
     <div>
         <label for="new-property-name">Property name</label>
         <input type="text" name="new-property-name" id="new-property-name">
+    </div>
+    <div>
+        <label for="new-property-description">Description/comment</label>
+        <textarea name="new-property-description" id="new-property-description"> </textarea>
     </div>
     <fieldset>
         <legend>Select a range type</legend>
@@ -368,6 +378,7 @@
             alert('Property name cannot be empty');
             return;
         }
+        let propDescription = document.getElementById('new-property-description').value;
         let range;
         let isObjectProperty;
         let validate = !document.getElementById('create-property-skip-validate').checked;
@@ -378,8 +389,19 @@
             range = document.getElementById('create-property-with-object').value;
             isObjectProperty = true;
         }
-        fetch(`/api/ontologies/${ontologyName}/properties/${propName}?isObjectProperty=${isObjectProperty}&domain=${targetClass}&range=${range}&validate=${validate}`, {
-            method: 'POST'
+        let body = {
+            'propName': propName,
+            'propDescription': propDescription,
+            'domain': targetClass,
+            'isObjectProperty': isObjectProperty,
+            'range': range,
+        };
+        fetch(`/api/ontologies/${ontologyName}/properties/${propName}?validate=${validate}`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json',
+            }
         }).then(async response => {
             if (!response.ok) {
                 if (response.status === 400) {
@@ -535,6 +557,7 @@
                         let string;
                         if (value !== '') {
                             let objectProp = allProperties.find(property => property.name === value).objectProperty;
+                            let comment = allProperties.find(property => property.name === value).rdfsComment;
                             if (objectProp) {
                                 let range = allProperties.find(property => property.name === value).objectRange;
                                 if (range) {
@@ -546,8 +569,13 @@
                                 string = allProperties.find(property => property.name === value).datatypeRange;
                             }
                             document.getElementById('new-property-class-range').innerText = string;
+                            if (comment === undefined) {
+                                comment = '';
+                            }
+                            document.getElementById('new-property-comment').innerText = comment;
                         } else {
                             document.getElementById('new-property-class-range').innerText = '';
+                            document.getElementById('new-property-comment').innerText = '';
                         }
 
                     }
