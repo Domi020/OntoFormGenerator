@@ -1,6 +1,7 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import com.google.gson.Gson;
+import fau.fdm.OntoFormGenerator.data.Constraint;
 import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
@@ -32,15 +33,17 @@ public class FormEditorService {
 
     private final PropertyService propertyService;
     private final GeneralTDBService generalTDBService;
+    private final OntologyConstraintService ontologyConstraintService;
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService) {
+    public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService, OntologyConstraintService ontologyConstraintService) {
         this.individualService = individualService;
         this.propertyService = propertyService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.generalTDBService = generalTDBService;
+        this.ontologyConstraintService = ontologyConstraintService;
     }
 
     public OntologyClass getSelectedEditorClass(String formName) {
@@ -173,6 +176,9 @@ public class FormEditorService {
                     propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
                     classIndividual
             );
+            var constraints = ontologyConstraintService.getConstraints(dataset, formInput.getFirst("ontologyName"),
+                    classIri, null);
+
             // Get all already existing form elements
             var alreadyInsertedElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                     "forms", form, "hasFormElement");
@@ -227,6 +233,16 @@ public class FormEditorService {
                 }
                 if (Integer.parseInt(maximumValues) < Integer.parseInt(minimumValues)) {
                     throw new RuntimeException("Maximum values must be greater than minimum values");
+                }
+                var relevantConstraints = constraints.stream().filter(
+                        constraint -> constraint.getOnProperty().getName().equals(propertyName)).toList();
+                var maxConstraint = relevantConstraints.stream().filter(constraint -> constraint.getConstraintType() == Constraint.ConstraintType.MAX).findFirst();
+                if (maxConstraint.isPresent() && Integer.parseInt(maximumValues) > (int) maxConstraint.get().getValue()) {
+                    throw new RuntimeException("Maximum values must be less than or equal to " + maxConstraint.get().getValue());
+                }
+                var minConstraint = relevantConstraints.stream().filter(constraint -> constraint.getConstraintType() == Constraint.ConstraintType.MIN).findFirst();
+                if (minConstraint.isPresent() && Integer.parseInt(minimumValues) < (int) minConstraint.get().getValue()) {
+                    throw new RuntimeException("Minimum values must be greater than or equal to " + minConstraint.get().getValue());
                 }
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                         field, "hasMaximumValues", maximumValues,
