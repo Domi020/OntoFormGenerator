@@ -219,7 +219,8 @@ public class OntologyController {
     @RequestMapping(value = "/api/ontologies/{ontologyName}/restrictions", method = RequestMethod.GET)
     public ResponseEntity<List<Constraint>> getConstraints(@PathVariable String ontologyName,
                                                            @RequestParam(value = "domainUri") String domainUri,
-                                                           @RequestParam(value = "propertyUri") String propertyUri) {
+                                                           @RequestParam(value = "propertyUri", required = false)
+                                                               String propertyUri) {
         return new ResponseEntity<>(ontologyConstraintService.getConstraints(ontologyName, domainUri, propertyUri),
                 HttpStatus.OK);
     }

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 public class RestController {
 
     private final FormFillService formFillService;
+    private final OntologyConstraintService ontologyConstraintService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -25,12 +26,13 @@ public class RestController {
     private final FormEditorService formEditorService;
 
     public RestController(OntologyOverviewService ontologyOverviewService,
-                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService, FormFillService formFillService) {
+                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.formOverviewService = formOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formEditorService = formEditorService;
         this.formFillService = formFillService;
+        this.ontologyConstraintService = ontologyConstraintService;
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -46,17 +48,19 @@ public class RestController {
 
     @RequestMapping(value = "/editor/{form}", method = RequestMethod.GET)
     public String loadEditorPage(Model model, @PathVariable String form, @RequestParam("ontology") String ontology) {
+        var targetClass = formEditorService.getSelectedEditorClass(form);
         model.addAttribute("form", form);
         model.addAttribute("ontology", ontology);
         model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology));
 
-        model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
+        model.addAttribute("targetClass", targetClass.getName());
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
 
+        model.addAttribute("constraints", ontologyConstraintService.getConstraints(ontology,
+                targetClass.getUri(), null));
 
         return "editor";
     }
-    //TODO: ReloadProperties => löscht alle Property Felder...und macht Form kaputt
 
     @RequestMapping(value = "/fill/{form}", method = RequestMethod.GET)
     public String loadFilloutPage(Model model, @PathVariable String form, @RequestParam("ontology") String ontology) {

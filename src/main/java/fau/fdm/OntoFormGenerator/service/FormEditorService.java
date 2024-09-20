@@ -43,7 +43,7 @@ public class FormEditorService {
         this.generalTDBService = generalTDBService;
     }
 
-    public String getSelectedEditorClass(String formName) {
+    public OntologyClass getSelectedEditorClass(String formName) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.READ);
         try {
@@ -51,13 +51,11 @@ public class FormEditorService {
             var classValue = propertyService.getObjectPropertyValueFromIndividual(dataset,
                     "forms", form, "targetsClass");
             if (classValue == null) return null;
-            return classValue.getLocalName();
+            return new OntologyClass(classValue.getLocalName(), classValue.getURI());
         } finally {
             dataset.end();
         }
     }
-
-    // TODO: TargetClass nicht mehr änderbar
 
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {

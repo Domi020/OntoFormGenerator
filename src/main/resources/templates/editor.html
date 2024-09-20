@@ -25,7 +25,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 9.28%;
+            width: 7.5%;
             position: relative;
             text-align: left;
         }
@@ -35,9 +35,10 @@
     </style>
     <!-- Quelle für autocomplete: https://www.w3schools.com/howto/howto_js_autocomplete.asp -->
     <!-- Quelle für selectize: https://selectize.dev/ -->
-    <script>
+    <script th:inline="javascript">
 
         let elements = 0;
+        let constraints = [[${constraints}]];
 
         function selectProperty(property) {
 
@@ -73,18 +74,21 @@
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </div>
                 <div class="property-field" style="vertical-align: middle">
+                    <p id="minimum-values-field-constraint-` + elements + `">Min: -</p>
+                    <p id="maximum-values-field-constraint-` + elements + `">Max: -</p>
+                </div>
+                <div class="property-field" style="vertical-align: middle">
                     <div>
                     <input id="minimum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="minimumValues">
                     <label class="mdl-textfield__label">Minimum values</label>
                     </div>
                     <div>
-                    <input id="maximum-values-field-\` + elements + \`" class="mdl-textfield__input" type="number"
+                    <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="maximumValues">
                     <label class="mdl-textfield__label">Maximum values</label>
                     </div>
                 </div>
-
                 <div class="property-field">
                     <input type="checkbox" id="required-checkbox-` + elements + `" name="required-checkbox"
                      value="required-checkbox-` + elements + `" checked>
@@ -117,6 +121,18 @@
                         objectPropertyCheckbox.checked = false;
                         hiddenObjectPropertyCheckbox.value = false;
                         rangeField.value = prop.datatypeRange;
+                    }
+                    // TODO: TESTEN
+                    let relevantConstraints = constraints
+                        .filter(con => con.onProperty.name === value);
+                    for (let i = 0; i < relevantConstraints.length; i++) {
+                        if (relevantConstraints[i].constraintType === "MIN") {
+                            const minField = document.getElementById('minimum-values-field-constraint-' + currentElement);
+                            minField.innerText = "Min: " + relevantConstraints[i].value;
+                        } else if (relevantConstraints[i].constraintType === "MAX") {
+                            const maxField = document.getElementById('maximum-values-field-constraint-' + currentElement);
+                            maxField.innerText = "Max: " + relevantConstraints[i].value;
+                        }
                     }
                 }
             });

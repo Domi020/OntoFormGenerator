@@ -6,6 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Constraint {
+    private OntologyClass domain;
+    private OntologyProperty onProperty;
     private Object value;
     private ConstraintType constraintType;
 

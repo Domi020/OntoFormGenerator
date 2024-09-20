@@ -1,6 +1,8 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Constraint;
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
@@ -28,12 +30,16 @@ public class OntologyConstraintService {
             var resultList = new ArrayList<Constraint>();
 
             var domainClass = ontModel.getOntClass(domainClassUri);
+            var domainClassLoc = new OntologyClass(domainClass.getLocalName(), domainClass.getURI());
             domainClass.listSuperClasses().forEachRemaining(subClass -> {
                 if (subClass.isRestriction()) {
                     var restriction = subClass.asRestriction();
                     var onProperty = restriction.getOnProperty();
-                    if (!onProperty.getURI().equals(propertyUri)) return;
+                    if (propertyUri != null && !onProperty.getURI().equals(propertyUri)) return;
                     var res = new Constraint();
+                    res.setDomain(domainClassLoc);
+                    res.setOnProperty(new OntologyProperty(onProperty.getLocalName(),
+                            domainClassLoc, onProperty.isObjectProperty(), null, null));
                     if (restriction.isMaxCardinalityRestriction()) {
                         res.setConstraintType(Constraint.ConstraintType.MAX);
                         res.setValue(restriction.asMaxCardinalityRestriction().getMaxCardinality());
