@@ -1,12 +1,15 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.Constraint;
+import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,7 +39,7 @@ public class OntologyConstraintService {
                 var res = new Constraint();
                 res.setDomain(domainClassLoc);
                 res.setOnProperty(new OntologyProperty(onProperty.getLocalName(),
-                        domainClassLoc, onProperty.isObjectProperty(), null, null));
+                        domainClassLoc, onProperty.getURI(), onProperty.isObjectProperty(), null, null));
                 if (restriction.isMaxCardinalityRestriction()) {
                     res.setConstraintType(Constraint.ConstraintType.MAX);
                     res.setValue(restriction.asMaxCardinalityRestriction().getMaxCardinality());
@@ -67,4 +70,46 @@ public class OntologyConstraintService {
             dataset.end();
         }
     }
+
+    public List<Individual> filterForAllValuesFromIndividuals(List<Individual> individuals,
+                                                              String ontologyName,
+                                                              String domainClassUri,
+                                                              String propertyUri) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                    dataset.getNamedModel(ontologyName));
+            ontModel.getOntClass(domainClassUri).listSuperClasses().forEachRemaining(cls -> {
+                if (cls.isRestriction()) {
+                    var restriction = cls.asRestriction();
+                    if (restriction.isAllValuesFromRestriction()) {
+                        var allValuesFrom = restriction.asAllValuesFromRestriction();
+                        if (!restriction.getOnProperty().getURI().equals(propertyUri)) return;
+                        var restrictionClass = (OntClass) allValuesFrom.getAllValuesFrom();
+                        List<Resource> rangeClasses = new ArrayList<>();
+                        if (restrictionClass.isEnumeratedClass()) {
+                            rangeClasses.addAll(restrictionClass.asEnumeratedClass().listOneOf().toList());
+                        } else {
+                            rangeClasses.add(restrictionClass);
+                        }
+
+                        individuals.removeIf(iv -> {
+                            for (var range : rangeClasses) {
+                                if (iv.getIri().equals(range.getURI())) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        });
+                    }
+                }
+            });
+        } finally {
+            dataset.end();
+        }
+        return individuals;
+    }
+
+
 }

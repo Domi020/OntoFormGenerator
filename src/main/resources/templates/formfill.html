@@ -462,7 +462,7 @@
         const className = currentFormElement.ontologyProperty.objectRange.name;
         const maximumValues = currentFormElement.maximumValues;
 
-        promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals`)
+        promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals?restrictionDomain=${encodeURIComponent(targetClass.uri)}&restrictionProperty=${encodeURIComponent(currentFormElement.ontologyProperty.uri)}`)
             .then(async function (response) {
                 let allIndividuals = await response.json();
                 $('#' + fieldId).selectize({

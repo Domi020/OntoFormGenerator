@@ -115,10 +115,18 @@ public class OntologyController {
                                                                        @PathVariable String className,
                                                                        @RequestParam(value = "withImportedIndividuals",
                                                                                required = false,
-                                                                               defaultValue = "true") boolean withImportedIndividuals) {
+                                                                               defaultValue = "true") boolean withImportedIndividuals,
+                                                                       @RequestParam(value = "restrictionDomain",
+                                                                               required = false) String restrictionDomain,
+                                                                       @RequestParam(value = "restrictionProperty",
+                                                                               required = false) String restrictionProperty) {
         var individuals = ontologyContentService.getAllIndividualsOfClass(ontologyName, className);
         if (!withImportedIndividuals) {
             individuals.removeIf(Individual::isImported);
+        }
+        if (restrictionDomain != null && restrictionProperty != null) {
+            individuals = ontologyConstraintService.filterForAllValuesFromIndividuals(individuals, ontologyName,
+                    restrictionDomain, restrictionProperty);
         }
         return new ResponseEntity<>(individuals, HttpStatus.OK);
     }

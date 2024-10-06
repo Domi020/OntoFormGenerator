@@ -101,6 +101,7 @@ public class OntologyContentService {
                         ontologyProperty.setName(property.getLocalName());
                         ontologyProperty.setRdfsComment(property.getComment(null));
                         ontologyProperty.setDomain(new OntologyClass(className, classURI));
+                        ontologyProperty.setUri(property.getURI());
                         if (property.isObjectProperty()) {
                             ontologyProperty.setObjectProperty(true);
                             if (property.getRange() != null) {
@@ -215,6 +216,7 @@ public class OntologyContentService {
                     setProperty.setProperty(new OntologyProperty(
                             stmt.getPredicate().getLocalName(),
                             ontClass,
+                            null,
                             isObjectProperty,
                             isObjectProperty ? new OntologyClass(stmt.getObject().asResource().getLocalName(),
                                     stmt.getObject().asResource().getURI()) : null,
@@ -504,14 +506,15 @@ public class OntologyContentService {
             var isUsedDefinedProp = ontModel.getProperty(IS_USER_DEFINED);
             var rdfsComment = ontModel.getProperty(RDFS_COMMENT);
             Property property;
+            String uri = generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName;
             if (objectProperty) {
-                property = ontModel.createObjectProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                property = ontModel.createObjectProperty(uri);
                 var prop = (ObjectProperty) property;
                 prop.addDomain(domainClass);
                 fullRange = ontModel.getOntClass(individualService.findIriOfClass(dataset, ontologyName, range));
                 prop.addRange(fullRange);
             } else {
-                property = ontModel.createDatatypeProperty(generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName) + "#" + propertyName);
+                property = ontModel.createDatatypeProperty(uri);
                 var prop = (DatatypeProperty) property;
                 prop.addDomain(domainClass);
                 fullRange = getResourceForDatatype(ontModel, range);
@@ -522,7 +525,7 @@ public class OntologyContentService {
                 property.addProperty(rdfsComment, ontModel.createTypedLiteral(propDescription));
             }
             dataset.commit();
-            return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()),
+            return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()), uri,
                     objectProperty, objectProperty ? new OntologyClass(fullRange.getLocalName(), fullRange.getURI()) : null,
                     objectProperty ? null : range);
         } catch (Exception e) {

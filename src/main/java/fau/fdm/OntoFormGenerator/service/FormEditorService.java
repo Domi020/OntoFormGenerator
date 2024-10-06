@@ -84,13 +84,13 @@ public class FormEditorService {
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName,
-                                    new OntologyClass(null, null),
+                                    new OntologyClass(null, null), property.getURI(),
                                     true, objectRange, null), "ObjectSelect", fieldName,
                             1, 1, true));
                 } else {
                     var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
                     formFields.add(new FormField(
-                            new OntologyProperty(fieldName, new OntologyClass(null, null),
+                            new OntologyProperty(fieldName, new OntologyClass(null, null), property.getURI(),
                                     false, null, dataRangeProp.getLocalName()),
                             getFormType(dataRangeProp.getLocalName()), fieldName, 1, 1, true));
                 }
@@ -128,16 +128,19 @@ public class FormEditorService {
                 var required = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "required").getBoolean();
                 var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
+                var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                 if (isObjectProperty) {
-                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
+                    // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
+                    var objectRangeProp = property.getRange();
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.set(position, new FormField(
-                            new OntologyProperty(targetField.getLocalName(), domain, true, objectRange, null),
+                            new OntologyProperty(targetField.getLocalName(), domain, property.getURI(), true, objectRange, null),
                             fieldType, fieldName, maximumValues, minimumValues, required));
                 } else {
-                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI()).getRange();
+                    // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
+                    var dataRangeProp = property.getRange();
                     formFields.set(position, new FormField(
-                            new OntologyProperty(targetField.getLocalName(), domain, false, null,
+                            new OntologyProperty(targetField.getLocalName(), domain, property.getURI(), false, null,
                                     dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues,
                             minimumValues, required));
                 }
