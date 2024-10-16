@@ -14,9 +14,13 @@
         .ontology-list {
             width: 300px;
         }
+        .property-card {
+            width: 100%;
+        }
         .property-row {
             width: 100%;
             padding-top: 75px;
+            padding-bottom: 20px;
         }
         .property-select {
             /* width: 300px; */
@@ -25,7 +29,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            width: 7.5%;
+            width: 20%;
             position: relative;
             text-align: left;
         }
@@ -53,27 +57,36 @@
         function addNewFormElement() {
             const fieldContainer = document.querySelector('.field-container');
             const newField = document.createElement('div');
+            newField.className = "mdl-card mdl-shadow--8dp property-card";
             newField.id = `field-${elements}`;
-            newField.className = "property-row";
-            newField.innerHTML = `
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+            const newFieldFirstRow = document.createElement('div');
+            newFieldFirstRow.className = "property-row";
+            newFieldFirstRow.innerHTML = `
+                <div class="mdl-textfield mdl-js-textfield property-field">
+                    <label>Field name</label>
                     <input class="mdl-textfield__input" type="text" name="fieldName">
-                    <label class="mdl-textfield__label">Field name</label>
                 </div>
                 <div class="property-field">
                     <label>Property</label>
                     <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
                 </div>
-                <div class="property-field">
+                <div class="mdl-textfield mdl-js-textfield property-field">
+                    <label>Range</label>
                     <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
-                    <label class="mdl-textfield__label">Range</label>
+
                 </div>
                 <div class="property-field property-checkbox">
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" name="object-property-checkbox" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
                 </div>
-                <div class="property-field" style="vertical-align: middle">
+
+            `;
+            newField.appendChild(newFieldFirstRow);
+            const newFieldSecondRow = document.createElement('div');
+            newFieldSecondRow.className = "property-row";
+            newFieldSecondRow.innerHTML = `
+            <div class="property-field" style="vertical-align: middle">
                     <p id="minimum-values-field-constraint-` + elements + `">Min: -</p>
                     <p id="maximum-values-field-constraint-` + elements + `">Max: -</p>
                 </div>
@@ -81,24 +94,26 @@
                     <div>
                     <input id="minimum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="minimumValues">
-                    <label class="mdl-textfield__label">Minimum values</label>
+                    <label>Minimum values</label>
                     </div>
                     <div>
                     <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="maximumValues">
-                    <label class="mdl-textfield__label">Maximum values</label>
+                    <label>Maximum values</label>
                     </div>
                 </div>
                 <div class="property-field">
+                    <label>Required</label>
                     <input type="checkbox" id="required-checkbox-` + elements + `" name="required-checkbox"
                      value="required-checkbox-` + elements + `" checked>
-                    <label>Required</label>
+
                 </div>
                 <div class="property-field">
-                    <button type="button" class="mdl-button delete-form-element"
+                    <button type="button" class="mdl-button mdl-button--raised mdl-button--accent delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
                 </div>
             `;
+            newField.appendChild(newFieldSecondRow);
             fieldContainer.appendChild(newField);
             const currentElement = elements;
             $('#prop-select-' + elements).selectize({
