@@ -93,9 +93,8 @@
                                     </div>
                                     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                                         <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology name</label>
-                                        <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate" required>
-                                            <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}"
-                                                    onchange="autoFillURI();refreshAvailableClasses()">Ontology
+                                        <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate" required onchange="autoFillURI();refreshAvailableClasses()">
+                                            <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">Ontology
                                             </option>
                                         </select>
                                     </div>

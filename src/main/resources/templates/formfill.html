@@ -19,66 +19,73 @@
 <h1 th:text="${form}"></h1>
 <form id="fillform" th:action="@{/api/forms/{name}/fill(name=${form})}" method="post">
     <div class="mdl-textfield mdl-js-textfield">
+        <label for="ontologyName">Ontology</label>
         <input id="ontologyName" class="mdl-textfield__input" type="text" name="ontologyName"
                th:value="${ontology}" readonly>
-        <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
     </div>
     <div class="mdl-textfield mdl-js-textfield">
+        <label for="targetClass">Class</label>
         <input id="targetClass" class="mdl-textfield__input" type="text" name="targetClass"
-               th:value="${targetClass}" readonly>
-        <label class="mdl-textfield__label" for="targetClass">Ontology</label>
+               th:value="${targetClass.name}" readonly>
     </div>
-    <div class="mdl-textfield mdl-js-textfield">
+    <div class="mdl-textfield mdl-js-textfield" style="margin-bottom: 50px">
+        <label for="instanceName">Instance name</label>
         <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
-        <label class="mdl-textfield__label" for="instanceName">Instance name</label>
     </div>
     <div th:each="field: ${formElements}">
-        <div th:if="${field.fieldType == 'Input'}">
-            <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+        <div class="mdl-card mdl-shadow--8dp" style="width: 60%; min-height: 120px">
+            <div th:if="${field.fieldType == 'Input'}">
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'Number'}">
-            <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'Number'}">
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'Datetime'}">
-            <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'Datetime'}">
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'ObjectSelect'}">
-            <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'ObjectSelect'}">
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
+            </div>
         </div>
     </div>
     <div th:each="field: ${additionalElements}">
-        <div th:if="${field.fieldType == 'Input'}">
-            <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
+        <div class="mdl-card mdl-shadow--8dp" style="width: 100%;">
+            <div th:if="${field.fieldType == 'Input'}">
+                <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'Number'}">
-            <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'Number'}">
+                <div th:replace="form-fields.html :: numberField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'Datetime'}">
-            <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'Datetime'}">
+                <div th:replace="form-fields.html :: dateTimeField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
-        </div>
-        <div th:if="${field.fieldType == 'ObjectSelect'}">
-            <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
+            </div>
+            <div th:if="${field.fieldType == 'ObjectSelect'}">
+                <div th:replace="form-fields.html :: objectSelectField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
+            </div>
         </div>
     </div>
     <div>
-        <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Add new field
+        <button id="new-field-button" type="button" class="mdl-button mdl-js-button mdl-button--raised" style="margin-top: 50px">
+            Add new field
         </button>
     </div>
-    <div style="padding-top: 70px">
-        <button id="save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
-    </div>
-    <div style="padding-top: 70px">
-        <button id="validate-save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Validate and
-            save
-        </button>
+    <div style="display: flex; padding-top: 100px">
+        <div>
+            <button id="save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Save</button>
+        </div>
+        <div>
+            <button id="validate-save-button" type="button" class="mdl-button mdl-js-button mdl-button--raised">Validate and
+                save
+            </button>
+        </div>
     </div>
 </form>
 <dialog id="add-property-dialog">
@@ -228,13 +235,13 @@
         <a>Cancel</a>
     </button>
 </dialog>
-<div style="padding-top: 100px">
+<div style="padding-top: 20px">
     <a onclick="createDraftAndGoToHomepage()" id="create-draft-button"
        class="mdl-button mdl-js-button mdl-button--raised">
         Create draft
     </a>
 </div>
-<div style="padding-top: 100px">
+<div style="padding-top: 20px">
     <a href="/" id="return-to-homepage-button" class="mdl-button mdl-js-button mdl-button--raised">
         Cancel
     </a>
