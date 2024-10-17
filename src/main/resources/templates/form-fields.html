@@ -1,8 +1,8 @@
 <div th:fragment="numberField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
+            <label th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
             <input class="mdl-textfield__input" type="number" th:id="${'input-' + name}" th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
@@ -23,8 +23,8 @@
 <div th:fragment="stringField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
+            <label th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
             <input class="mdl-textfield__input" type="text" th:id="${'input-' + name}" th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
@@ -45,9 +45,9 @@
 <div th:fragment="dateTimeField (name, propName, multipleValues, required)">
     <div th:id="${'main-container-' + name}">
         <div th:id="${'template-' + name}" class="mdl-textfield mdl-js-textfield">
+            <label th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">">Text...</label>
             <input class="mdl-textfield__input" type="datetime-local" step="1" th:id="${'input-' + name}"
                    th:name="${propName}">
-            <label class="mdl-textfield__label" th:for="${'input-' + name}" th:text="${required} ? ${name} + ' (REQUIRED)' : ${name}">">Text...</label>
         </div>
         <div th:if="${multipleValues > 1}">
             <a class="mdl-list__item-secondary-action clickable-button"
