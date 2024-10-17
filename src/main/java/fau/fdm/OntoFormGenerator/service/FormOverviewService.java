@@ -123,12 +123,16 @@ public class FormOverviewService {
             var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
             var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                     "forms", formIndividual, "created");
+            var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                    "forms", formIndividual, "targetsOntology").getLocalName();
             List<Individual> result = new ArrayList<>();
             for (var individual : individuals) {
                 var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
                         individual, "isDraft");
                 if (isDraft != null && isDraft.getBoolean()) continue;
-                result.add(new Individual(individual.getLocalName(), individual.getURI(),
+                result.add(new Individual(individual.getLocalName(),
+                        propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
+                        individual.getURI(),
                         new OntologyClass("test", "test"), true));
             }
             return result;
@@ -157,6 +161,8 @@ public class FormOverviewService {
 
     private List<Individual> getAllDraftsOfForm(Dataset dataset, String formName) {
         var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+        var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
+                "forms", formIndividual, "targetsOntology").getLocalName();
         var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                 "forms", formIndividual, "created");
         List<Individual> result = new ArrayList<>();
@@ -164,7 +170,9 @@ public class FormOverviewService {
             var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
                     individual, "isDraft");
             if (isDraft == null || !isDraft.getBoolean()) continue;
-            result.add(new Individual(individual.getLocalName(), individual.getURI(),
+            result.add(new Individual(individual.getLocalName(),
+                    propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
+                    individual.getURI(),
                     new OntologyClass("test", "test"), true));
         }
         return result;

@@ -24,6 +24,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -194,8 +195,9 @@ public class FormFillService {
             var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
             var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
-            var individual = ontology.createIndividual(ontologyURI + instanceName,
+            var individual = ontology.createIndividual(ontologyURI + instanceName + "_" + UUID.randomUUID(),
                     ontology.getOntClass(classURI));
+            individual.setLabel(instanceName, null);
             for (var formValue : formValues.keySet()) {
                 if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass") ||
                         formValue.equals("create-individual-dialog-option"))

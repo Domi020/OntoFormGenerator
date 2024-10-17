@@ -316,7 +316,7 @@
             let listItem = document.createElement('li');
             listItem.classList.add('mdl-list__item');
             listItem.innerHTML = `
-                <span class="mdl-list__item-primary-content">` + individual.name + `</span>
+                <span class="mdl-list__item-primary-content">` + individual.label + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
                                        href="/edit/ontologies/` + ontologyName + `/individuals/` + n + `">
                                         <i class="material-icons">edit</i></a>
@@ -402,7 +402,7 @@
             let individual = individuals[i];
             let row = document.createElement('tr');
             row.innerHTML = `
-                <td>` + individual.name + `</td>
+                <td>` + individual.label + `</td>
                 <td>
                     <button class="mdl-button
                                     mdl-js-button

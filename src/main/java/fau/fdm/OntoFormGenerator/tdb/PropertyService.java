@@ -139,6 +139,15 @@ public class PropertyService {
         );
     }
 
+    public String getLabelOfIndividual(Dataset dataset,
+                                       String ontologyName,
+                                       String uri) {
+        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
+                dataset.getNamedModel(ontologyName));
+        var individual = ontModel.getIndividual(uri);
+        return individual.getLabel(null);
+    }
+
 
     public List<Resource> getMultipleObjectPropertyValuesFromIndividual(Dataset dataset,
                                                                         String ontologyName,

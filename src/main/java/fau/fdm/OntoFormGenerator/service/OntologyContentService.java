@@ -137,7 +137,8 @@ public class OntologyContentService {
                         var individualIri = individual.getURI();
                         var ontClass = individual.getOntClass();
                         var ontologyClass = new OntologyClass(ontClass.getLocalName(), ontClass.getURI());
-                        individuals.add(new Individual(individualName, individualIri, ontologyClass,
+                        individuals.add(new Individual(individualName, propertyService.getLabelOfIndividual(dataset, ontologyName, individualIri),
+                                individualIri, ontologyClass,
                                 individualService.checkIfIndividualIsImported(dataset, ontologyName, individualIri)));
                     }
             );
@@ -166,6 +167,7 @@ public class OntologyContentService {
                     stmt -> {
                         var individual = new Individual();
                         individual.setName(stmt.getSubject().getLocalName());
+                        individual.setLabel(propertyService.getLabelOfIndividual(dataset, ontologyName, stmt.getSubject().getURI()));
                         individual.setIri(stmt.getSubject().getURI());
                         individual.setOntologyClass(new OntologyClass(className, classIri));
                         individual.setImported(individualService.checkIfIndividualIsImported(dataset, ontologyName, stmt.getSubject().getURI()));
@@ -183,7 +185,7 @@ public class OntologyContentService {
         try {
             dataset.begin(ReadWrite.READ);
             var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
-            return new Individual(individual.getLocalName(), individual.getURI(),
+            return new Individual(individual.getLocalName(), propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()), individual.getURI(),
                     new OntologyClass(individual.getOntClass().getLocalName(), individual.getOntClass().getURI()),
                     individualService.checkIfIndividualIsImported(dataset, ontologyName, individual.getURI()));
         } finally {
@@ -222,8 +224,9 @@ public class OntologyContentService {
                                     stmt.getObject().asResource().getURI()) : null,
                             isObjectProperty ? null : stmt.getObject().asLiteral().getDatatype().getJavaClass().getSimpleName()
                     ));
-                    setProperty.setIndividual(new Individual(individual.getLocalName(), individual.getURI(),
-                            ontClass, individualService.checkIfIndividualIsImported(dataset, ontologyName, individual.getURI())));
+                    setProperty.setIndividual(new Individual(individual.getLocalName(),
+                            propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
+                            individual.getURI(), ontClass, individualService.checkIfIndividualIsImported(dataset, ontologyName, individual.getURI())));
                     if (isObjectProperty) {
                         setProperty.setValue(stmt.getObject().asResource().getLocalName());
                     } else {

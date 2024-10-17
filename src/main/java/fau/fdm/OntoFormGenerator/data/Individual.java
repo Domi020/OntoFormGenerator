@@ -7,11 +7,19 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Individual {
     private String name;
+    private String label;
     private String iri;
     private OntologyClass ontologyClass;
     private boolean isImported;
+
+    public Individual(String name, String label, String iri, OntologyClass ontologyClass, boolean isImported) {
+        this.name = name;
+        this.label = label == null ? name : label;
+        this.iri = iri;
+        this.ontologyClass = ontologyClass;
+        this.isImported = isImported;
+    }
 }
