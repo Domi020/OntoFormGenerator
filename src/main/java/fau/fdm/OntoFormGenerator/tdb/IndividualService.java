@@ -164,7 +164,6 @@ public class IndividualService {
     }
 
     public String findIriOfClass(Dataset dataset, String ontologyName, String className) {
-        // TODO: Was wenn selber ClassName über mehrere Ontologien?
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         var classIterator = ontModel.listClasses().filterKeep(ontClass -> ontClass.getLocalName() != null &&

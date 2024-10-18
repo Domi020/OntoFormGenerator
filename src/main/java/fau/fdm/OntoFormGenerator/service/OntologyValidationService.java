@@ -1,18 +1,31 @@
 package fau.fdm.OntoFormGenerator.service;
 
+import com.clarkparsia.owlapi.explanation.BlackBoxExplanation;
+import com.clarkparsia.owlapi.explanation.HSTExplanationGenerator;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.data.ValidationResult;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.tdb2.TDB2Factory;
+import org.semanticweb.HermiT.Configuration;
+import org.semanticweb.HermiT.ReasonerFactory;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxOWLObjectRendererImpl;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -120,6 +133,54 @@ public class OntologyValidationService {
             }
         }
         return resultList;
+    }
+
+    public ValidationResult validateOntology(String ontologyName) {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.READ);
+        try {
+            return validateOntology(dataset, ontologyName);
+        } catch (OWLOntologyCreationException e) {
+            throw new RuntimeException(e);
+        } finally {
+            dataset.end();
+        }
+    }
+
+    public ValidationResult validateOntology(Dataset dataset, String ontologyName)
+            throws OWLOntologyCreationException {
+        var tdbModel = dataset.getNamedModel(ontologyName);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        tdbModel.write(outputStream, "RDF/XML");
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLDataFactory dataFactory = manager.getOWLDataFactory();
+        manager.getOntologyConfigurator().setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+        var owlApiOntology = manager.loadOntologyFromOntologyDocument(inputStream);
+        ReasonerFactory reasonerFactory = new ReasonerFactory();
+        Configuration config = new Configuration();
+        config.throwInconsistentOntologyException = false;
+        var reasoner = reasonerFactory.createReasoner(owlApiOntology, config);
+        if (reasoner.isConsistent()) {
+            return new ValidationResult(true, "");
+        }
+        reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory() {
+            @Override
+            public OWLReasoner createHermiTOWLReasoner(org.semanticweb.HermiT.Configuration configuration, OWLOntology o) {
+                configuration.throwInconsistentOntologyException = false;
+                return new org.semanticweb.HermiT.Reasoner(config, o);
+            }
+        };
+        BlackBoxExplanation x = new BlackBoxExplanation(owlApiOntology, reasonerFactory, reasoner);
+        HSTExplanationGenerator explanationGenerator = new HSTExplanationGenerator(x);
+        StringBuilder explaination = new StringBuilder("Knowledge base is inconsistent.\n");
+        var expl = explanationGenerator.getExplanation(dataFactory.getOWLThing());
+        var renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
+        explaination.append("Axioms causing the inconsistency:\n\n\n");
+        for (OWLAxiom causingAxiom : expl) {
+            explaination.append(renderer.render(causingAxiom)).append("\n\n");
+        }
+        return new ValidationResult(false, explaination.toString());
     }
 
     @Getter

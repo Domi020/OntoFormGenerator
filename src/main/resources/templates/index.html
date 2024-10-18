@@ -467,7 +467,7 @@
 
     function refreshAvailableClasses() {
         const ontologyName = document.getElementById('ontologyNameInFormCreate').value;
-        fetch('/api/ontologies/' + ontologyName + '/class')
+        fetch('/api/ontologies/' + ontologyName + '/classes')
             .then(response => response.json())
             .then(classes => {
                 $('#classSelectInFormCreate')[0].selectize.clearOptions();

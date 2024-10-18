@@ -37,6 +37,7 @@ public class OntologyController {
 
     private final FormFillService formFillService;
     private final OntologyConstraintService ontologyConstraintService;
+    private final OntologyValidationService ontologyValidationService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -48,12 +49,13 @@ public class OntologyController {
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService) {
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService, OntologyValidationService ontologyValidationService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formOverviewService = formOverviewService;
         this.formFillService = formFillService;
         this.ontologyConstraintService = ontologyConstraintService;
+        this.ontologyValidationService = ontologyValidationService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
@@ -174,14 +176,12 @@ public class OntologyController {
         }
     }
 
-    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/graph", method = RequestMethod.GET)
     public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {
         return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);
     }
 
-    //TODO: Rename both endpoints!
-
-    @RequestMapping(value = "/api/ontologies/{ontologyName}/class", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/ontologies/{ontologyName}/classes", method = RequestMethod.GET)
     public ResponseEntity<List<OntologyClass>> getAllClassesOfOntology(@PathVariable String ontologyName) {
         return new ResponseEntity<>(ontologyContentService.getAllClassesOfOntology(ontologyName), HttpStatus.OK);
     }
@@ -194,7 +194,7 @@ public class OntologyController {
         dataset.begin(ReadWrite.WRITE);
         try {
             var uri = ontologyContentService.editIndividual(dataset, ontologyName, individualName, form);
-            var res = ontologyContentService.validateOntology(dataset, ontologyName);
+            var res = ontologyValidationService.validateOntology(dataset, ontologyName);
             if (res.isConsistent()) {
                 dataset.commit();
                 return ResponseEntity.ok("Instance was created and validated");

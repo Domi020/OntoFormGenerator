@@ -26,15 +26,17 @@ public class FormController {
     private final OntologyOverviewService ontologyOverviewService;
     private final OntologyContentService ontologyContentService;
     private final IndividualService individualService;
+    private final OntologyValidationService ontologyValidationService;
 
     public FormController(FormOverviewService formOverviewService, FormEditorService formEditorService,
-                          FormFillService formFillService, OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, IndividualService individualService) {
+                          FormFillService formFillService, OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, IndividualService individualService, OntologyValidationService ontologyValidationService) {
         this.formOverviewService = formOverviewService;
         this.formEditorService = formEditorService;
         this.formFillService = formFillService;
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.individualService = individualService;
+        this.ontologyValidationService = ontologyValidationService;
     }
 
     @RequestMapping(value = "/api/forms", method = RequestMethod.POST)
@@ -73,7 +75,7 @@ public class FormController {
                 form.get("instanceName")[0], form);
         if (Boolean.parseBoolean(validate)) {
             try {
-                var res = ontologyContentService.validateOntology(ontologyName);
+                var res = ontologyValidationService.validateOntology(ontologyName);
                 if (res.isConsistent()) {
                     return ResponseEntity.ok("Instance was created and validated");
                 } else {

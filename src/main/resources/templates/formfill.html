@@ -356,7 +356,7 @@
         });
         newDialog.showModal();
         if (!subclassGraphBuild) {
-            fetch(`/api/ontologies/${ontologyName}/classes`)
+            fetch(`/api/ontologies/${ontologyName}/graph`)
                 .then(async function (response) {
                     let graph = await response.json();
                     let output = document.getElementById('new-object-property-range');
@@ -550,7 +550,7 @@
     const newFieldButton = document.querySelector('#new-field-button');
     newFieldButton.addEventListener('click', function () {
         JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties`)
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties`)
             .then(async function (response) {
                 let allProperties = await response.json();
                 allPropertiesOfTargetClass = allProperties;
