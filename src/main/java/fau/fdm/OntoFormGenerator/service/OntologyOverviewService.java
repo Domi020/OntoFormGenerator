@@ -4,16 +4,12 @@ import fau.fdm.OntoFormGenerator.data.Ontology;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.ontapi.GraphRepository;
 import org.apache.jena.ontapi.OntModelFactory;
 import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +27,6 @@ import java.util.List;
 public class OntologyOverviewService {
 
     private final Logger logger;
-    private final PropertyService propertyService;
-
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
 
     @Value("${ontoformgenerator.ontologies.forms}")
     private String formsIRI;
@@ -44,25 +36,21 @@ public class OntologyOverviewService {
     private final GeneralTDBService generalTDBService;
 
     @Autowired
-    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, PropertyService propertyService) {
+    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService) {
         this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
-        this.propertyService = propertyService;
     }
 
     public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService) {
-        this.ontologyDirectory = ontologyDirectory;
         this.logger = logger;
-        this.propertyService = propertyService;
         this.individualService = null;
         this.generalTDBService = null;
     }
 
     public boolean importOntology(File owlFile, String ontologyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            var dataset = connection.getDataset();
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
             var newModel = OntModelFactory.createModel(newOntURI, GraphRepository.createGraphDocumentRepositoryMem());
             var ontModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
@@ -79,30 +67,22 @@ public class OntologyOverviewService {
                 newModel.addImport(formModel);
             } catch (Exception e) {
                 logger.error("Error reading file while importing new ontology", e);
-                dataset.abort();
                 return false;
             }
             dataset.addNamedModel(ontologyName, newModel);
             var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
-            dataset.commit();
-            dataset.end();
+            connection.commit();
             logger.info("Ontology {} imported successfully", ontologyName);
             return true;
         } catch (Exception e) {
-            dataset.abort();
             return false;
-        } finally {
-            dataset.end();
         }
     }
 
     public List<Ontology> getImportedOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            OntClass ontologyClass = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                    dataset.getNamedModel("forms")).getOntClass(formsIRI + "#Ontology");
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, "forms")) {
+            OntClass ontologyClass = connection.getModel().getOntClass(formsIRI + "#Ontology");
             ontologyClass.listInstances().forEachRemaining(
                     res -> {
                         var ontName = res.getLocalName();
@@ -111,8 +91,6 @@ public class OntologyOverviewService {
                     }
             );
             return ontologies;
-        } finally {
-            dataset.end();
         }
     }
 
@@ -122,9 +100,8 @@ public class OntologyOverviewService {
     }
 
     public void deleteOntology(String ontologyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            var dataset = connection.getDataset();
             dataset.removeNamedModel(ontologyName);
             individualService.selectIndividualsInSPARQLQuery(dataset, "forms",
                             """
@@ -140,25 +117,15 @@ public class OntologyOverviewService {
                             individual.getLocalName()));
             var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
             individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-        } finally {
-            dataset.end();
+            connection.commit();
         }
     }
 
     public ByteArrayResource downloadOntology(String ontologyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            ontModel.write(outputStream, "RDF/XML");
+            connection.getModel().write(outputStream, "RDF/XML");
             return new ByteArrayResource(outputStream.toByteArray());
-        } finally {
-            dataset.end();
         }
     }
-
 }

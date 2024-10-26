@@ -4,14 +4,13 @@ import fau.fdm.OntoFormGenerator.data.Constraint;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.tdb2.TDB2Factory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,9 +18,6 @@ import java.util.List;
 
 @Service
 public class OntologyConstraintService {
-
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
 
     public List<Constraint> getConstraints(Dataset dataset, String ontologyName, String domainClassUri, String propertyUri) {
         var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
@@ -62,12 +58,8 @@ public class OntologyConstraintService {
     }
 
     public List<Constraint> getConstraints(String ontologyName, String domainClassUri, String propertyUri) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            return getConstraints(dataset, ontologyName, domainClassUri, propertyUri);
-        } finally {
-            dataset.end();
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            return getConstraints(connection.getDataset(), ontologyName, domainClassUri, propertyUri);
         }
     }
 
@@ -75,11 +67,8 @@ public class OntologyConstraintService {
                                                               String ontologyName,
                                                               String domainClassUri,
                                                               String propertyUri) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                    dataset.getNamedModel(ontologyName));
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            var ontModel = connection.getModel();
             ontModel.getOntClass(domainClassUri).listSuperClasses().forEachRemaining(cls -> {
                 if (cls.isRestriction()) {
                     var restriction = cls.asRestriction();
@@ -105,8 +94,6 @@ public class OntologyConstraintService {
                     }
                 }
             });
-        } finally {
-            dataset.end();
         }
         return individuals;
     }

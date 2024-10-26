@@ -22,9 +22,6 @@ public class PropertyService {
 
     private final GeneralTDBService generalTDBService;
 
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
-
     @Value("${ontoformgenerator.ontologies.baseIRI}")
     private String baseIRI;
 

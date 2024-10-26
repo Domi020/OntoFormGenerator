@@ -5,28 +5,21 @@ import fau.fdm.OntoFormGenerator.data.SetField;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.ontapi.OntModelFactory;
-import org.apache.jena.ontapi.OntSpecification;
 import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class FormFillService {
@@ -38,9 +31,6 @@ public class FormFillService {
     private final GeneralTDBService generalTDBService;
     private final PropertyService propertyService;
 
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
-
     public FormFillService(IndividualService individualService,
                            GeneralTDBService generalTDBService, PropertyService propertyService) {
         this.individualService = individualService;
@@ -50,31 +40,18 @@ public class FormFillService {
     }
 
     public void deleteIndividualByIri(String ontologyName, String individualUri) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
-            individualService.deleteIndividualByIri(dataset, ontologyName, individualUri);
-            individualService.deleteIndividualByIri(dataset, "forms", individualUri);
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-        } finally {
-            dataset.end();
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            individualService.deleteIndividualByIri(connection.getDataset(), ontologyName, individualUri);
+            individualService.deleteIndividualByIri(connection.getDataset(), "forms", individualUri);
+            connection.commit();
         }
     }
 
     public void deleteDraft(String formName,
                             String draftUri) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
-            individualService.deleteIndividualByIri(dataset, "forms", draftUri);
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-            throw e;
-        } finally {
-            dataset.end();
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+            individualService.deleteIndividualByIri(connection.getDataset(), "forms", draftUri);
+            connection.commit();
         }
     }
 
@@ -84,9 +61,8 @@ public class FormFillService {
                                           String instanceName,
                                           Map<String, List<String>> formValues,
                                           Map<String, List<String>> additionalValues) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            var dataset = connection.getDataset();
             var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
             var individualURI = ontologyURI + instanceName;
@@ -130,21 +106,15 @@ public class FormFillService {
             }
             propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
                     "hasDraft", json.toString(), XSDDatatype.XSDstring);
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-        } finally {
-            dataset.end();
+            connection.commit();
         }
     }
 
     public List<SetField> getSetFieldsByDraft(String formName, String individualName, String ontologyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
-            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
-            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var setFields = new ArrayList<SetField>();
@@ -155,32 +125,24 @@ public class FormFillService {
                 setFields.add(new SetField(key.toString(), (List<String>) normalFields.get(key.toString())));
             }
             return setFields;
-        } finally {
-            dataset.end();
         }
     }
 
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
-            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
-            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var additionalField = (Map) draftMap.get("additionalFields");
             additionalField.put(propertyName, new ArrayList<>());
             var json = gson.toJson(draftMap);
-            propertyService.removePropertyValueFromIndividual(dataset, "forms", individual,
+            propertyService.removePropertyValueFromIndividual(connection.getDataset(), "forms", individual,
                     "hasDraft");
-            propertyService.addDatatypePropertyToIndividual(dataset, "forms", individual,
+            propertyService.addDatatypePropertyToIndividual(connection.getDataset(), "forms", individual,
                     "hasDraft", json, XSDDatatype.XSDstring);
-            dataset.commit();
-        } catch (Exception e) {
-            dataset.abort();
-        } finally {
-            dataset.end();
+            connection.commit();
         }
     }
 
@@ -189,11 +151,9 @@ public class FormFillService {
                                                String targetField,
                                                String instanceName,
                                                Map<String, String[]> formValues) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
-            var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
-            var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, connection.getDataset().getNamedModel(ontologyName));
+            var classURI = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
             var individual = ontology.createIndividual(ontologyURI + instanceName + "_" + UUID.randomUUID(),
                     ontology.getOntClass(classURI));
@@ -202,11 +162,11 @@ public class FormFillService {
                 if (formValue.equals("instanceName") || formValue.equals("ontologyName") || formValue.equals("targetClass") ||
                         formValue.equals("create-individual-dialog-option"))
                     continue;
-                var propUri = generalTDBService.getPropertyURIInOntology(dataset, ontologyName, formValue);
+                var propUri = generalTDBService.getPropertyURIInOntology(connection.getDataset(), ontologyName, formValue);
                 var prop = ontology.getProperty(propUri);
-                if (generalTDBService.checkIfObjectProperty(dataset, ontologyName, prop.getURI())) {
+                if (generalTDBService.checkIfObjectProperty(connection.getDataset(), ontologyName, prop.getURI())) {
                     for (var objectValue : formValues.get(formValue)) {
-                        var objectIndividual = individualService.findIndividualInOntology(dataset, ontologyName, objectValue);
+                        var objectIndividual = individualService.findIndividualInOntology(connection.getDataset(), ontologyName, objectValue);
                         individual.addProperty(prop, objectIndividual);
                     }
                 } else {
@@ -236,27 +196,24 @@ public class FormFillService {
                     }
                 }
             }
-            OntIndividual indiv = individualService.getOntIndividualByIri(dataset, individual.getURI());
+            OntIndividual indiv = individualService.getOntIndividualByIri(connection.getDataset(), individual.getURI());
             if (indiv == null) {
                 // no draft exists
-                individualService.addIndividualWithURI(dataset, "Individual", individual.getURI());
-                var form = individualService.getIndividualByString(dataset, "forms", formName);
-                propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
+                individualService.addIndividualWithURI(connection.getDataset(), "Individual", individual.getURI());
+                var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+                propertyService.addObjectPropertyToIndividual(connection.getDataset(), "forms", form,
                         "created", individual.getURI());
             } else {
                 // draft already exists
-                propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
+                propertyService.removePropertyValueFromIndividual(connection.getDataset(), "forms", indiv,
                         "hasDraft");
-                propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
+                propertyService.removePropertyValueFromIndividual(connection.getDataset(), "forms", indiv,
                         "isDraft");
             }
-            dataset.commit();
+            connection.commit();
             return individual.getURI();
         } catch (Exception e) {
-            dataset.abort();
             return null;
-        } finally {
-            dataset.end();
         }
     }
 }

@@ -8,14 +8,12 @@ import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -35,9 +33,6 @@ public class FormEditorService {
     private final GeneralTDBService generalTDBService;
     private final OntologyConstraintService ontologyConstraintService;
 
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
-
     public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService, OntologyConstraintService ontologyConstraintService) {
         this.individualService = individualService;
         this.propertyService = propertyService;
@@ -47,27 +42,21 @@ public class FormEditorService {
     }
 
     public OntologyClass getSelectedEditorClass(String formName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
-            var classValue = propertyService.getObjectPropertyValueFromIndividual(dataset,
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            var classValue = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
                     "forms", form, "targetsClass");
             if (classValue == null) return null;
             return new OntologyClass(classValue.getLocalName(), classValue.getURI());
-        } finally {
-            dataset.end();
         }
     }
 
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {
         // TODO: properly add maximumValues and required to drafts
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            var individual = individualService.findOntIndividualInOntology(dataset, "forms", individualName);
-            var draft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms", individual, "hasDraft");
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var formFields = new ArrayList<FormField>();
@@ -77,10 +66,10 @@ public class FormEditorService {
             for (var field : fields.keySet()) {
                 var fieldName = (String) field;
 
-                var property = propertyService.getPropertyFromOntology(dataset, ontologyName, fieldName);
-                var isObjectProperty = generalTDBService.checkIfObjectProperty(dataset, ontologyName, property.getURI());
+                var property = propertyService.getPropertyFromOntology(connection.getDataset(), ontologyName, fieldName);
+                var isObjectProperty = generalTDBService.checkIfObjectProperty(connection.getDataset(), ontologyName, property.getURI());
                 if (isObjectProperty) {
-                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
+                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
                     var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName,
@@ -88,7 +77,7 @@ public class FormEditorService {
                                     true, objectRange, null), "ObjectSelect", fieldName,
                             1, 1, true));
                 } else {
-                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, property.getURI()).getRange();
+                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
                     formFields.add(new FormField(
                             new OntologyProperty(fieldName, new OntologyClass(null, null), property.getURI(),
                                     false, null, dataRangeProp.getLocalName()),
@@ -96,15 +85,12 @@ public class FormEditorService {
                 }
             }
             return formFields;
-        } finally {
-            dataset.end();
         }
     }
 
     public List<FormField> getAllFormElementsOfForm(String formName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+            var dataset = connection.getDataset();
             var form = individualService.getIndividualByString(dataset, "forms", formName);
             var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                     "forms", form, "hasFormElement");
@@ -152,15 +138,12 @@ public class FormEditorService {
                 }
             }
             return formFields;
-        } finally {
-            dataset.end();
         }
     }
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.WRITE);
-        try {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+            var dataset = connection.getDataset();
             var form = individualService.getIndividualByString(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
                     form, "targetsOntology");
@@ -270,12 +253,9 @@ public class FormEditorService {
                 individualService.deleteIndividual(dataset, "forms", alreadyInsertedElement
                         .getLocalName());
             }
-            dataset.commit();
+            connection.commit();
         } catch (Exception e) {
             logger.error("Error while updating form", e);
-            dataset.abort();
-        } finally {
-            dataset.end();
         }
     }
 

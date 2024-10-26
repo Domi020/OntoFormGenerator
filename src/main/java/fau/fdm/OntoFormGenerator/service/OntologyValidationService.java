@@ -6,6 +6,7 @@ import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.ValidationResult;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
+import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.jena.ontology.OntModel;
@@ -13,7 +14,6 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.tdb2.TDB2Factory;
 import org.semanticweb.HermiT.Configuration;
 import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -35,8 +35,6 @@ import java.util.Map;
 public class OntologyValidationService {
 
     private final PropertyService propertyService;
-    @Value("${ontoformgenerator.ontologyDirectory}")
-    private String ontologyDirectory;
 
     private final RestTemplate restTemplate;
 
@@ -136,14 +134,10 @@ public class OntologyValidationService {
     }
 
     public ValidationResult validateOntology(String ontologyName) {
-        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-        dataset.begin(ReadWrite.READ);
-        try {
-            return validateOntology(dataset, ontologyName);
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            return validateOntology(connection.getDataset(), ontologyName);
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
-        } finally {
-            dataset.end();
         }
     }
 
