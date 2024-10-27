@@ -601,7 +601,7 @@
     const newPropertySearchButton = document.querySelector('#new-property');
     newPropertySearchButton.addEventListener('click', function () {
         let query = document.getElementById('new-property-input').value;
-        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass}/properties?query=${query}`)
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?query=${query}`)
             .then(async function (response) {
                 let allProperties = await response.json();
                 let select = $('#new-property-class-select')[0].selectize;
