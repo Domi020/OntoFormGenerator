@@ -425,6 +425,9 @@
     async function createDraft() {
         const form = document.querySelector('#fillform');
         const formData = new FormData(form);
+        if (formData.get('instanceName') === '') {
+            formData.set('instanceName', generateInstanceName());
+        }
         let normalFields = {};
         let additionalFields = {};
         formData.forEach(function (value, key) {
@@ -681,6 +684,9 @@
     function formDataToJSON() {
         const form = document.querySelector('#fillform');
         const formData = new FormData(form);
+        if (formData.get('instanceName') === '') {
+            formData.set('instanceName', generateInstanceName());
+        }
         let json = {};
         formData.forEach(function (value, key) {
             if (json[key] === undefined) {
@@ -690,6 +696,11 @@
             }
         });
         return JSON.stringify(json);
+    }
+
+    function generateInstanceName() {
+        let date = new Date();
+        return date.toISOString() + "_" + Math.floor(Math.random() * 100);
     }
 
     function addField(containerId, templateId, isObjectSelect) {
