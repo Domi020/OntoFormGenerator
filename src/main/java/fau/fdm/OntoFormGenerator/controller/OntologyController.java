@@ -27,10 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 public class OntologyController {
@@ -165,7 +162,7 @@ public class OntologyController {
 
         try {
             var isObjectProperty = (boolean) body.get("isObjectProperty");
-            var domain = (String) body.get("domain");
+            var domain = (String) ((HashMap) body.get("domain")).get("name");
             var range = (String) body.get("range");
             var propDescription = (String) body.get("propDescription");
             return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propDescription,
@@ -175,6 +172,9 @@ public class OntologyController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
+    //TODO: OR-Filter weniger restriktiv => orderedAtTime!
+    //TODO: Class anlegen bei owl:Thing => Subclass von Thing?
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/graph", method = RequestMethod.GET)
     public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {

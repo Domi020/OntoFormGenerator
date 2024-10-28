@@ -142,13 +142,18 @@ public class FormOverviewService {
             var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
                     individual, "isDraft");
             if (isDraft == null || !isDraft.getBoolean()) continue;
-            result.add(new Individual(individual.getLocalName(),
-                    propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
-                    individual.getURI(),
-                    new OntologyClass("test", "test"), true));
+            try {
+                result.add(new Individual(individual.getLocalName(),
+                        propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
+                        individual.getURI(),
+                        new OntologyClass("test", "test"), true));
+            } catch (NullPointerException ignored) {}
+
         }
         return result;
     }
+
+    //TODO: generell mehr Stabilität => Hauptseite lädt trotz Fehler in Form/Ontologie/Individual
 
     public void deleteForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
