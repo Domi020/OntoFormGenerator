@@ -479,6 +479,7 @@
                     valueField: 'name',
                     labelField: 'name',
                     searchField: 'name',
+                    dropdownParent: 'body',
                     maxItems: 1,
                     options: allIndividuals,
                     render: {
@@ -560,6 +561,7 @@
                 $('#new-property-class-select').selectize({
                     valueField: 'name',
                     labelField: 'name',
+                    dropdownParent: 'body',
                     searchField: 'name',
                     maxItems: 1,
                     options: allProperties,
@@ -725,6 +727,7 @@
                     valueField: 'name',
                     labelField: 'name',
                     searchField: 'name',
+                    dropdownParent: 'body',
                     maxItems: 1,
                     options: Object.values($('#object-select-' + formElementName)[0].selectize.options),
                     render: {

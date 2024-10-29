@@ -50,4 +50,21 @@ public class GeneralTDBService {
         var namedProperty = ontmodel.listObjectProperties().filterKeep(ontProperty -> ontProperty.getURI().equals(propertyURI));
         return namedProperty.hasNext();
     }
+
+    public boolean checkIfAnnotationProperty(Dataset dataset, String ontologyName, String propertyURI) {
+        if (propertyURI.equals("http://www.w3.org/2000/01/rdf-schema#label") ||
+                propertyURI.equals("http://www.w3.org/2000/01/rdf-schema#comment") ||
+                propertyURI.equals("http://www.w3.org/2000/01/rdf-schema#isDefinedBy") ||
+                propertyURI.equals("http://www.w3.org/2000/01/rdf-schema#seeAlso") ||
+                propertyURI.equals("http://www.w3.org/2002/07/owl#versionInfo") ||
+                propertyURI.equals("http://www.w3.org/2002/07/owl#priorVersion") ||
+                propertyURI.equals("http://www.w3.org/2002/07/owl#backwardCompatibleWith") ||
+                propertyURI.equals("http://www.w3.org/2002/07/owl#incompatibleWith") ||
+                propertyURI.equals("http://www.w3.org/2002/07/owl#deprecated")){
+            return true;
+        }
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedProperty = ontmodel.listAnnotationProperties().filterKeep(ontProperty -> ontProperty.getURI().equals(propertyURI));
+        return namedProperty.hasNext();
+    }
 }

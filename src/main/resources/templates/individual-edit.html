@@ -15,9 +15,15 @@
         .ontology-list {
             width: 300px;
         }
+
+        .property-card {
+            width: 100%;
+        }
+
         .property-row {
-            /* width: 100%; */
+            width: 100%;
             padding-top: 75px;
+            padding-bottom: 20px;
         }
         .property-select {
             /* width: 300px; */
@@ -27,7 +33,7 @@
         .property-field {
             float: left;
             margin-left: 5%;
-            /* width: 300px; */
+            width: 12%;
             position: relative;
             text-align: left;
         }
@@ -53,38 +59,42 @@
 
         function addNewFormElement() {
             const fieldContainer = document.querySelector('.field-container');
-            const newField = document.createElement('tr');
+            const newField = document.createElement('div');
             newField.id = `field-${elements}`;
-            newField.className = "property-row";
-            newField.innerHTML = `
-                <th class="property-field">
+            newField.className = "mdl-card mdl-shadow--8dp property-card";
+            const newFieldFirstRow = document.createElement('div');
+            newFieldFirstRow.className = "property-row";
+            newFieldFirstRow.innerHTML = `
+                <div class="property-field">
                     <label>Property</label>
                     <select id="prop-select-` + elements + `" class="edit-object property-select" name="propertyName"></select>
-                </th>
-                <th class="property-field">
+                </div>
+                <div class="property-field">
+                    <label>Range</label>
                     <input id="range-field-` + elements + `" class="mdl-textfield__input" type="text" name="propertyRange" readonly>
-                    <label class="mdl-textfield__label">Range</label>
-                </th>
-                <th class="property-field property-checkbox">
+                </div>
+                <div class="property-field property-checkbox">
                     <label>Object property</label>
                     <input type="checkbox" id="object-property-checkbox-` + elements + `" disabled>
                     <input type="hidden" id="hidden-object-property-checkbox-` + elements + `" name="isObjectProperty">
-                </th>
-                <th id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+                </div>
+                <div id="value-field-` + elements + `" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label property-field">
+                    <label>Value</label>
                     <input id="value-field-select-` + elements + `" class="edit-object mdl-textfield__input" type="text"  name="fieldValue">
-                    <label class="mdl-textfield__label">Value</label>
-                </th>
-                <th class="property-field">
-                    <button type="button" class="edit-object-button mdl-button delete-form-element"
+                </div>
+                <div class="property-field">
+                    <button type="button" class="edit-object-button mdl-button mdl-js-button mdl-button--raised mdl-button--accent delete-form-element"
                     onclick="removeFormElement('field-` + elements + `')">Remove</button>
-                </th>
+                </div>
             `;
+            newField.appendChild(newFieldFirstRow);
             fieldContainer.appendChild(newField);
             const currentElement = elements;
             $('#prop-select-' + elements).selectize({
                 options: availableProperties,
                 valueField: 'name',
                 labelField: 'name',
+                dropdownParent: 'body',
                 searchField: 'name',
                 maxItems: 1,
                 closeAfterSelect: true,
@@ -110,12 +120,13 @@
 
                         let value = document.getElementById("value-field-select-" + currentElement).value;
                         valueField.innerHTML = `
-                        <select id="value-field-select-` + currentElement + `" class="property-select" name="fieldValue"></select>
                         <label>Value</label>
+                        <select id="value-field-select-` + currentElement + `" class="property-select" name="fieldValue"></select>
                         `;
                         $("#value-field-select-" + currentElement).selectize({
                             options: individuals,
                             valueField: 'name',
+                            dropdownParent: 'body',
                             labelField: 'name',
                             searchField: 'name',
                             maxItems: 1,
@@ -161,7 +172,7 @@
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
         <input class="mdl-textfield__input" type="text" id="individualURI" name="individualURI"
                th:value="${individual.iri}" readonly>
-        <label class="mdl-textfield__label" for="individualURI">Individual</label>
+        <label class="mdl-textfield__label" for="individualURI">URI</label>
         </div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName"

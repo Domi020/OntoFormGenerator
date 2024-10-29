@@ -163,6 +163,8 @@ public class OntologyContentService {
                 stmt -> {
                     if (stmt.getPredicate().getLocalName().equals("type"))
                         return;
+                    if (generalTDBService.checkIfAnnotationProperty(dataset, ontologyName, stmt.getPredicate().getURI()))
+                        return;
                     var setProperty = new SetProperty();
                     var ontClass = new OntologyClass(individual.getOntClass().getLocalName(),
                             individual.getOntClass().getURI());
