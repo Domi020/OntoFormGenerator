@@ -1,10 +1,7 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import com.google.gson.Gson;
-import fau.fdm.OntoFormGenerator.data.Constraint;
-import fau.fdm.OntoFormGenerator.data.FormField;
-import fau.fdm.OntoFormGenerator.data.OntologyClass;
-import fau.fdm.OntoFormGenerator.data.OntologyProperty;
+import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
@@ -12,6 +9,7 @@ import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -172,18 +170,22 @@ public class FormEditorService {
 
             for (int i = 0; i < formInput.get("fieldName").size(); i++) {
                 // Check if field already exists
-                //TODO: Aktuell wird nur anhand Feldnamen geprüft, ob ein Feld schon existiert
                 var fieldName = formInput.get("fieldName").get(i);
-                boolean foundElement = false;
+                Resource foundElement = null;
                 for (int j = 0; j < alreadyInsertedElements.size(); j++) {
                     if (alreadyInsertedElements.get(j) != null &&
                             alreadyInsertedElements.get(j).getLocalName().equals(fieldName)) {
+                        foundElement = alreadyInsertedElements.get(j);
                         alreadyInsertedElements.set(j, null);
-                        foundElement = true;
                         break;
                     }
                 }
-                if (foundElement) continue;
+
+                // Remove old data
+                if (foundElement != null) {
+                    var oldField = individualService.getIndividualByIri(dataset, foundElement.getURI());
+                    individualService.deleteIndividual(dataset, "forms", oldField.getLocalName());
+                }
 
                 // set targetsField for each field
                 var propertyName = formInput.get("propertyName").get(i);
@@ -237,10 +239,12 @@ public class FormEditorService {
                         field, "hasMinimumValues", minimumValues,
                         XSDDatatype.XSDinteger);
                 String checked = "false";
-                for (var val : formInput.get("required-checkbox")) {
-                    if (val.equals("required-checkbox-" + i)) {
-                        checked = "true";
-                        break;
+                if (formInput.containsKey("required-checkbox")) {
+                    for (var val : formInput.get("required-checkbox")) {
+                        if (val.equals("required-checkbox-" + i)) {
+                            checked = "true";
+                            break;
+                        }
                     }
                 }
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms",
