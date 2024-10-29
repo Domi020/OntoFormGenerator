@@ -173,9 +173,6 @@ public class OntologyController {
         }
     }
 
-    //TODO: OR-Filter weniger restriktiv => orderedAtTime!
-    //TODO: Class anlegen bei owl:Thing => Subclass von Thing?
-
     @RequestMapping(value = "/api/ontologies/{ontologyName}/graph", method = RequestMethod.GET)
     public ResponseEntity<SubclassGraph> getSubclassGraphOfOntology(@PathVariable String ontologyName) {
         return new ResponseEntity<>(ontologyContentService.buildSubclassGraph(ontologyName), HttpStatus.OK);

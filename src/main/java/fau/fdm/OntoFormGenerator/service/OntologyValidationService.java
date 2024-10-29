@@ -44,12 +44,12 @@ public class OntologyValidationService {
     }
 
     public PropertyNamingValidationResult checkNaming(String newPropertyName) {
-        var toCheck = newPropertyName.toLowerCase();
-        var wordFilters = List.of("and", "or", "other", "miscellaneous");
+        // var toCheck = newPropertyName.toLowerCase();
+        var wordFilters = List.of("And", "Or", "Other", "Miscellaneous");
         var result = new PropertyNamingValidationResult();
         result.setNewPropertyName(newPropertyName);
         for (var filter : wordFilters) {
-            if (toCheck.contains(filter)) {
+            if (newPropertyName.contains(filter)) {
                 result.setValid(false);
                 result.setFilteredWord(filter);
                 return result;

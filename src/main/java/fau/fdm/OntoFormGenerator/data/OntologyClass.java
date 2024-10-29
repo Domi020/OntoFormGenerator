@@ -6,7 +6,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class OntologyClass {
     private String name;
     private String uri;
@@ -18,5 +17,16 @@ public class OntologyClass {
                     ((OntologyClass) obj).getName().equals(this.name);
         }
         return false;
+    }
+
+    public OntologyClass(String name, String uri) {
+        if (name != null && uri != null &&
+                name.equals("Thing") && uri.equals("http://www.w3.org/2002/07/owl#Thing")) {
+            this.name = "owl:Thing";
+            this.uri = "http://www.w3.org/2002/07/owl#Thing";
+        } else {
+            this.name = name;
+            this.uri = uri;
+        }
     }
 }
