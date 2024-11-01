@@ -83,6 +83,11 @@
 			<artifactId>org.semanticweb.hermit</artifactId>
 			<version>1.4.5.519</version>
 		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.owlapi</groupId>
+			<artifactId>jfact</artifactId>
+			<version>5.0.3</version>
+		</dependency>
 
 	</dependencies>
 

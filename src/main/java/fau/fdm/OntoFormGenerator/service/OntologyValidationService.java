@@ -5,6 +5,7 @@ import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.ValidationResult;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
+import fau.fdm.OntoFormGenerator.validation.FactValidator;
 import fau.fdm.OntoFormGenerator.validation.HermitValidator;
 import fau.fdm.OntoFormGenerator.validation.Validator;
 import fau.fdm.OntoFormGenerator.validation.ValidatorMode;
@@ -144,7 +145,8 @@ public class OntologyValidationService {
         Validator validator = null;
         if (mode == ValidatorMode.HERMIT) {
             validator = new HermitValidator();
-        } else {
+        } else if (mode == ValidatorMode.JFACT) {
+            validator = new FactValidator();
         }
         return validator.validate(tdbModel);
     }
