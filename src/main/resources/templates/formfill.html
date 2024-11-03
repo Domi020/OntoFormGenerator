@@ -124,56 +124,67 @@
         <a>Cancel</a>
     </button>
 </dialog>
-<dialog id="add-new-property-dialog">
-    <h2>Add new property to ontology</h2>
-    <p>Create a new property and add a field to this ontology.</p>
+<dialog id="add-new-property-dialog" class="mdl-dialog" style="width: 400px">
+    <h2 class="mdl-dialog__title">Add new property to ontology</h2>
 
-    <div>
-        <label for="new-property-name">Property name</label>
-        <input type="text" name="new-property-name" id="new-property-name">
+
+    <div class="mdl-dialog__content">
+        <p>Create a new property and add a field to this ontology.</p>
+        <div class="mdl-textfield mdl-js-textfield">
+            <label class="mdl-textfield__label" for="new-property-name">Property name</label>
+            <input class="mdl-textfield__input" type="text" name="new-property-name" id="new-property-name">
+        </div>
+        <div class="mdl-textfield mdl-js-textfield">
+            <label class="mdl-textfield__label" for="new-property-description">Description</label>
+            <textarea class="mdl-textfield__input" name="new-property-description" id="new-property-description"> </textarea>
+        </div>
+        <fieldset>
+            <legend>Select a range type</legend>
+            <div>
+                <input type="radio" id="create-property-dialog-option-1" name="create-property-dialog-option"
+                       value="1" onclick="createNewProperty_checkOption()" checked>
+                <label for="create-property-dialog-option-1">Data object</label>
+            </div>
+            <div>
+                <input type="radio" id="create-property-dialog-option-2" name="create-property-dialog-option"
+                       value="2" onclick="createNewProperty_checkOption()">
+                <label for="create-property-dialog-option-2">Individual from ontology</label>
+            </div>
+            <div id="div-datatype-option" style="display:block">
+                <label for="create-property-with-datatype">Datatype</label>
+                <select id="create-property-with-datatype" name="create-property-with-datatype">
+                    <option value="string">String</option>
+                    <option value="int">Integer</option>
+                    <option value="float">Float</option>
+                    <option value="datetime">Datetime</option>
+                </select>
+            </div>
+            <div id="div-object-option" style="display:none;">
+                <div style="padding-bottom: 5px; padding-top: 5px">
+                    <button class="mdl-button mdl-js-button mdl-button--raised">
+                        <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
+                    </button>
+                </div>
+                <div class="mdl-textfield mdl-js-textfield">
+                    <label class="mdl-textfield__label" for="create-property-with-object">Selected class</label>
+                    <input class="mdl-textfield__input" id="create-property-with-object" type="text" name="create-property-with-object" readonly>
+                </div>
+
+            </div>
+            <div style="padding-top: 15px; padding-bottom: 15px">
+                <input type="checkbox" id="create-property-skip-validate" name="create-property-skip-validate">
+                <label for="create-property-skip-validate">Skip validation (only for experienced users!)</label>
+            </div>
+        </fieldset>
+        <button class="mdl-button mdl-js-button mdl-button--raised" style="padding-bottom: 10px;">
+            <a onclick="createNewProperty()">Create property</a>
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--raised close">
+            <a>Cancel</a>
+        </button>
     </div>
-    <div>
-        <label for="new-property-description">Description/comment</label>
-        <textarea name="new-property-description" id="new-property-description"> </textarea>
-    </div>
-    <fieldset>
-        <legend>Select a range type</legend>
-        <div>
-            <input type="radio" id="create-property-dialog-option-1" name="create-property-dialog-option"
-                   value="1" onclick="createNewProperty_checkOption()" checked>
-            <label for="create-property-dialog-option-1">Data object</label>
-        </div>
-        <div>
-            <input type="radio" id="create-property-dialog-option-2" name="create-property-dialog-option"
-                   value="2" onclick="createNewProperty_checkOption()">
-            <label for="create-property-dialog-option-2">Individual from ontology</label>
-        </div>
-        <div id="div-datatype-option" style="display:block">
-            <select id="create-property-with-datatype" name="create-property-with-datatype">
-                <option value="string">String</option>
-                <option value="int">Integer</option>
-                <option value="float">Float</option>
-                <option value="datetime">Datetime</option>
-            </select>
-            <label for="create-property-with-datatype">Datatype</label>
-        </div>
-        <div id="div-object-option" style="display:none">
-            <button>
-                <a onclick="selectObjectPropertyFromGraph()">Select class from graph</a>
-            </button>
-            <input id="create-property-with-object" type="text" name="create-property-with-object" readonly>
-        </div>
-        <div>
-            <input type="checkbox" id="create-property-skip-validate" name="create-property-skip-validate">
-            <label for="create-property-skip-validate">Skip validation (only for experienced users!)</label>
-        </div>
-    </fieldset>
-    <button>
-        <a onclick="createNewProperty()">Create property</a>
-    </button>
-    <button class="close">
-        <a>Cancel</a>
-    </button>
+
+
 
 </dialog>
 <dialog id="select-class-for-property-dialog">
