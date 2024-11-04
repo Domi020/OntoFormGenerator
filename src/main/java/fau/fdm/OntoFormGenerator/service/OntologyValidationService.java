@@ -101,7 +101,7 @@ public class OntologyValidationService {
 
     public List<OntologyProperty> findPotentialSimilarProperties(Dataset dataset,
                                                                  String ontologyName,
-                                                                 String domainName,
+                                                                 String domainUri,
                                                                  String newPropertyName) {
         List<OntologyProperty> resultList = new ArrayList<>();
         String url = "https://api.datamuse.com/words?rel_trg=" + newPropertyName;
@@ -109,7 +109,7 @@ public class OntologyValidationService {
         var synonyms = (List<Map<String, Object>>) response;
         assert synonyms != null;
         for (var synonym : synonyms) {
-            var props = propertyService.searchProperties(dataset, ontologyName, domainName, synonym.get("word").toString());
+            var props = propertyService.searchProperties(dataset, ontologyName, domainUri, synonym.get("word").toString());
             for (var property : props) {
                 var ontologyProperty = new OntologyProperty();
                 ontologyProperty.setName(property.getLocalName());

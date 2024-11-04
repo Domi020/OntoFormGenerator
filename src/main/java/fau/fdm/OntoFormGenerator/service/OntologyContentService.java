@@ -60,10 +60,9 @@ public class OntologyContentService {
         }
     }
 
-    public List<OntologyProperty> getAllPropertiesOfDomain(String ontologyName, String className) {
+    public List<OntologyProperty> getAllPropertiesOfDomain(String ontologyName, String classURI) {
         List<OntologyProperty> properties = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            String classURI = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, className);
             OntClass ontClass = connection.getModel().getOntClass(classURI);
             if (ontClass == null) {
                 return properties;
@@ -74,7 +73,7 @@ public class OntologyContentService {
                         OntologyProperty ontologyProperty = new OntologyProperty();
                         ontologyProperty.setName(property.getLocalName());
                         ontologyProperty.setRdfsComment(property.getComment(null));
-                        ontologyProperty.setDomain(new OntologyClass(className, classURI));
+                        ontologyProperty.setDomain(new OntologyClass(ontClass.getLocalName(), classURI));
                         ontologyProperty.setUri(property.getURI());
                         if (property.isObjectProperty()) {
                             ontologyProperty.setObjectProperty(true);
@@ -115,11 +114,10 @@ public class OntologyContentService {
         }
     }
 
-    public List<Individual> getAllIndividualsOfClass(String ontologyName, String className) {
+    //TODO: prüfen: bekommt man so alle Individuals?? => v.a. Superclass?
+    public List<Individual> getAllIndividualsOfClass(String ontologyName, String classIri) {
         List<Individual> individuals = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            var classIri = individualService.findIriOfClass(connection.getDataset(), ontologyName, className);
-
             Reasoner reasoner = ReasonerRegistry.getOWLMicroReasoner();
             reasoner.bindSchema(connection.getModel());
             InfModel infModel = ModelFactory.createInfModel(reasoner, connection.getModel());
@@ -132,7 +130,9 @@ public class OntologyContentService {
                         individual.setName(stmt.getSubject().getLocalName());
                         individual.setLabel(propertyService.getLabelOfIndividual(connection.getDataset(), ontologyName, stmt.getSubject().getURI()));
                         individual.setIri(stmt.getSubject().getURI());
-                        individual.setOntologyClass(new OntologyClass(className, classIri));
+                        individual.setOntologyClass(new OntologyClass(generalTDBService.getClassNameInOntology(
+                                connection.getDataset(), ontologyName, classIri
+                        ), classIri));
                         individual.setImported(individualService.checkIfIndividualIsImported(connection.getDataset(), ontologyName, stmt.getSubject().getURI()));
                         individuals.add(individual);
                     }
@@ -150,15 +150,16 @@ public class OntologyContentService {
         }
     }
 
-    public List<SetProperty> getAllSetPropertiesByIndividual(String individualName, String ontologyName) {
+    public List<SetProperty> getAllSetPropertiesByIndividual(String individualURI, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            return getSetProperties(connection.getDataset(), individualName, ontologyName);
+            return getSetProperties(connection.getDataset(), individualURI, ontologyName);
         }
     }
 
-    private List<SetProperty> getSetProperties(Dataset dataset, String individualName, String ontologyName) {
+    private List<SetProperty> getSetProperties(Dataset dataset, String individualUri, String ontologyName) {
+        // TODO: Testen
         List<SetProperty> setProperties = new ArrayList<>();
-        var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
+        var individual = individualService.getOntIndividualByIri(dataset, ontologyName, individualUri);
         individual.listProperties().forEachRemaining(
                 stmt -> {
                     if (stmt.getPredicate().getLocalName().equals("type"))
@@ -166,8 +167,8 @@ public class OntologyContentService {
                     if (generalTDBService.checkIfAnnotationProperty(dataset, ontologyName, stmt.getPredicate().getURI()))
                         return;
                     var setProperty = new SetProperty();
-                    var ontClass = new OntologyClass(individual.getOntClass().getLocalName(),
-                            individual.getOntClass().getURI());
+                    var ontClass = new OntologyClass(individual.ontClass().get().getLocalName(),
+                            individual.ontClass().get().getURI());
                     var isObjectProperty = generalTDBService.checkIfObjectProperty(dataset, ontologyName,
                             stmt.getPredicate().getURI());
                     setProperty.setProperty(new OntologyProperty(
@@ -193,9 +194,9 @@ public class OntologyContentService {
         return setProperties;
     }
 
-    public Boolean addEmptyIndividual(String ontologyName, String className, String individualName) {
+    public Boolean addEmptyIndividual(String ontologyName, String classUri, String individualName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
-            var ontClass = connection.getModel().getOntClass(individualService.findIriOfClass(connection.getDataset(), ontologyName, className));
+            var ontClass = connection.getModel().getOntClass(classUri);
             var ontologyURI = ontClass.getURI().substring(0, ontClass.getURI().lastIndexOf("#") + 1);
             connection.getModel().createIndividual(ontologyURI + individualName, ontClass);
             connection.commit();
@@ -207,16 +208,15 @@ public class OntologyContentService {
 
     public String editIndividual(Dataset dataset,
                                  String ontologyName,
-                                 String individualName,
+                                 String individualUri,
                                  Map<String, String[]> form) {
         //TODO: Delete all old props first; create new
         var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                 OntSpecification.OWL2_DL_MEM);
 
-        var individual = individualService.findIndividualInOntology(dataset, ontologyName, individualName);
-        var indivUri = individual.getURI();
+        var individual = individualService.getIndividualByIri(dataset, ontologyName, individualUri);
 
-        var setProperties = getSetProperties(dataset, individualName, ontologyName);
+        var setProperties = getSetProperties(dataset, individualUri, ontologyName);
 
         // propertyService.removeAllPropertyValuesFromIndividual(individual);
 
@@ -288,7 +288,7 @@ public class OntologyContentService {
                         alreadyInsertedElement.getValue());
             }
         }
-        return indivUri;
+        return individualUri;
     }
 
     public SubclassGraph buildSubclassGraph(String ontologyName) {
@@ -329,18 +329,14 @@ public class OntologyContentService {
     }
 
     public OntologyClass addNewClass(String ontologyName, String className,
-                                     String superClassName) {
+                                     String superClassUri) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
             var uri = generalTDBService.getOntologyURIByOntologyName(connection.getDataset(), ontologyName)
                     + "#" + className;
             var newClass = connection.getModel().createClass(uri);
-            if (superClassName != null) {
-                if (superClassName.equals("owl:Thing")) {
-                    newClass.addSuperClass(connection.getModel().getOntClass("http://www.w3.org/2002/07/owl#Thing"));
-                } else {
-                    var superClassURI = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, superClassName);
-                    newClass.addSuperClass(connection.getModel().getOntClass(superClassURI));
-                }
+            if (superClassUri != null) {
+                //TODO: TESTEN
+                newClass.addSuperClass(connection.getModel().getOntClass(superClassUri));
             }
             connection.commit();
             return new OntologyClass(className, uri);
@@ -435,12 +431,12 @@ public class OntologyContentService {
         }
     }
 
-    public List<OntologyProperty> queryProperties(String ontologyName, String className, String query) {
+    public List<OntologyProperty> queryProperties(String ontologyName, String classIri, String query) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
             // 1. Search for name (case invariant; contains)
             // 2. Search for label (case invariant; contains)
             // 3. Search for description (case invariant; contains)
-            var properties = propertyService.searchProperties(connection.getDataset(), ontologyName, className, query);
+            var properties = propertyService.searchProperties(connection.getDataset(), ontologyName, classIri, query);
             List<OntologyProperty> ontologyProperties = new ArrayList<>();
             properties.forEach(
                     property -> {

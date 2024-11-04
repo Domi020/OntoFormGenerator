@@ -31,6 +31,19 @@ public class GeneralTDBService {
         return namedClass.getURI();
     }
 
+    public String getClassURIInOntology(String ontologyName, String className) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            return getClassURIInOntology(connection.getDataset(), ontologyName, className);
+        }
+    }
+
+    public String getClassNameInOntology(Dataset dataset, String ontologyName, String classURI) {
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedClass = ontmodel.listClasses().filterKeep(ontClass -> ontClass.getURI() != null &&
+                ontClass.getURI().equals(classURI)).next();
+        return namedClass.getLocalName();
+    }
+
     public String getPropertyURIInOntology(Dataset dataset, String ontologyName, String propertyName) {
         var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
         var namedProperty = ontmodel.listAllOntProperties().filterKeep(ontProperty -> ontProperty.getLocalName() != null &&
@@ -43,6 +56,12 @@ public class GeneralTDBService {
                 OntSpecification.OWL2_DL_MEM);
         var namedIndividual = ontmodel.individuals().filter(ontIndividual -> ontIndividual.getLocalName().equals(individualName)).findFirst().orElseThrow();
         return namedIndividual.getURI();
+    }
+
+    public String getIndividualNameInOntology(Dataset dataset, String ontologyName, String individualURI) {
+        var ontmodel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, dataset.getNamedModel(ontologyName));
+        var namedIndividual = ontmodel.getIndividual(individualURI);
+        return namedIndividual.getLocalName();
     }
 
     public boolean checkIfObjectProperty(Dataset dataset, String ontologyName, String propertyURI) {

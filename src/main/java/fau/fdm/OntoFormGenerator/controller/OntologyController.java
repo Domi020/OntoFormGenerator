@@ -4,6 +4,7 @@ import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
 import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.service.*;
+import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.ontology.OntModelSpec;
@@ -35,6 +36,7 @@ public class OntologyController {
     private final FormFillService formFillService;
     private final OntologyConstraintService ontologyConstraintService;
     private final OntologyValidationService ontologyValidationService;
+    private final GeneralTDBService generalTDBService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -46,13 +48,14 @@ public class OntologyController {
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
-    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService, OntologyValidationService ontologyValidationService) {
+    public OntologyController(OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, FormOverviewService formOverviewService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService, OntologyValidationService ontologyValidationService, GeneralTDBService generalTDBService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formOverviewService = formOverviewService;
         this.formFillService = formFillService;
         this.ontologyConstraintService = ontologyConstraintService;
         this.ontologyValidationService = ontologyValidationService;
+        this.generalTDBService = generalTDBService;
     }
 
     @RequestMapping(value = "/ontologies/{ontology}", method = RequestMethod.DELETE)
@@ -64,8 +67,8 @@ public class OntologyController {
 
     @RequestMapping(value = "/ontologies", method = RequestMethod.POST)
     public String importOntology(@RequestParam("file") MultipartFile file,
-                                                   @RequestParam("ontologyName") String ontologyName,
-                                                    Model model) {
+                                 @RequestParam("ontologyName") String ontologyName,
+                                 Model model) {
         String fileName = UUID.randomUUID() + ".owl";
         File localFile = null;
         try {
@@ -96,19 +99,25 @@ public class OntologyController {
 
     }
 
+    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/properties", method = RequestMethod.GET)
     public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
                                                                              @PathVariable String className,
-                                            @RequestParam(value = "query", required = false) String query) {
+                                                                             @RequestParam(value = "query", required = false) String query,
+                                                                             @RequestParam(value = "classIri", required = false) String iri) {
+        if (iri == null) {
+            iri = generalTDBService.getClassURIInOntology(ontologyName, className);
+        }
         if (query != null) {
-            return new ResponseEntity<>(ontologyContentService.queryProperties(ontologyName, className, query),
+            return new ResponseEntity<>(ontologyContentService.queryProperties(ontologyName, iri, query),
                     HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, className),
+            return new ResponseEntity<>(ontologyContentService.getAllPropertiesOfDomain(ontologyName, iri),
                     HttpStatus.OK);
         }
     }
 
+    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals", method = RequestMethod.GET)
     public ResponseEntity<List<Individual>> getAllIndividualsFromClass(@PathVariable String ontologyName,
                                                                        @PathVariable String className,
@@ -118,8 +127,12 @@ public class OntologyController {
                                                                        @RequestParam(value = "restrictionDomain",
                                                                                required = false) String restrictionDomain,
                                                                        @RequestParam(value = "restrictionProperty",
-                                                                               required = false) String restrictionProperty) {
-        var individuals = ontologyContentService.getAllIndividualsOfClass(ontologyName, className);
+                                                                               required = false) String restrictionProperty,
+                                                                       @RequestParam(value = "classIri", required = false) String iri) {
+        if (iri == null) {
+            iri = generalTDBService.getClassURIInOntology(ontologyName, className);
+        }
+        var individuals = ontologyContentService.getAllIndividualsOfClass(ontologyName, iri);
         if (!withImportedIndividuals) {
             individuals.removeIf(Individual::isImported);
         }
@@ -136,33 +149,40 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
+    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}", method = RequestMethod.POST)
     public ResponseEntity<OntologyClass> addNewClass(@PathVariable String ontologyName,
-                                                    @PathVariable String className,
-                                                     @RequestParam("superClass") String superClassName) {
-        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClassName),
+                                                     @PathVariable String className,
+                                                     @RequestParam("superClass") String superClassUri) {
+        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClassUri),
                 HttpStatus.OK);
     }
 
+    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals/{individualName}",
             method = RequestMethod.POST)
     public ResponseEntity<Boolean> addEmptyIndividual(@PathVariable String ontologyName,
                                                       @PathVariable String className,
-                                                      @PathVariable String individualName) {
-        return new ResponseEntity<>(ontologyContentService.addEmptyIndividual(ontologyName, className, individualName),
+                                                      @PathVariable String individualName,
+                                                      @RequestParam(value = "classURI", required = false) String classURI) {
+        if (classURI == null) {
+            classURI = generalTDBService.getClassURIInOntology(ontologyName, className);
+        }
+        return new ResponseEntity<>(ontologyContentService.addEmptyIndividual(ontologyName, classURI, individualName),
                 HttpStatus.OK);
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/properties/{propertyName}",
             method = RequestMethod.POST)
     public ResponseEntity<?> createNewProperty(@PathVariable String ontologyName,
-                                                             @PathVariable String propertyName,
-                                                             @RequestBody Map<String, Object> body,
-                                                             @RequestParam("validate") boolean validate) {
+                                               @PathVariable String propertyName,
+                                               @RequestBody Map<String, Object> body,
+                                               @RequestParam("validate") boolean validate) {
 
         try {
             var isObjectProperty = (boolean) body.get("isObjectProperty");
-            var domain = (String) ((HashMap) body.get("domain")).get("name");
+            //TODO: TESTEN
+            var domain = (String) ((HashMap) body.get("domain")).get("uri");
             var range = (String) body.get("range");
             var propDescription = (String) body.get("propDescription");
             return new ResponseEntity<>(ontologyContentService.createNewProperty(ontologyName, propDescription,
@@ -183,14 +203,20 @@ public class OntologyController {
         return new ResponseEntity<>(ontologyContentService.getAllClassesOfOntology(ontologyName), HttpStatus.OK);
     }
 
+    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/individuals/{individualName}", method = RequestMethod.POST,
             consumes = "application/json;charset=UTF-8")
-    public ResponseEntity<String> editIndividual(@PathVariable String ontologyName, @PathVariable String individualName,
-                                 @RequestBody Map<String, String[]> form) {
+    public ResponseEntity<String> editIndividual(@PathVariable String ontologyName,
+                                                 @PathVariable String individualName,
+                                                 @RequestParam("individualUri") String individualUri,
+                                                 @RequestBody Map<String, String[]> form) {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(ReadWrite.WRITE);
         try {
-            var uri = ontologyContentService.editIndividual(dataset, ontologyName, individualName, form);
+            if (individualUri == null) {
+                individualUri = generalTDBService.getIndividualURIInOntology(dataset, ontologyName, individualName);
+            }
+            var uri = ontologyContentService.editIndividual(dataset, ontologyName, individualUri, form);
             var res = ontologyValidationService.validateOntology(dataset, ontologyName);
             if (res.isConsistent()) {
                 dataset.commit();
@@ -225,7 +251,7 @@ public class OntologyController {
     public ResponseEntity<List<Constraint>> getConstraints(@PathVariable String ontologyName,
                                                            @RequestParam(value = "domainUri") String domainUri,
                                                            @RequestParam(value = "propertyUri", required = false)
-                                                               String propertyUri) {
+                                                           String propertyUri) {
         return new ResponseEntity<>(ontologyConstraintService.getConstraints(ontologyName, domainUri, propertyUri),
                 HttpStatus.OK);
     }
@@ -236,7 +262,6 @@ public class OntologyController {
 
         return "index";
     }
-
 
 
 }

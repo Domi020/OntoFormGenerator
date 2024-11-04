@@ -189,7 +189,7 @@ public class PropertyService {
         return ontModel.getOntProperty(propertyIRI);
     }
 
-    public List<OntProperty> searchProperties(Dataset dataset, String ontologyName, String domain, String query) {
+    public List<OntProperty> searchProperties(Dataset dataset, String ontologyName, String domainIri, String query) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
         return ontModel.listAllOntProperties().filterKeep(property -> {
@@ -197,7 +197,7 @@ public class PropertyService {
             String q = query.toLowerCase();
             var label = property.getLabel(null);
             var comment = property.getComment(null);
-            return  (ontDomain == null || ontDomain.getLocalName().equals(domain)) && (
+            return  (ontDomain == null || ontDomain.getURI().equals(domainIri)) && (
                     label != null && label.toLowerCase().contains(q) ||
                     comment != null && comment.toLowerCase().contains(q) ||
                     property.getLocalName().toLowerCase().contains(q));

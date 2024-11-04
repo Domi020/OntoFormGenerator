@@ -106,10 +106,10 @@ public class RestController {
         model.addAttribute("ontology", ontology);
         model.addAttribute("individual", individual);
         model.addAttribute("classProperties", ontologyContentService.getAllPropertiesOfDomain(ontology.getName(),
-                individual.getOntologyClass().getName()));
+                individual.getOntologyClass().getUri()));
         // model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(formName));
         model.addAttribute("individualProperties", ontologyContentService.getAllSetPropertiesByIndividual(
-                individualName, ontology.getName()));
+                individual.getIri(), ontology.getName()));
         return "individual-edit";
     }
 
