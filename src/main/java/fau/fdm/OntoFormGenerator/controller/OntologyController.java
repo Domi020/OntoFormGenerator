@@ -99,7 +99,6 @@ public class OntologyController {
 
     }
 
-    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/properties", method = RequestMethod.GET)
     public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
                                                                              @PathVariable String className,

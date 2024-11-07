@@ -53,7 +53,7 @@ public class RestController {
         model.addAttribute("ontology", ontology);
         model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology));
 
-        model.addAttribute("targetClass", targetClass.getName());
+        model.addAttribute("targetClass", targetClass);
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
 
         model.addAttribute("constraints", ontologyConstraintService.getConstraints(ontology,

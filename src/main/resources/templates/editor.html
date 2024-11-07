@@ -185,9 +185,9 @@
         }
 
         function firstRefreshAvailableProperties(divs, items) {
-            const ontologyClass = document.getElementById("ontologyClass").value;
+            const targetClass = [[${targetClass}]];
             const ontology = document.getElementById("ontologyName").value;
-            fetch(`/api/ontologies/${ontology}/classes/${ontologyClass}/properties`)
+            fetch(`/api/ontologies/${ontology}/classes/${targetClass.name}/properties?classIri=${encodeURIComponent(targetClass.uri)}`)
                 .then(async function (response) {
                     availableProperties = await response.json();
 
@@ -216,7 +216,8 @@
                 <label class="mdl-textfield__label" for="ontologyName">Ontology</label>
             </div>
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass" readonly>
+                <input class="mdl-textfield__input" type="text" name="ontologyClass" id="ontologyClass"
+                       th:value="${targetClass.getName()}" readonly>
                 <label class="mdl-textfield__label" for="ontologyClass">Ontology class</label>
             </div>
         </div>
@@ -236,10 +237,6 @@
     <script th:inline="javascript">
 
         function initEditorForm() {
-            const targetClass = [[${targetClass}]];
-            if (targetClass != null) {
-                document.getElementById("ontologyClass").value = targetClass;
-            }
             const formElements = [[${formElements}]];
             let divs = [];
             let items = [];
@@ -265,7 +262,7 @@
         }
 
         const ontologyClasses = [[${ontologyClasses}]];
-        autocomplete(document.getElementById("ontologyClass"), ontologyClasses.map(cl => cl.name));
+        // autocomplete(document.getElementById("ontologyClass"), ontologyClasses.map(cl => cl.name));
         initEditorForm();
     </script>
 </body>

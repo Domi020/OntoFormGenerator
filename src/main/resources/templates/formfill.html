@@ -565,7 +565,7 @@
     const newFieldButton = document.querySelector('#new-field-button');
     newFieldButton.addEventListener('click', function () {
         JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties`)
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?classIri=${encodeURIComponent(targetClass.uri)}`)
             .then(async function (response) {
                 let allProperties = await response.json();
                 allPropertiesOfTargetClass = allProperties;
@@ -614,7 +614,7 @@
     const newPropertySearchButton = document.querySelector('#new-property');
     newPropertySearchButton.addEventListener('click', function () {
         let query = document.getElementById('new-property-input').value;
-        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?query=${query}`)
+        fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?classIri=${encodeURIComponent(targetClass.uri)}&query=${query}`)
             .then(async function (response) {
                 let allProperties = await response.json();
                 let select = $('#new-property-class-select')[0].selectize;
