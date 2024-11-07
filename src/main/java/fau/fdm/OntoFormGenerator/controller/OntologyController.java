@@ -116,7 +116,6 @@ public class OntologyController {
         }
     }
 
-    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals", method = RequestMethod.GET)
     public ResponseEntity<List<Individual>> getAllIndividualsFromClass(@PathVariable String ontologyName,
                                                                        @PathVariable String className,
@@ -148,16 +147,14 @@ public class OntologyController {
                 HttpStatus.OK);
     }
 
-    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}", method = RequestMethod.POST)
     public ResponseEntity<OntologyClass> addNewClass(@PathVariable String ontologyName,
                                                      @PathVariable String className,
-                                                     @RequestParam("superClass") String superClassUri) {
-        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClassUri),
+                                                     @RequestParam("superClass") String superClass) {
+        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClass),
                 HttpStatus.OK);
     }
 
-    //URI
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals/{individualName}",
             method = RequestMethod.POST)
     public ResponseEntity<Boolean> addEmptyIndividual(@PathVariable String ontologyName,

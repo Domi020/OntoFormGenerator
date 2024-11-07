@@ -382,8 +382,9 @@
                                     mdl-button--raised
                                     select-class"
                                     data-ontology="` + ontologyName + `"
-                                    data-class="` + curClass.name + `"
-                                    onclick="onSelectClass(this.getAttribute(\'data-class\'),
+                                    data-class-name="` + curClass.name + `"
+                                    data-class-uri="` + curClass.uri + `"
+                                    onclick="onSelectClass(this.getAttribute(\'data-class-name\'), this.getAttribute('data-class-uri'),
                                     this.getAttribute(\'data-ontology\'))">
                             Select
                     </button>
@@ -392,9 +393,9 @@
         }
     }));
 
-    async function onSelectClass(ontClass, ontName) {
+    async function onSelectClass(ontClassName, ontClassUri, ontName) {
         JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-        let individuals = await fetch('/api/ontologies/' + ontName + '/classes/' + ontClass + '/individuals?withImportedIndividuals=false')
+        let individuals = await fetch('/api/ontologies/' + ontName + '/classes/' + ontClassName + '/individuals?withImportedIndividuals=false&classIri=' + encodeURIComponent(ontClassUri))
             .then(response => response.json());
         let individualTable = document.querySelector('#individual-table');
         individualTable.innerHTML = '';

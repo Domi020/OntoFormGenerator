@@ -222,6 +222,7 @@
         (The current form will be saved as draft)
     </p>
     <p id="create-individual-dialog-ontology-class"></p>
+    <p hidden id="create-individual-dialog-ontology-uri"></p>
     <fieldset>
         <legend>Select a creation option.</legend>
         <div>
@@ -280,34 +281,17 @@
         );
     }
 
-    function addIndividual(propName) {
-        let rangeName = allFormElements.find(formElement => formElement.ontologyProperty.name === propName).ontologyProperty.objectRange.name;
-        document.getElementById('create-individual-dialog-ontology-class').innerText = rangeName;
-        fetch(`/api/forms?ontologyName=${ontologyName}&targetClass=${rangeName}`)
-            .then(async function (response) {
-                let allForms = await response.json();
-                let select = document.getElementById('create-individual-form-list');
-                for (let i = 0; i < allForms.length; i++) {
-                    let option = document.createElement('option');
-                    option.value = allForms[i].formName;
-                    option.text = allForms[i].formName;
-                    select.add(option);
-                }
-            });
-        const dialog = document.querySelector('#add-individual-dialog');
-        dialog.showModal();
-    }
-
     function createIndividual() {
         if (document.getElementById("create-individual-dialog-option-1").checked) {
             // Empty individual
             let individualName = document.getElementById("create-individual-name").value;
             let className = document.getElementById('create-individual-dialog-ontology-class').innerText
+            let classUri = document.getElementById('create-individual-dialog-ontology-uri').innerText
             if (individualName === '') {
                 alert('Individual name cannot be empty');
                 return;
             }
-            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}`, {
+            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}?classIri=${encodeURIComponent(classUri)}`, {
                 method: 'POST',
             }).then(() => {
                 let draftName = document.getElementById('instanceName').value;
@@ -483,7 +467,7 @@
         const className = currentFormElement.ontologyProperty.objectRange.name;
         const maximumValues = currentFormElement.maximumValues;
 
-        promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals?restrictionDomain=${encodeURIComponent(targetClass.uri)}&restrictionProperty=${encodeURIComponent(currentFormElement.ontologyProperty.uri)}`)
+        promises.push(fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals?restrictionDomain=${encodeURIComponent(targetClass.uri)}&restrictionProperty=${encodeURIComponent(currentFormElement.ontologyProperty.uri)}&classIri=${encodeURIComponent(currentFormElement.ontologyProperty.objectRange.uri)}`)
             .then(async function (response) {
                 let allIndividuals = await response.json();
                 $('#' + fieldId).selectize({

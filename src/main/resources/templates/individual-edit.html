@@ -108,7 +108,7 @@
                         let individuals;
                         if (prop.objectRange) {
                             individuals = await fetch("/api/ontologies/" + ontology.name + "" +
-                                "/classes/" + prop.objectRange.name + "/individuals").then(response => response.json());
+                                "/classes/" + prop.objectRange.name + "/individuals?classIri=" + encodeURIComponent(prop.objectRange.uri)).then(response => response.json());
                             rangeField.value = prop.objectRange.name;
                         } else {
                             individuals = await fetch("/api/ontologies/" + ontology.name + "/individuals").
@@ -264,7 +264,7 @@
     saveButton.addEventListener('click', function () {
         JsLoadingOverlay.show();
         const formJson = formDataToJSON();
-        fetch(`/api/ontologies/${ontology.name}/individuals/${individual.name}`, {
+        fetch(`/api/ontologies/${ontology.name}/individuals/${individual.name}?individualUri=${encodeURIComponent(individual.uri)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

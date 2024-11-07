@@ -157,9 +157,8 @@ public class OntologyContentService {
     }
 
     private List<SetProperty> getSetProperties(Dataset dataset, String individualUri, String ontologyName) {
-        // TODO: Testen
         List<SetProperty> setProperties = new ArrayList<>();
-        var individual = individualService.getOntIndividualByIri(dataset, ontologyName, individualUri);
+        var individual = individualService.getIndividualByIri(dataset, ontologyName, individualUri);
         individual.listProperties().forEachRemaining(
                 stmt -> {
                     if (stmt.getPredicate().getLocalName().equals("type"))
@@ -167,8 +166,8 @@ public class OntologyContentService {
                     if (generalTDBService.checkIfAnnotationProperty(dataset, ontologyName, stmt.getPredicate().getURI()))
                         return;
                     var setProperty = new SetProperty();
-                    var ontClass = new OntologyClass(individual.ontClass().get().getLocalName(),
-                            individual.ontClass().get().getURI());
+                    var ontClass = new OntologyClass(individual.getOntClass().getLocalName(),
+                            individual.getOntClass().getURI());
                     var isObjectProperty = generalTDBService.checkIfObjectProperty(dataset, ontologyName,
                             stmt.getPredicate().getURI());
                     setProperty.setProperty(new OntologyProperty(
@@ -329,8 +328,9 @@ public class OntologyContentService {
     }
 
     public OntologyClass addNewClass(String ontologyName, String className,
-                                     String superClassUri) {
+                                     String superClass) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+            var superClassUri = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, superClass);
             var uri = generalTDBService.getOntologyURIByOntologyName(connection.getDataset(), ontologyName)
                     + "#" + className;
             var newClass = connection.getModel().createClass(uri);
