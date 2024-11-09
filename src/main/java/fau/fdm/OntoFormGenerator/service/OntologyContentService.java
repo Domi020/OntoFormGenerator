@@ -114,7 +114,6 @@ public class OntologyContentService {
         }
     }
 
-    //TODO: prüfen: bekommt man so alle Individuals?? => v.a. Superclass?
     public List<Individual> getAllIndividualsOfClass(String ontologyName, String classIri) {
         List<Individual> individuals = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
