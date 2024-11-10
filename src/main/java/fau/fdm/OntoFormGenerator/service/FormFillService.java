@@ -1,6 +1,9 @@
 package fau.fdm.OntoFormGenerator.service;
 
 import com.google.gson.Gson;
+import fau.fdm.OntoFormGenerator.data.FormField;
+import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.SetField;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
@@ -128,6 +131,43 @@ public class FormFillService {
         }
     }
 
+    public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
+                                                           String individualName) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
+            var gson = new Gson();
+            var draftMap = gson.fromJson(draft.getString(), Map.class);
+            var formFields = new ArrayList<FormField>();
+            var fields = (Map) draftMap.get("additionalFields");
+            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            // var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
+            //         "forms", individual, "targetsClass");
+            for (var field : fields.keySet()) {
+                var fieldName = (String) field;
+
+                var property = propertyService.getPropertyFromOntology(connection.getDataset(), ontologyName, fieldName);
+                var isObjectProperty = generalTDBService.checkIfObjectProperty(connection.getDataset(), ontologyName, property.getURI());
+                if (isObjectProperty) {
+                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
+                    var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                    formFields.add(new FormField(
+                            new OntologyProperty(fieldName,
+                                    new OntologyClass(null, null), property.getURI(),
+                                    true, objectRange, null), "ObjectSelect", fieldName,
+                            1, 1, true));
+                } else {
+                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
+                    formFields.add(new FormField(
+                            new OntologyProperty(fieldName, new OntologyClass(null, null), property.getURI(),
+                                    false, null, dataRangeProp.getLocalName()),
+                            getFormType(dataRangeProp.getLocalName()), fieldName, 1, 1, true));
+                }
+            }
+            return formFields;
+        }
+    }
+
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
@@ -217,4 +257,27 @@ public class FormFillService {
         }
     }
     //TODO: import-Vorgang prüfen
+
+    private String getFormType(String datatype) {
+        switch (datatype) {
+            case "string" -> {
+                return "Input";
+            }
+            case "boolean" -> {
+                return "Select";
+            }
+            case "date" -> {
+                return "Date";
+            }
+            case "dateTime", "dateTimeStamp" -> {
+                return "Datetime";
+            }
+            case "int", "integer" -> {
+                return "Number";
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
 }

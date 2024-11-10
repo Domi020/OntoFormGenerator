@@ -144,7 +144,7 @@ public class FormOverviewService {
             if (isDraft == null || !isDraft.getBoolean()) continue;
             try {
                 result.add(new Individual(individual.getLocalName(),
-                        propertyService.getLabelOfIndividual(dataset, ontologyName, individual.getURI()),
+                        propertyService.getLabelOfIndividual(dataset, "forms", individual.getURI()),
                         individual.getURI(),
                         new OntologyClass("test", "test"), true));
             } catch (NullPointerException ignored) {}

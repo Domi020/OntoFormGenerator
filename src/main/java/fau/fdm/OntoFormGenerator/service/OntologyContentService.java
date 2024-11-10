@@ -334,7 +334,6 @@ public class OntologyContentService {
                     + "#" + className;
             var newClass = connection.getModel().createClass(uri);
             if (superClassUri != null) {
-                //TODO: TESTEN
                 newClass.addSuperClass(connection.getModel().getOntClass(superClassUri));
             }
             connection.commit();
@@ -376,7 +375,7 @@ public class OntologyContentService {
                 }
             }
             var ontModel = connection.getModel();
-            var domainClass = ontModel.getOntClass(individualService.findIriOfClass(connection.getDataset(), ontologyName, domain));
+            var domainClass = ontModel.getOntClass(domain);
             OntResource fullRange;
             var isUsedDefinedProp = ontModel.getProperty(IS_USER_DEFINED);
             var rdfsComment = ontModel.getProperty(RDFS_COMMENT);

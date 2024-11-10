@@ -177,7 +177,6 @@ public class OntologyController {
 
         try {
             var isObjectProperty = (boolean) body.get("isObjectProperty");
-            //TODO: TESTEN
             var domain = (String) ((HashMap) body.get("domain")).get("uri");
             var range = (String) body.get("range");
             var propDescription = (String) body.get("propDescription");

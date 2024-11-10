@@ -49,42 +49,7 @@ public class FormEditorService {
         }
     }
 
-    public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
-                                                           String individualName) {
-        // TODO: properly add maximumValues and required to drafts
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
-            var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
-            var gson = new Gson();
-            var draftMap = gson.fromJson(draft.getString(), Map.class);
-            var formFields = new ArrayList<FormField>();
-            var fields = (Map) draftMap.get("additionalFields");
-            // var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
-            //         "forms", individual, "targetsClass");
-            for (var field : fields.keySet()) {
-                var fieldName = (String) field;
 
-                var property = propertyService.getPropertyFromOntology(connection.getDataset(), ontologyName, fieldName);
-                var isObjectProperty = generalTDBService.checkIfObjectProperty(connection.getDataset(), ontologyName, property.getURI());
-                if (isObjectProperty) {
-                    var objectRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
-                    var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
-                    formFields.add(new FormField(
-                            new OntologyProperty(fieldName,
-                                    new OntologyClass(null, null), property.getURI(),
-                                    true, objectRange, null), "ObjectSelect", fieldName,
-                            1, 1, true));
-                } else {
-                    var dataRangeProp = propertyService.getPropertyFromOntologyByIRI(connection.getDataset(), ontologyName, property.getURI()).getRange();
-                    formFields.add(new FormField(
-                            new OntologyProperty(fieldName, new OntologyClass(null, null), property.getURI(),
-                                    false, null, dataRangeProp.getLocalName()),
-                            getFormType(dataRangeProp.getLocalName()), fieldName, 1, 1, true));
-                }
-            }
-            return formFields;
-        }
-    }
 
     public List<FormField> getAllFormElementsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {

@@ -87,7 +87,7 @@ public class RestController {
 
         model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
-        model.addAttribute("additionalElements", formEditorService.getAllAdditionalElementsOfDraft(form,
+        model.addAttribute("additionalElements", formFillService.getAllAdditionalElementsOfDraft(form,
                 ontology.getName(), individualName));
 
         model.addAttribute("setElements", formFillService.getSetFieldsByDraft(form, individualName,

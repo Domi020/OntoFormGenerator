@@ -78,6 +78,19 @@ public class PropertyService {
         }
     }
 
+    public Resource getObjectPropertyValueFromIndividual(Dataset dataset,
+                                                         String ontologyName,
+                                                         Resource domainIndividual,
+                                                         String propertyName) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getPropertyResourceValue(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop == null) {
+            return null;
+        } else {
+            return prop.asResource();
+        }
+    }
+
     public boolean checkIfPropertyValueExists(Dataset dataset,
                                               String ontologyName,
                                               OntIndividual domainIndividual,
