@@ -157,12 +157,23 @@ public class FormOverviewService {
 
     public void deleteForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
-            for (var draft : getAllDraftsOfForm(connection.getDataset(), formName)) {
-                individualService.deleteIndividualByIri(connection.getDataset(), "forms", draft.getIri());
-            }
-            individualService.deleteIndividual(connection.getDataset(), "forms", formName);
+            deleteForm(connection.getDataset(), formName);
             connection.commit();
         }
+    }
+
+    public void deleteForm(Dataset dataset, String formName) {
+        for (var draft : getAllDraftsOfForm(dataset, formName)) {
+            individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
+        }
+        var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
+                "forms", individualService.getIndividualByString(dataset, "forms", formName),
+                "hasFormElement");
+        for (var formElement : formElements) {
+            individualService.deleteIndividualByIri(dataset, "forms",
+                    formElement.getURI());
+        }
+        individualService.deleteIndividual(dataset, "forms", formName);
     }
 
     public Ontology getOntologyOfForm(String formName) {

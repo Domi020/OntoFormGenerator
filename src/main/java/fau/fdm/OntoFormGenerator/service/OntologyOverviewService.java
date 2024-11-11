@@ -27,6 +27,7 @@ import java.util.List;
 public class OntologyOverviewService {
 
     private final Logger logger;
+    private final FormOverviewService formOverviewService;
 
     @Value("${ontoformgenerator.ontologies.forms}")
     private String formsIRI;
@@ -36,16 +37,18 @@ public class OntologyOverviewService {
     private final GeneralTDBService generalTDBService;
 
     @Autowired
-    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService) {
+    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, FormOverviewService formOverviewService) {
         this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
+        this.formOverviewService = formOverviewService;
     }
 
-    public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService) {
+    public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService, FormOverviewService formOverviewService) {
         this.logger = logger;
         this.individualService = null;
         this.generalTDBService = null;
+        this.formOverviewService = formOverviewService;
     }
 
     public boolean importOntology(File owlFile, String ontologyName) {
@@ -106,15 +109,18 @@ public class OntologyOverviewService {
             individualService.selectIndividualsInSPARQLQuery(dataset, "forms",
                             """
                                     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-                                        PREFIX form: <http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#>
-            
-                                        SELECT ?f WHERE {
-                                      ?f form:targetsOntology form:%s .
-                                        }
-                                    """.formatted(ontologyName))
-                    .forEach(individual -> individualService.deleteIndividual(dataset, "forms",
-                            individual.getLocalName()));
+                                    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                                    PREFIX ont: <http://www.ontoformgenerator.de/ontologies/>
+                                    PREFIX form: <http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#>
+                                              \s
+                                    SELECT ?f WHERE {
+                                    	?f form:targetsOntology ont:%s .
+                                    }
+                                   \s
+                                   \s""".formatted(ontologyName))
+                    .forEach(form -> {
+                        if (form != null) formOverviewService.deleteForm(connection.getDataset(), form.getLocalName());
+                    });
             var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
             individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
             connection.commit();

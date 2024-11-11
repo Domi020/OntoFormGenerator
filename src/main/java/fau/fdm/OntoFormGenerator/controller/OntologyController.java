@@ -240,7 +240,6 @@ public class OntologyController {
         ontologyContentService.deleteIndividual(ontologyName, individualUri);
         return loadIndexPage(model);
     }
-    // TODO: Generell bei allen Löschvorgängen prüfen, ob alle Rückstände (FormElements, etc.) gelöscht werden
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/restrictions", method = RequestMethod.GET)
     public ResponseEntity<List<Constraint>> getConstraints(@PathVariable String ontologyName,
