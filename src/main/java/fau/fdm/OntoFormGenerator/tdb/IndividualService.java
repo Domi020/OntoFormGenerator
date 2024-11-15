@@ -1,14 +1,9 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
-import org.apache.jena.ontapi.OntModelFactory;
-import org.apache.jena.ontapi.OntSpecification;
-import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.*;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.reasoner.Reasoner;
-import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,43 +33,39 @@ public class IndividualService {
         this.generalTDBService = generalTDBService;
     }
 
-    private org.apache.jena.ontapi.model.OntModel getOntModel(Model model) {
-        return OntModelFactory.createModel(model.getGraph(), OntSpecification.OWL2_DL_MEM);
-    }
-
-    public List<OntIndividual> getAllIndividualsOfClass(Dataset dataset,
+    public List<Individual> getAllIndividualsOfClass(Dataset dataset,
                                                         String ontologyName,
                                                         String className) {
-        List<OntIndividual> individuals = new ArrayList<>();
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        List<Individual> individuals = new ArrayList<>();
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, className);
         var ontClass = ontModel.getOntClass(classURI);
-        ontModel.individuals().filter(individual -> individual.hasOntClass(ontClass, true))
-                .forEach(individuals::add);
+        ontModel.listIndividuals().filterKeep(individual -> individual.hasOntClass(ontClass, true))
+                .forEach(ind -> individuals.add(ind));
         return individuals;
     }
 
-    public OntIndividual addIndividual(Dataset dataset,
+    public Individual addIndividual(Dataset dataset,
                                     String ontologyName,
                                     String className,
                                     String individualName) {
         var model = dataset.getNamedModel(ontologyName);
-        var ontModel = getOntModel(model);
+        var ontModel = generalTDBService.getOntModel(model);
         var ontClass = ontModel.getOntClass(baseIRI + "/" + ontologyName + "#" + className);
         return ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
     }
 
-    public OntIndividual addIndividual(Dataset dataset,
+    public Individual addIndividual(Dataset dataset,
                                     String className,
                                     String individualName) {
         return addIndividual(dataset, "forms", className, individualName);
     }
 
-    public OntIndividual addIndividualWithURI(Dataset dataset,
+    public Individual addIndividualWithURI(Dataset dataset,
                                               String className,
                                               String URI) {
         var model = dataset.getNamedModel("forms");
-        var ontModel = getOntModel(model);
+        var ontModel = generalTDBService.getOntModel(model);
         var ontClass = ontModel.getOntClass(baseIRI + "/forms#" + className);
         return ontModel.createIndividual(URI, ontClass);
     }
@@ -82,36 +73,34 @@ public class IndividualService {
     public void deleteIndividual(Dataset dataset,
                                  String ontologyName,
                                  String individualName) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName).remove();
     }
 
     public void deleteIndividualByIri(Dataset dataset,
                                       String ontologyName,
                                       String iri) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         ontModel.getIndividual(iri).remove();
     }
 
-    public OntIndividual getIndividualByString(Dataset dataset,
+    public Individual getIndividualByString(Dataset dataset,
                                             String ontologyName,
                                             String individualName) {
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
     }
 
-    public OntIndividual getOntIndividualByIri(Dataset dataset,
+    public Individual getOntIndividualByIri(Dataset dataset,
                                                String iri) {
-        var ontModel = getOntModel(dataset.getNamedModel("forms"));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel("forms"));
         return ontModel.getIndividual(iri);
     }
 
-    public OntIndividual getOntIndividualByIri(Dataset dataset,
+    public Individual getOntIndividualByIri(Dataset dataset,
                                                String ontologyName,
                                                String iri) {
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         return ontModel.getIndividual(iri);
     }
 
@@ -123,9 +112,9 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
-    public OntIndividual getIndividualByIri(Dataset dataset,
+    public Individual getIndividualByIri(Dataset dataset,
                                                String iri) {
-        var ontModel = getOntModel(dataset.getNamedModel("forms"));
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel("forms"));
         return ontModel.getIndividual(iri);
     }
 
@@ -150,30 +139,15 @@ public class IndividualService {
         return !filtered.hasNext();
     }
 
-    public OntIndividual findOntIndividualInOntology(Dataset dataset,
+    public Individual findOntIndividualInOntology(Dataset dataset,
                                                String ontologyName,
                                                String individualName) {
-        var ontModel = getOntModel(dataset.getNamedModel(ontologyName));
-        return ontModel.individuals().filter(individual -> individual.getLocalName().equals(individualName)).findFirst().get();
-    }
-
-    public OntIndividual getOrAddIndividualByString(Dataset dataset,
-                                                    String iri,
-                                                    String className) {
-        var individual = getOntIndividualByIri(dataset, iri);
-        if (individual == null) {
-            individual = addIndividualWithURI(dataset, className, iri);
-        }
-        return individual;
-    }
-
-    public String findIriOfClass(Dataset dataset, String className) {
-        return findIriOfClass(dataset, "forms", className);
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
     }
 
     public String findIriOfClass(Dataset dataset, String ontologyName, String className) {
-        OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
-                dataset.getNamedModel(ontologyName));
+        OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         var classIterator = ontModel.listClasses().filterKeep(ontClass -> ontClass.getLocalName() != null &&
                 ontClass.getLocalName().equals(className));
         if (classIterator.hasNext()) {

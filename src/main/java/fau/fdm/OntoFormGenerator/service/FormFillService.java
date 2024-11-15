@@ -90,7 +90,7 @@ public class FormFillService {
             json.append("}\n");
             json.append("}");
 
-            OntIndividual indiv = individualService.getIndividualByIri(dataset, individualURI);
+            var indiv = individualService.getIndividualByIri(dataset, individualURI);
             boolean alreadyCreated = true;
             if (indiv == null) {
                 indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
@@ -236,7 +236,7 @@ public class FormFillService {
                     }
                 }
             }
-            OntIndividual indiv = individualService.getOntIndividualByIri(connection.getDataset(), individual.getURI());
+            var indiv = individualService.getOntIndividualByIri(connection.getDataset(), individual.getURI());
             if (indiv == null) {
                 // no draft exists
                 individualService.addIndividualWithURI(connection.getDataset(), "Individual", individual.getURI());

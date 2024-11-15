@@ -8,6 +8,7 @@ import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontapi.model.OntIndividual;
+import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ public class FormEditorService {
             for (var formElement : formElements) {
                 var fieldName = formElement.getLocalName();
                 var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
-                var fieldType = formElementIndividual.ontClass().get().getLocalName();
+                var fieldType = formElementIndividual.getOntClass().getLocalName();
                 var isObjectProperty = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "isObjectProperty").getBoolean();
                 var position = propertyService.getDatatypePropertyValueFromIndividual(dataset,
@@ -157,7 +158,7 @@ public class FormEditorService {
                 var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
                 var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
                         property.getURI());
-                OntIndividual field;
+                Individual field;
                 if (formInput.get("isObjectProperty").get(i).equals("true")) {
                     // object property
                     field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
