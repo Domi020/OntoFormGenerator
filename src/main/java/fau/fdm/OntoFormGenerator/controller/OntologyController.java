@@ -103,10 +103,7 @@ public class OntologyController {
     public ResponseEntity<List<OntologyProperty>> getAllPropertiesFromDomain(@PathVariable String ontologyName,
                                                                              @PathVariable String className,
                                                                              @RequestParam(value = "query", required = false) String query,
-                                                                             @RequestParam(value = "classIri", required = false) String iri) {
-        if (iri == null) {
-            iri = generalTDBService.getClassURIInOntology(ontologyName, className);
-        }
+                                                                             @RequestParam(value = "classIri") String iri) {
         if (query != null) {
             return new ResponseEntity<>(ontologyContentService.queryProperties(ontologyName, iri, query),
                     HttpStatus.OK);
@@ -126,10 +123,7 @@ public class OntologyController {
                                                                                required = false) String restrictionDomain,
                                                                        @RequestParam(value = "restrictionProperty",
                                                                                required = false) String restrictionProperty,
-                                                                       @RequestParam(value = "classIri", required = false) String iri) {
-        if (iri == null) {
-            iri = generalTDBService.getClassURIInOntology(ontologyName, className);
-        }
+                                                                       @RequestParam(value = "classIri") String iri) {
         var individuals = ontologyContentService.getAllIndividualsOfClass(ontologyName, iri);
         if (!withImportedIndividuals) {
             individuals.removeIf(Individual::isImported);
@@ -160,10 +154,7 @@ public class OntologyController {
     public ResponseEntity<Boolean> addEmptyIndividual(@PathVariable String ontologyName,
                                                       @PathVariable String className,
                                                       @PathVariable String individualName,
-                                                      @RequestParam(value = "classURI", required = false) String classURI) {
-        if (classURI == null) {
-            classURI = generalTDBService.getClassURIInOntology(ontologyName, className);
-        }
+                                                      @RequestParam(value = "classURI") String classURI) {
         return new ResponseEntity<>(ontologyContentService.addEmptyIndividual(ontologyName, classURI, individualName),
                 HttpStatus.OK);
     }

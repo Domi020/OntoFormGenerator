@@ -1,13 +1,11 @@
 package fau.fdm.OntoFormGenerator.service;
 
-import com.google.gson.Gson;
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Resource;
@@ -19,7 +17,6 @@ import org.springframework.util.MultiValueMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class FormEditorService {
@@ -42,7 +39,7 @@ public class FormEditorService {
 
     public OntologyClass getSelectedEditorClass(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
-            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var classValue = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
                     "forms", form, "targetsClass");
             if (classValue == null) return null;
@@ -55,7 +52,7 @@ public class FormEditorService {
     public List<FormField> getAllFormElementsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
             var dataset = connection.getDataset();
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                     "forms", form, "hasFormElement");
             var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
@@ -63,7 +60,7 @@ public class FormEditorService {
             List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size() + 50, null));
             for (var formElement : formElements) {
                 var fieldName = formElement.getLocalName();
-                var formElementIndividual = individualService.getIndividualByIri(dataset, formElement.getURI());
+                var formElementIndividual = individualService.getIndividualByIri(dataset, "forms", formElement.getURI());
                 var fieldType = formElementIndividual.getOntClass().getLocalName();
                 var isObjectProperty = propertyService.getDatatypePropertyValueFromIndividual(dataset,
                         "forms", formElementIndividual, "isObjectProperty").getBoolean();
@@ -108,18 +105,18 @@ public class FormEditorService {
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
             var dataset = connection.getDataset();
-            var form = individualService.getIndividualByString(dataset, "forms", formName);
+            var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
                     form, "targetsOntology");
 
             // Set targetsClass
-            var classIri = individualService.findIriOfClass(dataset, formInput.getFirst("ontologyName"),
+            var classIri = generalTDBService.getClassURIInOntology(dataset, formInput.getFirst("ontologyName"),
                     formInput.getFirst("ontologyClass"));
-            var classIndividual = individualService.getOntIndividualByIri(dataset, classIri);
+            var classIndividual = individualService.getIndividualByIri(dataset, "forms", classIri);
             if (classIndividual == null) {
-                classIndividual = individualService.addIndividualWithURI(dataset, "TargetClass", classIri);
+                classIndividual = individualService.addIndividualWithUniqueIRI(dataset, "TargetClass", classIri);
                 propertyService.addObjectPropertyToIndividual(dataset, "forms",
-                        individualService.getOntIndividualByIri(dataset, ontology.getURI()),
+                        individualService.getIndividualByIri(dataset, "forms", ontology.getURI()),
                         "hasTargetClass", classIndividual.getURI());
             }
             form.addProperty(
@@ -149,25 +146,25 @@ public class FormEditorService {
 
                 // Remove old data
                 if (foundElement != null) {
-                    var oldField = individualService.getIndividualByIri(dataset, foundElement.getURI());
-                    individualService.deleteIndividual(dataset, "forms", oldField.getLocalName());
+                    var oldField = individualService.getIndividualByIri(dataset, "forms", foundElement.getURI());
+                    individualService.deleteIndividualByLocalName(dataset, "forms", oldField.getLocalName());
                 }
 
                 // set targetsField for each field
                 var propertyName = formInput.get("propertyName").get(i);
                 var property = propertyService.getPropertyFromOntology(dataset, ontology.getLocalName(), propertyName);
-                var targetField = individualService.addIndividualWithURI(dataset, "TargetField",
+                var targetField = individualService.addIndividualWithUniqueIRI(dataset, "TargetField",
                         property.getURI());
                 Individual field;
                 if (formInput.get("isObjectProperty").get(i).equals("true")) {
                     // object property
-                    field = individualService.addIndividual(dataset, "ObjectSelect", fieldName);
+                    field = individualService.addIndividualByLocalName(dataset, "ObjectSelect", fieldName);
                     propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                             field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
                 } else {
                     // datatype property
                     var fieldType = getFormType(formInput.get("propertyRange").get(i));
-                    field = individualService.addIndividual(dataset, fieldType, fieldName);
+                    field = individualService.addIndividualByLocalName(dataset, fieldType, fieldName);
                     propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                             field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
                 }
@@ -220,7 +217,7 @@ public class FormEditorService {
             // delete all old form elements that are not in the new form
             for (var alreadyInsertedElement : alreadyInsertedElements) {
                 if (alreadyInsertedElement == null) continue;
-                individualService.deleteIndividual(dataset, "forms", alreadyInsertedElement
+                individualService.deleteIndividualByLocalName(dataset, "forms", alreadyInsertedElement
                         .getLocalName());
             }
             connection.commit();

@@ -385,7 +385,7 @@ public class OntologyContentService {
                 property = ontModel.createObjectProperty(uri);
                 var prop = (ObjectProperty) property;
                 prop.addDomain(domainClass);
-                fullRange = ontModel.getOntClass(individualService.findIriOfClass(connection.getDataset(), ontologyName, range));
+                fullRange = ontModel.getOntClass(generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, range));
                 prop.addRange(fullRange);
             } else {
                 property = ontModel.createDatatypeProperty(uri);
@@ -418,7 +418,7 @@ public class OntologyContentService {
 
     public List<OntologyClass> getTargetClasses(String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            var ontology = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", ontologyName);
+            var ontology = individualService.findIndividualInOntology(connection.getDataset(), "forms", ontologyName);
             var targetClasses = propertyService.getMultipleObjectPropertyValuesFromIndividual(connection.getDataset(), "forms",
                     ontology, "hasTargetClass");
             List<OntologyClass> classes = new ArrayList<>();

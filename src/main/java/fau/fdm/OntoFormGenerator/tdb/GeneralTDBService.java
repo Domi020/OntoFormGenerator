@@ -4,9 +4,16 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.tdb2.TDB2Factory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import org.apache.jena.rdf.model.ModelFactory;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 
 /**
@@ -18,6 +25,9 @@ import org.apache.jena.rdf.model.ModelFactory;
  */
 @Service
 public class GeneralTDBService {
+
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
 
     /**
      * Factory method to construct an ontology model from a general unspecified model extracted from TDB.
@@ -138,4 +148,34 @@ public class GeneralTDBService {
         var namedProperty = ontmodel.listAnnotationProperties().filterKeep(ontProperty -> ontProperty.getURI().equals(propertyURI));
         return namedProperty.hasNext();
     }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void initFormOntology() {
+        Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+        dataset.begin(ReadWrite.WRITE);
+        try {
+            Model model = dataset.getNamedModel("forms");
+            if (model.isEmpty()) {
+                try {
+                    OntModel m = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM);
+                    var fis = new FileInputStream("owl/forms.rdf");
+                    m.read(fis, null);
+                    model = m;
+                    dataset.addNamedModel("forms", model);
+                } catch (FileNotFoundException e) {
+                    // logger.error("Error reading forms ontology file while importing new ontology", e);
+                    dataset.abort();
+                    dataset.end();
+                    System.exit(1);
+                }
+            }
+            dataset.commit();
+        } catch (Exception e) {
+            dataset.abort();
+        } finally {
+            dataset.end();
+        }
+    }
+
+    //TODO: Logging
 }

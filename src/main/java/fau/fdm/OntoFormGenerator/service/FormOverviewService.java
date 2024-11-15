@@ -54,18 +54,18 @@ public class FormOverviewService {
                            String targetClass) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
             var dataset = connection.getDataset();
-            var individual = individualService.addIndividual(dataset, "Form", formName);
+            var individual = individualService.addIndividualByLocalName(dataset, "Form", formName);
             propertyService.addObjectPropertyToIndividual(dataset,
                     "forms", individual, "targetsOntology", ontologyURI);
 
             // Set targetsClass
-            var classIri = individualService.findIriOfClass(dataset, ontologyName, targetClass);
+            var classIri = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetClass);
             var ontologyUri = generalTDBService.getOntologyURIByOntologyName(dataset, ontologyName);
-            var classIndividual = individualService.getOntIndividualByIri(dataset, classIri);
+            var classIndividual = individualService.getIndividualByIri(dataset, "forms", classIri);
             if (classIndividual == null) {
-                classIndividual = individualService.addIndividualWithURI(dataset, "TargetClass", classIri);
+                classIndividual = individualService.addIndividualWithUniqueIRI(dataset, "TargetClass", classIri);
                 propertyService.addObjectPropertyToIndividual(dataset, "forms",
-                        individualService.getOntIndividualByIri(dataset, ontologyUri),
+                        individualService.getIndividualByIri(dataset, "forms", ontologyUri),
                         "hasTargetClass", classIndividual.getURI());
             }
             individual.addProperty(
@@ -98,7 +98,7 @@ public class FormOverviewService {
     public List<Individual> getAllIndividualsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
             var dataset = connection.getDataset();
-            var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+            var formIndividual = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                     "forms", formIndividual, "created");
             var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
@@ -132,7 +132,7 @@ public class FormOverviewService {
     }
 
     private List<Individual> getAllDraftsOfForm(Dataset dataset, String formName) {
-        var formIndividual = individualService.getIndividualByString(dataset, "forms", formName);
+        var formIndividual = individualService.getIndividualByLocalName(dataset, "forms", formName);
         var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
                 "forms", formIndividual, "targetsOntology").getLocalName();
         var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
@@ -167,18 +167,18 @@ public class FormOverviewService {
             individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
         }
         var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
-                "forms", individualService.getIndividualByString(dataset, "forms", formName),
+                "forms", individualService.getIndividualByLocalName(dataset, "forms", formName),
                 "hasFormElement");
         for (var formElement : formElements) {
             individualService.deleteIndividualByIri(dataset, "forms",
                     formElement.getURI());
         }
-        individualService.deleteIndividual(dataset, "forms", formName);
+        individualService.deleteIndividualByLocalName(dataset, "forms", formName);
     }
 
     public Ontology getOntologyOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
-            var formIndividual = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            var formIndividual = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var ontologyIndividual = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
                     "forms", formIndividual, "targetsOntology");
             return new Ontology(ontologyIndividual.getLocalName(), ontologyIndividual.getURI());

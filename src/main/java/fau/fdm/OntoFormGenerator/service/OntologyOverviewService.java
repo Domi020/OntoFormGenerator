@@ -73,7 +73,7 @@ public class OntologyOverviewService {
                 return false;
             }
             dataset.addNamedModel(ontologyName, newModel);
-            var ontIndiv = individualService.addIndividualWithURI(dataset, "Ontology", newOntURI);
+            var ontIndiv = individualService.addIndividualWithUniqueIRI(dataset, "Ontology", newOntURI);
             connection.commit();
             logger.info("Ontology {} imported successfully", ontologyName);
             return true;

@@ -10,13 +10,11 @@ import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -90,10 +88,10 @@ public class FormFillService {
             json.append("}\n");
             json.append("}");
 
-            var indiv = individualService.getIndividualByIri(dataset, individualURI);
+            var indiv = individualService.getIndividualByIri(dataset, "forms", individualURI);
             boolean alreadyCreated = true;
             if (indiv == null) {
-                indiv = individualService.addIndividualWithURI(dataset, "Individual", individualURI);
+                indiv = individualService.addIndividualWithUniqueIRI(dataset, "Individual", individualURI);
                 alreadyCreated = false;
             }
 
@@ -101,7 +99,7 @@ public class FormFillService {
                 propertyService.removePropertyValueFromIndividual(dataset, "forms", indiv,
                         "hasDraft");
             } else {
-                var form = individualService.getIndividualByString(dataset, "forms", formName);
+                var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
                 propertyService.addObjectPropertyToIndividual(dataset, "forms", form,
                         "created", individualURI);
                 propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
@@ -115,8 +113,8 @@ public class FormFillService {
 
     public List<SetField> getSetFieldsByDraft(String formName, String individualName, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
-            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
+            var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
@@ -134,13 +132,13 @@ public class FormFillService {
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
-            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var formFields = new ArrayList<FormField>();
             var fields = (Map) draftMap.get("additionalFields");
-            var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+            var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             // var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
             //         "forms", individual, "targetsClass");
             for (var field : fields.keySet()) {
@@ -171,7 +169,7 @@ public class FormFillService {
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
-            var individual = individualService.findOntIndividualInOntology(connection.getDataset(), "forms", individualName);
+            var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
             var draftMap = gson.fromJson(draft.getString(), Map.class);
@@ -236,11 +234,11 @@ public class FormFillService {
                     }
                 }
             }
-            var indiv = individualService.getOntIndividualByIri(connection.getDataset(), individual.getURI());
+            var indiv = individualService.getIndividualByIri(connection.getDataset(), "forms", individual.getURI());
             if (indiv == null) {
                 // no draft exists
-                individualService.addIndividualWithURI(connection.getDataset(), "Individual", individual.getURI());
-                var form = individualService.getIndividualByString(connection.getDataset(), "forms", formName);
+                individualService.addIndividualWithUniqueIRI(connection.getDataset(), "Individual", individual.getURI());
+                var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
                 propertyService.addObjectPropertyToIndividual(connection.getDataset(), "forms", form,
                         "created", individual.getURI());
             } else {
