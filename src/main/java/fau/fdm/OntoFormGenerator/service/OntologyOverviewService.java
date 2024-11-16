@@ -36,13 +36,15 @@ public class OntologyOverviewService {
     private final IndividualService individualService;
 
     private final GeneralTDBService generalTDBService;
+    private PropertyService propertyService;
 
     @Autowired
-    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, FormOverviewService formOverviewService) {
+    public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, FormOverviewService formOverviewService, PropertyService propertyService) {
         this.generalTDBService = generalTDBService;
         this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
         this.individualService = individualService;
         this.formOverviewService = formOverviewService;
+        this.propertyService = propertyService;
     }
 
     public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService, FormOverviewService formOverviewService) {
@@ -58,7 +60,7 @@ public class OntologyOverviewService {
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
             var newModel = OntModelFactory.createModel(newOntURI, GraphRepository.createGraphDocumentRepositoryMem());
             var ontModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
-            var formModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
+            // var formModel = OntModelFactory.createModel(OntSpecification.OWL2_DL_MEM);
             // var ontology = newModel.setID(newOntURI);
 
             try {
@@ -66,15 +68,17 @@ public class OntologyOverviewService {
                 ontModel.read(fis, null);
                 newModel.addImport(ontModel);
                 fis.close();
-                var formFis = new FileInputStream("owl/forms.rdf");
-                formModel.read(formFis, null);
-                newModel.addImport(formModel);
+                // var formFis = new FileInputStream("owl/forms.rdf");
+                // formModel.read(formFis, null);
+                // newModel.addImport(formModel);
             } catch (Exception e) {
                 logger.error("Error reading file while importing new ontology", e);
                 throw e;
             }
             dataset.addNamedModel(ontologyName, newModel);
             var ontIndiv = individualService.addIndividualWithUniqueIRI(dataset, "Ontology", newOntURI);
+            propertyService.createAnnotationProperty(dataset, "general", "isUserDefined", "isUserDefined",
+                    "Indicates whether this entity was created by OntoFormGenerator.");
             connection.commit();
             logger.info("Ontology {} imported successfully", ontologyName);
             return true;

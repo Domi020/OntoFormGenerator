@@ -120,7 +120,16 @@ public class PropertyService {
                 datatype);
     }
 
-
+    public void createAnnotationProperty(Dataset dataset,
+                                         String ontologyName,
+                                         String propertyName,
+                                         String label,
+                                         String comment) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var property = ontModel.createAnnotationProperty(baseIRI + "/" + ontologyName + "#" + propertyName);
+        property.addLabel(label, null);
+        property.addComment(comment, null);
+    }
 
 
 

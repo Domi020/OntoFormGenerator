@@ -349,8 +349,7 @@ public class OntologyContentService {
         }
     }
 
-    private final String IS_USER_DEFINED = "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms" +
-            "#isUserDefined";
+    private final String IS_USER_DEFINED = "http://ontologies.ontoformgenerator.de/general#isUserDefined";
     private final String RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
 
     public OntologyProperty createNewProperty(String ontologyName, String propDescription, String propertyName,
