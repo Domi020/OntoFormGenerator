@@ -336,6 +336,8 @@ public class OntologyContentService {
             if (superClassUri != null) {
                 newClass.addSuperClass(connection.getModel().getOntClass(superClassUri));
             }
+            var isUsedDefinedProp = connection.getModel().getProperty(IS_USER_DEFINED);
+            newClass.addProperty(isUsedDefinedProp, connection.getModel().createTypedLiteral(true));
             connection.commit();
             return new OntologyClass(className, uri);
         }
