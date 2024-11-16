@@ -80,7 +80,7 @@ public class OntologyController {
             return loadIndexPage(model);
         } catch (Exception e) {
             logger.error("Error importing ontology", e);
-            return loadIndexPage(model);
+            return "error/import-error";
         } finally {
             if (localFile != null) {
                 FileUtils.deleteQuietly(localFile);

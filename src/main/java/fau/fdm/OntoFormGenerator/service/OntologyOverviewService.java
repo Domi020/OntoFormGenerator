@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class OntologyOverviewService {
         this.formOverviewService = formOverviewService;
     }
 
-    public boolean importOntology(File owlFile, String ontologyName) {
+    public boolean importOntology(File owlFile, String ontologyName) throws IOException {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
             var dataset = connection.getDataset();
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
@@ -70,7 +71,7 @@ public class OntologyOverviewService {
                 newModel.addImport(formModel);
             } catch (Exception e) {
                 logger.error("Error reading file while importing new ontology", e);
-                return false;
+                throw e;
             }
             dataset.addNamedModel(ontologyName, newModel);
             var ontIndiv = individualService.addIndividualWithUniqueIRI(dataset, "Ontology", newOntURI);
@@ -78,7 +79,8 @@ public class OntologyOverviewService {
             logger.info("Ontology {} imported successfully", ontologyName);
             return true;
         } catch (Exception e) {
-            return false;
+            logger.error("Error reading file while importing new ontology", e);
+            throw e;
         }
     }
 

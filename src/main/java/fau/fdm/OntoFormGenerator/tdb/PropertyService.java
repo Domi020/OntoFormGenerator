@@ -2,7 +2,6 @@ package fau.fdm.OntoFormGenerator.tdb;
 
 import fau.fdm.OntoFormGenerator.service.OntologyOverviewService;
 import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntProperty;
@@ -30,28 +29,8 @@ public class PropertyService {
         this.generalTDBService = generalTDBService;
     }
 
-    public Individual addObjectPropertyToIndividual(Dataset dataset,
-                                                    String ontologyName,
-                                                    Individual domainIndividual,
-                                                    String propertyName,
-                                                    String otherIndividualURI) {
-        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        var otherIndividual = ontModel.getIndividual(otherIndividualURI);
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName),
-                otherIndividual);
-        return domainIndividual;
-    }
 
-    public Individual addDatatypePropertyToIndividual(Dataset dataset,
-                                                      String ontologyName,
-                                                      Individual domainIndividual,
-                                                      String propertyName,
-                                                      String value, RDFDatatype datatype) {
-        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value,
-                datatype);
-        return domainIndividual;
-    }
+    // Retrieval methods
 
     public Literal getDatatypePropertyValueFromIndividual(Dataset dataset,
                                                           String ontologyName,
@@ -74,50 +53,6 @@ public class PropertyService {
         } else {
             return prop.asResource();
         }
-    }
-
-    public void removePropertyValueFromIndividual(Dataset dataset,
-                                                 String ontologyName,
-                                                 OntIndividual domainIndividual,
-                                                 String propertyName) {
-        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-        if (prop != null) {
-            prop.remove();
-        }
-    }
-
-    public void removePropertyValueFromIndividual(Dataset dataset,
-                                                  String ontologyName,
-                                                  Individual domainIndividual,
-                                                  String propertyName) {
-        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
-        if (prop != null) {
-            prop.remove();
-        }
-    }
-
-    public void removePropertyValueFromIndividual(Dataset dataset,
-                                                  String ontologyName,
-                                                  Individual domainIndividual,
-                                                  String propertyName,
-                                                  Object value) {
-        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        var prop = getPropertyFromOntology(dataset, ontologyName, propertyName);
-        ontModel.listStatements(domainIndividual.asResource(), prop, (RDFNode) null).forEach(
-                stmt -> {
-                    if (stmt.getObject().isLiteral()) {
-                        if (stmt.getObject().asLiteral().getValue().equals(value)) {
-                            stmt.remove();
-                        }
-                    } else {
-                        if (stmt.getObject().asResource().getLocalName().equals(value)) {
-                            stmt.remove();
-                        }
-                    }
-                }
-        );
     }
 
     public String getLabelOfIndividual(Dataset dataset,
@@ -153,6 +88,88 @@ public class PropertyService {
         OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
         return ontModel.getOntProperty(propertyIRI);
     }
+
+
+
+
+
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------------------
+
+    // Creation methods
+
+    public void addObjectPropertyToIndividual(Dataset dataset,
+                                              String ontologyName,
+                                              Individual domainIndividual,
+                                              String propertyName,
+                                              String otherIndividualURI) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var otherIndividual = ontModel.getIndividual(otherIndividualURI);
+        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName),
+                otherIndividual);
+    }
+
+    public void addDatatypePropertyToIndividual(Dataset dataset,
+                                                String ontologyName,
+                                                Individual domainIndividual,
+                                                String propertyName,
+                                                String value, RDFDatatype datatype) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        domainIndividual.addProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName), value,
+                datatype);
+    }
+
+
+
+
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------------------
+
+    // Deletion methods
+
+    public void removePropertyValueFromIndividual(Dataset dataset,
+                                                  String ontologyName,
+                                                  Individual domainIndividual,
+                                                  String propertyName) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = domainIndividual.getProperty(ontModel.getProperty(baseIRI + "/" + ontologyName + "#" + propertyName));
+        if (prop != null) {
+            prop.remove();
+        }
+    }
+
+    public void removePropertyValueFromIndividual(Dataset dataset,
+                                                  String ontologyName,
+                                                  Individual domainIndividual,
+                                                  String propertyName,
+                                                  Object value) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var prop = getPropertyFromOntology(dataset, ontologyName, propertyName);
+        ontModel.listStatements(domainIndividual.asResource(), prop, (RDFNode) null).forEach(
+                stmt -> {
+                    if (stmt.getObject().isLiteral()) {
+                        if (stmt.getObject().asLiteral().getValue().equals(value)) {
+                            stmt.remove();
+                        }
+                    } else {
+                        if (stmt.getObject().asResource().getLocalName().equals(value)) {
+                            stmt.remove();
+                        }
+                    }
+                }
+        );
+    }
+
+
+
+
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------------------
+
+    // Other methods
 
     public List<OntProperty> searchProperties(Dataset dataset, String ontologyName, String domainIri, String query) {
         OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));

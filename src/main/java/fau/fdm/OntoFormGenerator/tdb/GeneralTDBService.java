@@ -149,6 +149,9 @@ public class GeneralTDBService {
         return namedProperty.hasNext();
     }
 
+    /**
+     * Startup method to initialize the forms ontology in the TDB, if it is not already present.
+     */
     @EventListener(ApplicationReadyEvent.class)
     public void initFormOntology() {
         Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
