@@ -64,11 +64,11 @@
             newFieldFirstRow.innerHTML = `
                 <div class="mdl-textfield mdl-js-textfield property-field">
                     <label>Field name</label>
-                    <input class="mdl-textfield__input" type="text" name="fieldName">
+                    <input required class="mdl-textfield__input" type="text" name="fieldName">
                 </div>
                 <div class="property-field">
                     <label>Property</label>
-                    <select id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
+                    <select required id="prop-select-` + elements + `" class="property-select" name="propertyName"></select>
                 </div>
                 <div class="mdl-textfield mdl-js-textfield property-field">
                     <label>Range</label>
@@ -92,12 +92,12 @@
                 </div>
                 <div class="property-field" style="vertical-align: middle">
                     <div>
-                    <input id="minimum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
+                    <input required id="minimum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="minimumValues">
                     <label>Minimum values</label>
                     </div>
                     <div>
-                    <input id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
+                    <input required id="maximum-values-field-` + elements + `" class="mdl-textfield__input" type="number"
                     placeholder="1" name="maximumValues">
                     <label>Maximum values</label>
                     </div>

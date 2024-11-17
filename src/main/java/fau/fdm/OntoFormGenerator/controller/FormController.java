@@ -60,7 +60,11 @@ public class FormController {
     public String updateCreatedForm(@PathVariable String formName,
                                     @RequestBody MultiValueMap<String, String> form,
                                     Model model) {
-        formEditorService.updateForm(formName, form);
+        try {
+            formEditorService.updateForm(formName, form);
+        } catch (Exception e) {
+            return "error/formedit-samefield-error";
+        }
         return loadIndexPage(model);
     }
 

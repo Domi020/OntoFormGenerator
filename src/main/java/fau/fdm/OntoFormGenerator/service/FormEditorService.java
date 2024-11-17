@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FormEditorService {
@@ -108,6 +106,11 @@ public class FormEditorService {
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
                     form, "targetsOntology");
+
+            // Consistency check
+            if (formInput.get("fieldName").size() != formInput.get("fieldName").stream().distinct().count()) {
+                throw new RuntimeException("Field names must be unique");
+            }
 
             // Set targetsClass
             var classIri = generalTDBService.getClassURIInOntology(dataset, formInput.getFirst("ontologyName"),
@@ -223,6 +226,7 @@ public class FormEditorService {
             connection.commit();
         } catch (Exception e) {
             logger.error("Error while updating form", e);
+            throw e;
         }
     }
 

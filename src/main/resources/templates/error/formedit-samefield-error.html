@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Error</title>
+    <link rel="stylesheet" href="/material.min.css">
+    <script src="/jquery-3.7.1.min.js"></script>
+    <script src="/material.min.js"></script>
+    <style>
+        .error-container {
+            text-align: center;
+            padding: 50px;
+        }
+        .error-title {
+            font-size: 72px;
+            color: #d32f2f;
+            margin-bottom: 30px;
+        }
+        .error-message {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .home-link {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <span class="mdl-layout-title">Error with form editing</span>
+            <div class="mdl-layout-spacer"></div>
+        </div>
+    </header>
+    <main class="mdl-layout__content">
+        <div class="error-container">
+            <div class="error-title">Form edit error</div>
+            <div class="error-message">Multiple elements have the same name. Rename the form elements.</div>
+            <a href="/" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent home-link">
+                Go to Home
+            </a>
+        </div>
+    </main>
+</div>
+</body>
+</html>
