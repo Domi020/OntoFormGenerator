@@ -9,6 +9,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,7 +49,7 @@ public class FormEditorService {
 
 
     public List<FormField> getAllFormElementsOfForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, "forms")) {
             var dataset = connection.getDataset();
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
@@ -57,7 +58,7 @@ public class FormEditorService {
                     "forms", form, "targetsOntology").getLocalName();
             List<FormField> formFields = new ArrayList<>(Collections.nCopies(formElements.size() + 50, null));
             for (var formElement : formElements) {
-                var fieldName = formElement.getLocalName();
+                var fieldName = propertyService.getLabelOfIndividual(dataset, "forms", formElement.getURI());
                 var formElementIndividual = individualService.getIndividualByIri(dataset, "forms", formElement.getURI());
                 var fieldType = formElementIndividual.getOntClass().getLocalName();
                 var isObjectProperty = propertyService.getDatatypePropertyValueFromIndividual(dataset,
@@ -101,7 +102,7 @@ public class FormEditorService {
     }
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, "forms")) {
             var dataset = connection.getDataset();
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
@@ -140,7 +141,8 @@ public class FormEditorService {
                 Resource foundElement = null;
                 for (int j = 0; j < alreadyInsertedElements.size(); j++) {
                     if (alreadyInsertedElements.get(j) != null &&
-                            alreadyInsertedElements.get(j).getLocalName().equals(fieldName)) {
+                            propertyService.getLabelOfIndividual(dataset, "forms", alreadyInsertedElements.get(j).getURI())
+                                    .equals(fieldName)) {
                         foundElement = alreadyInsertedElements.get(j);
                         alreadyInsertedElements.set(j, null);
                         break;
@@ -159,18 +161,21 @@ public class FormEditorService {
                 var targetField = individualService.addIndividualWithUniqueIRI(dataset, "TargetField",
                         property.getURI());
                 Individual field;
+                var fieldUri = "http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#" + fieldName +
+                        UUID.randomUUID();
                 if (formInput.get("isObjectProperty").get(i).equals("true")) {
                     // object property
-                    field = individualService.addIndividualByLocalName(dataset, "ObjectSelect", fieldName);
+                    field = individualService.addIndividualWithUniqueIRI(dataset, "ObjectSelect", fieldUri);
                     propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                             field, "isObjectProperty", "true", XSDDatatype.XSDboolean);
                 } else {
                     // datatype property
                     var fieldType = getFormType(formInput.get("propertyRange").get(i));
-                    field = individualService.addIndividualByLocalName(dataset, fieldType, fieldName);
+                    field = individualService.addIndividualWithUniqueIRI(dataset, fieldType, fieldUri);
                     propertyService.addDatatypePropertyToIndividual(dataset, "forms",
                             field, "isObjectProperty", "false", XSDDatatype.XSDboolean);
                 }
+                field.addLabel(connection.getModel().createTypedLiteral(fieldName));
                 propertyService.addObjectPropertyToIndividual(dataset, "forms",
                         field, "targetsField", targetField.getURI());
                 propertyService.addObjectPropertyToIndividual(dataset, "forms",

@@ -98,5 +98,5 @@ public class OntologyConstraintService {
         return individuals;
     }
 
-
+    // TODO: Check for already used property/class names
 }
