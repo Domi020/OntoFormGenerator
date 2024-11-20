@@ -763,9 +763,15 @@
         const superclass = document.getElementById('add-subclass-dialog-superclass').textContent;
         fetch('/api/ontologies/' + ontologyName + '/classes/' + newClassName + '?superClass=' + superclass, {
             method: 'POST'
-        }).then(response => {
+        }).then(async response => {
             if (response.ok) {
                 location.reload();
+            } else {
+                if (response.status === 400) {
+                    alert(await response.text());
+                } else {
+                    alert('An error has occurred');
+                }
             }
         });
     }

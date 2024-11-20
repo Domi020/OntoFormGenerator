@@ -3,6 +3,8 @@ package fau.fdm.OntoFormGenerator.service;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.ValidationResult;
+import fau.fdm.OntoFormGenerator.exception.URIAlreadyExistsException;
+import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import fau.fdm.OntoFormGenerator.validation.FactValidator;
@@ -33,13 +35,15 @@ public class OntologyValidationService {
     private final PropertyService propertyService;
 
     private final RestTemplate restTemplate;
+    private final GeneralTDBService generalTDBService;
 
     @Value("${ontoformgenerator.validator.mode}")
     private ValidatorMode mode;
 
-    public OntologyValidationService(PropertyService propertyService) {
+    public OntologyValidationService(PropertyService propertyService, GeneralTDBService generalTDBService) {
         this.propertyService = propertyService;
         this.restTemplate = new RestTemplate();
+        this.generalTDBService = generalTDBService;
     }
 
     public PropertyNamingValidationResult checkNaming(String newPropertyName) {
@@ -56,6 +60,13 @@ public class OntologyValidationService {
         }
         result.setValid(true);
         return result;
+    }
+
+    public boolean checkIfURIisUsed(Dataset dataset, String ontologyName,
+                                 String URI) {
+        var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
+        var resource = ontModel.getOntResource(URI);
+        return resource != null;
     }
 
     public NamingSchemaValidationResult checkNamingSchema(Dataset dataset, String ontologyName,

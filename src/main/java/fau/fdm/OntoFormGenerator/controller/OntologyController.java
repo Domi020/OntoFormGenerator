@@ -142,11 +142,15 @@ public class OntologyController {
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}", method = RequestMethod.POST)
-    public ResponseEntity<OntologyClass> addNewClass(@PathVariable String ontologyName,
+    public ResponseEntity<?> addNewClass(@PathVariable String ontologyName,
                                                      @PathVariable String className,
                                                      @RequestParam("superClass") String superClass) {
-        return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClass),
-                HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(ontologyContentService.addNewClass(ontologyName, className, superClass),
+                    HttpStatus.OK);
+        } catch (OntologyValidationException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @RequestMapping(value = "/api/ontologies/{ontologyName}/classes/{className}/individuals/{individualName}",

@@ -254,7 +254,6 @@ public class FormFillService {
             return null;
         }
     }
-    //TODO: import-Vorgang prüfen
 
     private String getFormType(String datatype) {
         switch (datatype) {

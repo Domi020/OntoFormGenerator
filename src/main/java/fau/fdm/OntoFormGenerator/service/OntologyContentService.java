@@ -3,10 +3,7 @@ package fau.fdm.OntoFormGenerator.service;
 
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.data.Individual;
-import fau.fdm.OntoFormGenerator.exception.NamingFilterViolatedException;
-import fau.fdm.OntoFormGenerator.exception.NamingSchemaDifferentException;
-import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
-import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
+import fau.fdm.OntoFormGenerator.exception.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
@@ -327,11 +324,14 @@ public class OntologyContentService {
     }
 
     public OntologyClass addNewClass(String ontologyName, String className,
-                                     String superClass) {
+                                     String superClass) throws OntologyValidationException {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
             var superClassUri = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, superClass);
             var uri = generalTDBService.getOntologyURIByOntologyName(connection.getDataset(), ontologyName)
                     + "#" + className;
+            if (ontologyValidationService.checkIfURIisUsed(connection.getDataset(), ontologyName, uri)) {
+                throw new URIAlreadyExistsException(className, uri);
+            }
             var newClass = connection.getModel().createClass(uri);
             if (superClassUri != null) {
                 newClass.addSuperClass(connection.getModel().getOntClass(superClassUri));
@@ -382,6 +382,9 @@ public class OntologyContentService {
             var rdfsComment = ontModel.getProperty(RDFS_COMMENT);
             Property property;
             String uri = generalTDBService.getOntologyURIByOntologyName(connection.getDataset(), ontologyName) + "#" + propertyName;
+            if (ontologyValidationService.checkIfURIisUsed(connection.getDataset(), ontologyName, uri)) {
+                throw new URIAlreadyExistsException(propertyName, uri);
+            }
             if (objectProperty) {
                 property = ontModel.createObjectProperty(uri);
                 var prop = (ObjectProperty) property;
