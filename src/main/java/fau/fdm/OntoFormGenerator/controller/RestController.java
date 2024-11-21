@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.OntoFormGeneratorApplication;
 import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.service.*;
 import org.slf4j.Logger;
@@ -119,5 +120,12 @@ public class RestController {
         model.addAttribute("ontology", ontologyOverviewService.getOntologyByName(ontologyName));
         model.addAttribute("subclassGraph", ontologyContentService.buildSubclassGraph(ontologyName));
         return "class-viewer";
+    }
+
+    @RequestMapping(value = "/restart", method = RequestMethod.POST)
+    public String restart(Model model,
+                          @RequestParam(value = "deleteDB", required = false) boolean deleteDB) {
+        OntoFormGeneratorApplication.restart(deleteDB);
+        return loadMainPage(model);
     }
 }

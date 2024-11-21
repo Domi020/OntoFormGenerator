@@ -27,25 +27,34 @@
             transform: translate(0%, -120%);
         }
 
+        .third-fab-button {
+            transform: translate(0%, -240%);
+        }
+
+        .fourth-fab-button {
+            transform: translate(0%, -360%);
+        }
+
         .clickable-button {
             cursor: pointer;
         }
-         .floating-button {
-             position: fixed;
-             bottom: 20px;
-             right: 20px;
-             background-color: #6200ea;
-             color: white;
-             border: none;
-             border-radius: 50%;
-             width: 56px;
-             height: 56px;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-             cursor: pointer;
-         }
+
+        .floating-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
     </style>
 
 </head>
@@ -67,173 +76,203 @@
 
     </header>
     <main class="mdl-layout__content">
-            <section class="mdl-layout__tab-panel is-active" id="forms">
-                <div class="page-content">
-                    <button id="form-create-dialog-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
-                        <i class="material-icons">add</i>
-                    </button>
-                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="form-create-dialog-button">
-                        Create Form
-                    </div>
-                    <button id="export-forms" onclick="location.href='/ontologies/forms'" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button second-fab-button">
-                        <i class="material-icons">download</i>
-                    </button>
-                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="export-forms">
-                        Download Forms ontology
-                    </div>
-                    <div>
-                        <dialog id="formCreateDialog" class="mdl-dialog">
-                            <h4 class="mdl-dialog__title"> Create new form</h4>
-                            <div class="mdl-dialog__content">
-                                <form action="/api/forms" method="post"
-                                      enctype="multipart/form-data">
-                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                        <label class="mdl-textfield__label"  for="formName">Form name</label>
-                                        <input class="mdl-textfield__input" type="text" id="formName" name="formName" required>
-                                    </div>
-                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                        <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology name</label>
-                                        <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate" name="ontologyNameInFormCreate" required onchange="autoFillURI();refreshAvailableClasses()">
-                                            <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">Ontology
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                        <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology IRI</label>
-                                        <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate" name="ontologyURIInFormCreate" readonly>
-                                    </div>
-                                    <div>
-                                        <select required name="targetClass" id="classSelectInFormCreate"></select>
-                                        <label for="classSelectInFormCreate">Ontology class</label>
-                                    </div>
-                                    <div>
-                                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div class="mdl-dialog__actions">
-                                <button type="button" class="close mdl-button mdl-js-button mdl-button--raised">Cancel</button>
-                            </div>
-                        </dialog>
-                        <ul class="mdl-list ontology-list">
-                            <li class="mdl-list__item" th:each="form, iter : ${forms}">
-                                <div class="mdl-card mdl-shadow--2dp">
-                                    <div class="mdl-card__title">
-                                        <h3 class="mdl-card__title-text" th:text="${form.getFormName()}">
-                                            Form1
-                                        </h3>
-                                    </div>
-                                    <div class="mdl-card__menu">
-                                        <button th:id="'delete-form-button--' + ${form.getFormName()}"
-                                                class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect delete-form-button">
-                                            <i class="material-icons">delete</i>
-                                        </button>
-                                    </div>
-                                    <div class="mdl-card__supporting-text" th:text="${form.getOntologyName()} + ' --- ' + ${form.getTargetClass().name}">
-                                        Wines and Meals
-                                    </div>
-                                    <div class="mdl-card__actions mdl-card--border">
-                                        <a th:if="${formDrafts.get(iter.index).size == 0}"
-                                           th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
-                                           class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
-                                            Edit form
-                                        </a>
-                                        <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
-                                           class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
-                                            Fill form
-                                        </a>
-                                        <button th:id="'show-individuals-button--' + ${form.getOntologyName()} + '--' + ${form.getFormName()}"
-                                                class="mdl-button mdl-js-button mdl-button--raised show-individuals-button">
-                                            Show individuals
-                                        </button>
-                                        <button th:id="'show-drafts-button-' + ${form.getFormName()}"
-                                                class="mdl-button mdl-js-button mdl-button--raised show-drafts-button">
-                                            Show drafts
-                                        </button>
-                                    </div>
+        <section class="mdl-layout__tab-panel is-active" id="forms">
+            <div class="page-content">
+                <button id="form-create-dialog-button"
+                        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
+                    <i class="material-icons">add</i>
+                </button>
+                <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="form-create-dialog-button">
+                    Create Form
+                </div>
+                <button id="export-forms" onclick="location.href='/ontologies/forms'"
+                        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button second-fab-button">
+                    <i class="material-icons">download</i>
+                </button>
+                <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="export-forms">
+                    Download Forms ontology
+                </div>
+                <button id="restart" onclick="fetch('/restart', {method: 'POST'})"
+                        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button third-fab-button">
+                    <i class="material-icons">restart_alt</i>
+                </button>
+                <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="restart">
+                    Restart App
+                </div>
+                <button id="restart_withDelete" onclick="fetch('/restart?deleteDB=true', {method: 'POST'})"
+                        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button fourth-fab-button">
+                    <i class="material-icons">delete</i>
+                </button>
+                <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="restart_withDelete">
+                    Reset App
+                </div>
+                <div>
+                    <dialog id="formCreateDialog" class="mdl-dialog">
+                        <h4 class="mdl-dialog__title"> Create new form</h4>
+                        <div class="mdl-dialog__content">
+                            <form action="/api/forms" method="post"
+                                  enctype="multipart/form-data">
+                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                    <label class="mdl-textfield__label" for="formName">Form name</label>
+                                    <input class="mdl-textfield__input" type="text" id="formName" name="formName"
+                                           required>
                                 </div>
-                            </li>
-                            <li class="mdl-list__item" th:if="${forms.isEmpty()}">
+                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                    <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology
+                                        name</label>
+                                    <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate"
+                                            name="ontologyNameInFormCreate" required
+                                            onchange="autoFillURI();refreshAvailableClasses()">
+                                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">
+                                            Ontology
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                    <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology
+                                        IRI</label>
+                                    <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate"
+                                           name="ontologyURIInFormCreate" readonly>
+                                </div>
+                                <div>
+                                    <select required name="targetClass" id="classSelectInFormCreate"></select>
+                                    <label for="classSelectInFormCreate">Ontology class</label>
+                                </div>
+                                <div>
+                                    <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="mdl-dialog__actions">
+                            <button type="button" class="close mdl-button mdl-js-button mdl-button--raised">Cancel
+                            </button>
+                        </div>
+                    </dialog>
+                    <ul class="mdl-list ontology-list">
+                        <li class="mdl-list__item" th:each="form, iter : ${forms}">
+                            <div class="mdl-card mdl-shadow--2dp">
+                                <div class="mdl-card__title">
+                                    <h3 class="mdl-card__title-text" th:text="${form.getFormName()}">
+                                        Form1
+                                    </h3>
+                                </div>
+                                <div class="mdl-card__menu">
+                                    <button th:id="'delete-form-button--' + ${form.getFormName()}"
+                                            class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect delete-form-button">
+                                        <i class="material-icons">delete</i>
+                                    </button>
+                                </div>
+                                <div class="mdl-card__supporting-text"
+                                     th:text="${form.getOntologyName()} + ' --- ' + ${form.getTargetClass().name}">
+                                    Wines and Meals
+                                </div>
+                                <div class="mdl-card__actions mdl-card--border">
+                                    <a th:if="${formDrafts.get(iter.index).size == 0}"
+                                       th:href="@{/editor/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
+                                       class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                                        Edit form
+                                    </a>
+                                    <a th:href="@{/fill/{name}(name=${form.getFormName()},ontology=${form.getOntologyName()})}"
+                                       class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                                        Fill form
+                                    </a>
+                                    <button th:id="'show-individuals-button--' + ${form.getOntologyName()} + '--' + ${form.getFormName()}"
+                                            class="mdl-button mdl-js-button mdl-button--raised show-individuals-button">
+                                        Show individuals
+                                    </button>
+                                    <button th:id="'show-drafts-button-' + ${form.getFormName()}"
+                                            class="mdl-button mdl-js-button mdl-button--raised show-drafts-button">
+                                        Show drafts
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="mdl-list__item" th:if="${forms.isEmpty()}">
                 <span class="mdl-list__item-primary-content">
                     No forms
                 </span>
-                            </li>
-                        </ul>
-                    </div>
-                    <dialog id="showIndividualsDialog" class="mdl-dialog">
-                        <h4>Created individuals by form</h4>
-                        <ul id="showIndividualsList" class="mdl-list">
-                        </ul>
-                        <div class="mdl-dialog__actions">
-                            <button type="button" class="close">Cancel</button>
-                        </div>
-                    </dialog>
-                    <dialog id="showDraftsDialog" class="mdl-dialog">
-                        <h4>Current drafts by form</h4>
-                        <ul id="showDraftsList" class="mdl-list">
-                        </ul>
-                        <div class="mdl-dialog__actions">
-                            <button type="button" class="close">Cancel</button>
-                        </div>
-                    </dialog>
+                        </li>
+                    </ul>
                 </div>
-            </section>
-            <section class="mdl-layout__tab-panel" id="ontologies">
-                <div class="page-content">
-                    <button id="show-ontology-import-dialog" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
-                        <i class="material-icons">add</i>
-                    </button>
-                    <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="show-ontology-import-dialog">
-                        Import new ontology
+                <dialog id="showIndividualsDialog" class="mdl-dialog">
+                    <h4>Created individuals by form</h4>
+                    <ul id="showIndividualsList" class="mdl-list">
+                    </ul>
+                    <div class="mdl-dialog__actions">
+                        <button type="button" class="close">Cancel</button>
                     </div>
-                    <div>
-                        <dialog id="importOntologyDialog" class="mdl-dialog">
-                            <h4 class="mdl-dialog__title">Import new ontology</h4>
-                            <div class="mdl-dialog__content">
-                                <form action="/ontologies" method="post"
-                                      enctype="multipart/form-data">
-                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                        <label class="mdl-textfield__label" for="ontologyName">Ontology name</label>
-                                        <input class="mdl-textfield__input" type="text" id="ontologyName" name="ontologyName" required>
-                                    </div>
-                                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                        <label class="mdl-textfield__label" for="file">Ontology file</label>
-                                        <input class="mdl-textfield__input" type="file" id="file" name="file" required>
-                                    </div>
-                                    <div>
-                                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Import</button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="mdl-dialog__actions">
-                                <button class="mdl-button mdl-js-button mdl-button--raised close" type="button">Cancel</button>
-                            </div>
-                        </dialog>
-                        <ul class="mdl-list ontology-list">
-                            <li class="mdl-list__item" th:each="ontology : ${ontologies}">
+                </dialog>
+                <dialog id="showDraftsDialog" class="mdl-dialog">
+                    <h4>Current drafts by form</h4>
+                    <ul id="showDraftsList" class="mdl-list">
+                    </ul>
+                    <div class="mdl-dialog__actions">
+                        <button type="button" class="close">Cancel</button>
+                    </div>
+                </dialog>
+            </div>
+        </section>
+        <section class="mdl-layout__tab-panel" id="ontologies">
+            <div class="page-content">
+                <button id="show-ontology-import-dialog"
+                        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored mdl-shadow--4dp mdl-color--accent floating-button">
+                    <i class="material-icons">add</i>
+                </button>
+                <div class="mdl-tooltip mdl-tooltip--top" data-mdl-for="show-ontology-import-dialog">
+                    Import new ontology
+                </div>
+                <div>
+                    <dialog id="importOntologyDialog" class="mdl-dialog">
+                        <h4 class="mdl-dialog__title">Import new ontology</h4>
+                        <div class="mdl-dialog__content">
+                            <form action="/ontologies" method="post"
+                                  enctype="multipart/form-data">
+                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                    <label class="mdl-textfield__label" for="ontologyName">Ontology name</label>
+                                    <input class="mdl-textfield__input" type="text" id="ontologyName"
+                                           name="ontologyName" required>
+                                </div>
+                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                    <label class="mdl-textfield__label" for="file">Ontology file</label>
+                                    <input class="mdl-textfield__input" type="file" id="file" name="file" required>
+                                </div>
+                                <div>
+                                    <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Import
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="mdl-dialog__actions">
+                            <button class="mdl-button mdl-js-button mdl-button--raised close" type="button">Cancel
+                            </button>
+                        </div>
+                    </dialog>
+                    <ul class="mdl-list ontology-list">
+                        <li class="mdl-list__item" th:each="ontology : ${ontologies}">
                 <span class="mdl-list__item-primary-content" th:text="${ontology.getName()}">
                     Ontology
                 </span>
-                                <a class="mdl-list__item-secondary-action clickable-button"
-                                   th:data-ontology-name="${ontology.getName()}" th:data-ontology-iri="${ontology.getIri()}"
-                                   onclick="deleteOntology(this.getAttribute('data-ontology-name'), this.getAttribute('data-ontology-iri'));">
-                                    <i class="material-icons">delete</i></a>
-                                <a class="mdl-list__item-secondary-action clickable-button"
-                                   th:data-ontology="${ontology.name}"
-                                   onclick="location.href='/ontologies/' + this.getAttribute('data-ontology')">
-                                    <i class="material-icons">download</i></a>
-                            </li>
-                            <li class="mdl-list__item" th:if="${ontologies.isEmpty()}">
+                            <a class="mdl-list__item-secondary-action clickable-button"
+                               th:data-ontology-name="${ontology.getName()}" th:data-ontology-iri="${ontology.getIri()}"
+                               onclick="deleteOntology(this.getAttribute('data-ontology-name'), this.getAttribute('data-ontology-iri'));">
+                                <i class="material-icons">delete</i></a>
+                            <a class="mdl-list__item-secondary-action clickable-button"
+                               th:data-ontology="${ontology.name}"
+                               onclick="location.href='/ontologies/' + this.getAttribute('data-ontology')">
+                                <i class="material-icons">download</i></a>
+                        </li>
+                        <li class="mdl-list__item" th:if="${ontologies.isEmpty()}">
                 <span class="mdl-list__item-primary-content">
                     No ontologies
                 </span>
-                            </li>
-                        </ul>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
-            </section>
-            <section class="mdl-layout__tab-panel" id="individuals">
+            </div>
+        </section>
+        <section class="mdl-layout__tab-panel" id="individuals">
             <div class="page-content">
                 <div>
                     <h3>Select an ontology</h3>
