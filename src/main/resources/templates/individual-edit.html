@@ -264,7 +264,7 @@
     saveButton.addEventListener('click', function () {
         JsLoadingOverlay.show();
         const formJson = formDataToJSON();
-        fetch(`/api/ontologies/${ontology.name}/individuals/${individual.name}?individualUri=${encodeURIComponent(individual.uri)}`, {
+        fetch(`/api/ontologies/${ontology.name}/individuals/${individual.name}?individualUri=${encodeURIComponent(individual.iri)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -77,11 +77,17 @@ public class OntologyContentService {
                             if (property.getRange() != null) {
                                 ontologyProperty.setObjectRange(
                                         new OntologyClass(property.getRange().getLocalName(), property.getRange().getURI()));
+                            } else {
+                                ontologyProperty.setObjectRange(
+                                        new OntologyClass("Thing", "http://www.w3.org/2002/07/owl#Thing")
+                                );
                             }
                         } else {
                             ontologyProperty.setObjectProperty(false);
                             if (property.getRange() != null) {
                                 ontologyProperty.setDatatypeRange(property.getRange().getLocalName());
+                            } else {
+                                ontologyProperty.setDatatypeRange("string");
                             }
                         }
                         properties.add(ontologyProperty);

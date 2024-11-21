@@ -7,6 +7,7 @@ import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontology.Individual;
+import org.apache.jena.ontology.impl.OntResourceImpl;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
@@ -46,8 +47,6 @@ public class FormEditorService {
         }
     }
 
-
-
     public List<FormField> getAllFormElementsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, "forms")) {
             var dataset = connection.getDataset();
@@ -77,17 +76,28 @@ public class FormEditorService {
                 var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                 if (isObjectProperty) {
                     // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
+                    OntologyClass objectRange;
                     var objectRangeProp = property.getRange();
-                    var objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                    if (objectRangeProp != null) {
+                        objectRange = new OntologyClass(objectRangeProp.getLocalName(), objectRangeProp.getURI());
+                    } else {
+                        objectRange = new OntologyClass("Thing", "http://www.w3.org/2002/07/owl#Thing");
+                    }
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, property.getURI(), true, objectRange, null),
                             fieldType, fieldName, maximumValues, minimumValues, required));
                 } else {
                     // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                     var dataRangeProp = property.getRange();
+                    String dataRange;
+                    if (dataRangeProp != null) {
+                        dataRange = dataRangeProp.getLocalName();
+                    } else {
+                        dataRange = "string";
+                    }
                     formFields.set(position, new FormField(
                             new OntologyProperty(targetField.getLocalName(), domain, property.getURI(), false, null,
-                                    dataRangeProp.getLocalName()), fieldType, fieldName, maximumValues,
+                                    dataRange), fieldType, fieldName, maximumValues,
                             minimumValues, required));
                 }
             }
@@ -100,6 +110,7 @@ public class FormEditorService {
             return formFields;
         }
     }
+    // TODO: Restart function
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, "forms")) {

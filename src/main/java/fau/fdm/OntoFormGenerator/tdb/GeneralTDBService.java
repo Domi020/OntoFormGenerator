@@ -77,6 +77,9 @@ public class GeneralTDBService {
      * @return The local name of the class
      */
     public String getClassNameInOntology(Dataset dataset, String ontologyName, String classURI) {
+        if (classURI.equals("http://www.w3.org/2002/07/owl#Thing")) {
+            return "Thing";
+        }
         var ontmodel = getOntModel(dataset.getNamedModel(ontologyName));
         var namedClass = ontmodel.listClasses().filterKeep(ontClass -> ontClass.getURI() != null &&
                 ontClass.getURI().equals(classURI)).next();
