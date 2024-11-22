@@ -291,7 +291,7 @@
                 alert('Individual name cannot be empty');
                 return;
             }
-            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}?classIri=${encodeURIComponent(classUri)}`, {
+            fetch(`/api/ontologies/${ontologyName}/classes/${className}/individuals/${individualName}?classURI=${encodeURIComponent(classUri)}`, {
                 method: 'POST',
             }).then(() => {
                 let draftName = document.getElementById('instanceName').value;
@@ -748,6 +748,17 @@
                 return input;
             }
         }
+    }
+
+    function addIndividual(propertyName) {
+        const dialog = document.querySelector('#add-individual-dialog');
+        document.getElementById('create-individual-dialog-ontology-class').innerText =
+            allFormElements.filter(formElement => formElement.ontologyProperty.name === propertyName)[0]
+                .ontologyProperty.objectRange.name;
+            document.getElementById('create-individual-dialog-ontology-uri').innerText =
+                allFormElements.filter(formElement => formElement.ontologyProperty.name === propertyName)[0]
+                    .ontologyProperty.objectRange.uri;
+        dialog.showModal();
     }
 
     function removeField(containerId) {
