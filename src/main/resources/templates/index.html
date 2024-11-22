@@ -10,12 +10,15 @@
     <title>OntoFormGenerator</title>
     <link rel="stylesheet" href="./material.min.css">
     <link rel="stylesheet" href="/selectize.default.min.css">
+    <script src="./src/index.js"></script>
     <script src="/js-loading-overlay.min.js"></script>
     <script src="./material.min.js"></script>
     <script src="/jquery-3.7.1.min.js"></script>
     <script src="/selectize.min.js"></script>
     <script th:inline="javascript">
         const ontologies = [[${ontologies}]];
+        const formDrafts = [[${formDrafts}]];
+        const forms = [[${forms}]];
     </script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <style>
@@ -56,7 +59,6 @@
             cursor: pointer;
         }
     </style>
-
 </head>
 <body class="mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
 
@@ -107,49 +109,7 @@
                     Reset App
                 </div>
                 <div>
-                    <dialog id="formCreateDialog" class="mdl-dialog">
-                        <h4 class="mdl-dialog__title"> Create new form</h4>
-                        <div class="mdl-dialog__content">
-                            <form action="/api/forms" method="post"
-                                  enctype="multipart/form-data">
-                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                    <label class="mdl-textfield__label" for="formName">Form name</label>
-                                    <input class="mdl-textfield__input" type="text" id="formName" name="formName"
-                                           required>
-                                </div>
-                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                    <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology
-                                        name</label>
-                                    <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate"
-                                            name="ontologyNameInFormCreate" required
-                                            onchange="autoFillURI();refreshAvailableClasses()">
-                                        <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">
-                                            Ontology
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                    <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology
-                                        IRI</label>
-                                    <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate"
-                                           name="ontologyURIInFormCreate" readonly>
-                                </div>
-                                <div>
-                                    <select required name="targetClass" id="classSelectInFormCreate"></select>
-                                    <label for="classSelectInFormCreate">Ontology class</label>
-                                </div>
-                                <div>
-                                    <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
 
-                        <div class="mdl-dialog__actions">
-                            <button type="button" class="close mdl-button mdl-js-button mdl-button--raised">Cancel
-                            </button>
-                        </div>
-                    </dialog>
                     <ul class="mdl-list ontology-list">
                         <li class="mdl-list__item" th:each="form, iter : ${forms}">
                             <div class="mdl-card mdl-shadow--2dp">
@@ -196,22 +156,7 @@
                         </li>
                     </ul>
                 </div>
-                <dialog id="showIndividualsDialog" class="mdl-dialog">
-                    <h4>Created individuals by form</h4>
-                    <ul id="showIndividualsList" class="mdl-list">
-                    </ul>
-                    <div class="mdl-dialog__actions">
-                        <button type="button" class="close">Cancel</button>
-                    </div>
-                </dialog>
-                <dialog id="showDraftsDialog" class="mdl-dialog">
-                    <h4>Current drafts by form</h4>
-                    <ul id="showDraftsList" class="mdl-list">
-                    </ul>
-                    <div class="mdl-dialog__actions">
-                        <button type="button" class="close">Cancel</button>
-                    </div>
-                </dialog>
+
             </div>
         </section>
         <section class="mdl-layout__tab-panel" id="ontologies">
@@ -224,31 +169,7 @@
                     Import new ontology
                 </div>
                 <div>
-                    <dialog id="importOntologyDialog" class="mdl-dialog">
-                        <h4 class="mdl-dialog__title">Import new ontology</h4>
-                        <div class="mdl-dialog__content">
-                            <form action="/ontologies" method="post"
-                                  enctype="multipart/form-data">
-                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                    <label class="mdl-textfield__label" for="ontologyName">Ontology name</label>
-                                    <input class="mdl-textfield__input" type="text" id="ontologyName"
-                                           name="ontologyName" required>
-                                </div>
-                                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                    <label class="mdl-textfield__label" for="file">Ontology file</label>
-                                    <input class="mdl-textfield__input" type="file" id="file" name="file" required>
-                                </div>
-                                <div>
-                                    <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Import
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="mdl-dialog__actions">
-                            <button class="mdl-button mdl-js-button mdl-button--raised close" type="button">Cancel
-                            </button>
-                        </div>
-                    </dialog>
+
                     <ul class="mdl-list ontology-list">
                         <li class="mdl-list__item" th:each="ontology : ${ontologies}">
                 <span class="mdl-list__item-primary-content" th:text="${ontology.getName()}">
@@ -302,11 +223,94 @@
                 </div>
             </div>
         </section>
+        <dialog id="formCreateDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title"> Create new form</h4>
+            <div class="mdl-dialog__content">
+                <form action="/api/forms" method="post"
+                      enctype="multipart/form-data">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label class="mdl-textfield__label" for="formName">Form name</label>
+                        <input class="mdl-textfield__input" type="text" id="formName" name="formName"
+                               required>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label class="mdl-textfield__label" for="ontologyNameInFormCreate">Ontology
+                            name</label>
+                        <select class="mdl-textfield__input" type="file" id="ontologyNameInFormCreate"
+                                name="ontologyNameInFormCreate" required
+                                onchange="autoFillURI();refreshAvailableClasses()">
+                            <option th:each="ontology : ${ontologies}" th:text="${ontology.getName()}">
+                                Ontology
+                            </option>
+                        </select>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label class="mdl-textfield__label" for="ontologyURIInFormCreate">Ontology
+                            IRI</label>
+                        <input class="mdl-textfield__input" type="text" id="ontologyURIInFormCreate"
+                               name="ontologyURIInFormCreate" readonly>
+                    </div>
+                    <div>
+                        <select required name="targetClass" id="classSelectInFormCreate"></select>
+                        <label for="classSelectInFormCreate">Ontology class</label>
+                    </div>
+                    <div>
+                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Create
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mdl-dialog__actions">
+                <button type="button" class="close mdl-button mdl-js-button mdl-button--raised">Cancel
+                </button>
+            </div>
+        </dialog>
+        <dialog id="showIndividualsDialog" class="mdl-dialog">
+            <h4>Created individuals by form</h4>
+            <ul id="showIndividualsList" class="mdl-list">
+            </ul>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="close">Cancel</button>
+            </div>
+        </dialog>
+        <dialog id="showDraftsDialog" class="mdl-dialog">
+            <h4>Current drafts by form</h4>
+            <ul id="showDraftsList" class="mdl-list">
+            </ul>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="close">Cancel</button>
+            </div>
+        </dialog>
+        <dialog id="importOntologyDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title">Import new ontology</h4>
+            <div class="mdl-dialog__content">
+                <form action="/ontologies" method="post"
+                      enctype="multipart/form-data">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label class="mdl-textfield__label" for="ontologyName">Ontology name</label>
+                        <input class="mdl-textfield__input" type="text" id="ontologyName"
+                               name="ontologyName" required>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label class="mdl-textfield__label" for="file">Ontology file</label>
+                        <input class="mdl-textfield__input" type="file" id="file" name="file" required>
+                    </div>
+                    <div>
+                        <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button class="mdl-button mdl-js-button mdl-button--raised close" type="button">Cancel
+                </button>
+            </div>
+        </dialog>
     </main>
 </div>
-<script th:inline="javascript">
-    var formDrafts = [[${formDrafts}]];
-    var forms = [[${forms}]];
+<script>
+    // Dialog definitions
     var importOntologyDialog = document.querySelector('#importOntologyDialog');
     var showDialogButton = document.querySelector('#show-ontology-import-dialog');
     showDialogButton.addEventListener('click', function () {
@@ -315,12 +319,10 @@
     importOntologyDialog.querySelector('.close').addEventListener('click', function () {
         importOntologyDialog.close();
     });
-
     var createFormDialog = document.querySelector('#formCreateDialog');
     var showCreateFormDialogButton = document.querySelector('#form-create-dialog-button');
     showCreateFormDialogButton.addEventListener('click', function () {
         createFormDialog.showModal();
-
     });
     createFormDialog.querySelector('.close').addEventListener('click', function () {
         createFormDialog.close();
@@ -328,43 +330,15 @@
 
     var deleteFormButtons = document.querySelectorAll('.delete-form-button');
     deleteFormButtons.forEach(el => el.addEventListener('click', async function (event) {
-        let buttonId = event.currentTarget.id
-        let formName = buttonId.replace('delete-form-button--', '');
-        fetch('/api/forms/' + formName, {
-            method: 'DELETE'
-        }).then(function (response) {
-            if (response.ok) {
-                location.reload();
-            }
-        });
+        let buttonId = event.currentTarget.id;
+        deleteForm(buttonId);
     }));
 
     var showIndividualsDialog = document.querySelector('#showIndividualsDialog');
     var showIndividualsButtons = document.querySelectorAll('.show-individuals-button');
     showIndividualsButtons.forEach(el => el.addEventListener('click', async function (event) {
         let buttonId = event.currentTarget.id
-        let ontologyAndFormName = buttonId.replace('show-individuals-button--', '');
-        let ontologyName = ontologyAndFormName.split('--')[0];
-        let formName = ontologyAndFormName.split('--')[1];
-        let individuals = await fetch('/api/forms/' + formName + "/individuals").then(response => response.json());
-        let showIndividualsList = document.querySelector('#showIndividualsList');
-        showIndividualsList.innerHTML = '';
-        for (let i = 0; i < individuals.length; i++) {
-            let individual = individuals[i];
-            let n = individual.name;
-            let listItem = document.createElement('li');
-            listItem.classList.add('mdl-list__item');
-            listItem.innerHTML = `
-                <span class="mdl-list__item-primary-content">` + individual.label + `</span>
-                <a class="mdl-list__item-secondary-action clickable-button"
-                                       href="/edit/ontologies/` + ontologyName + `/individuals/` + n + `">
-                                        <i class="material-icons">edit</i></a>
-                        <button class="mdl-list__item-secondary-action clickable-button"
-                                       onclick="fetch('/api/ontologies/${ontologyName}/individual?uri=${encodeURIComponent(individual.iri)}',
-                                       {method: 'DELETE'}).then(async () => location.reload())">
-                                        <i class="material-icons">delete</i></button>`
-            showIndividualsList.appendChild(listItem);
-        }
+        await showIndividuals(buttonId)
         showIndividualsDialog.showModal();
     }));
 
@@ -376,26 +350,7 @@
     var showDraftsButtons = document.querySelectorAll('.show-drafts-button');
     showDraftsButtons.forEach(el => el.addEventListener('click', async function (event) {
         let buttonId = event.currentTarget.id
-        let formName = buttonId.replace('show-drafts-button-', '');
-        let i = forms.findIndex(form => form.formName === formName);
-        let drafts = formDrafts[i];
-        let showDraftsList = document.querySelector('#showDraftsList');
-        showDraftsList.innerHTML = '';
-        for (let i = 0; i < drafts.length; i++) {
-            let individual = drafts[i];
-            let listItem = document.createElement('li');
-            listItem.classList.add('mdl-list__item');
-            listItem.innerHTML = `
-                <span class="mdl-list__item-primary-content">` + individual.name + `</span>
-                <a class="mdl-list__item-secondary-action clickable-button"
-                                       href="/fill/` + formName + `/draft/` + individual.name + `">
-                                        <i class="material-icons">edit</i></a>
-                <button class="mdl-list__item-secondary-action clickable-button"
-                                       onclick="fetch('/api/forms/${formName}/draft?uri=${encodeURIComponent(individual.iri)}',
-                                       {method: 'DELETE'}).then(async () => location.reload())">
-                                        <i class="material-icons">delete</i></button>`
-            showDraftsList.appendChild(listItem);
-        }
+        await showDrafts(buttonId)
         showDraftsDialog.showModal();
     }));
 
@@ -403,120 +358,18 @@
         showDraftsDialog.close();
     });
 
+    // Setup individual table
+
     let selectOntologyButtons = document.querySelectorAll('.select-ontology');
     selectOntologyButtons.forEach(el => el.addEventListener('click', async function (event) {
         let buttonId = event.currentTarget.id;
-        let ontologyName = buttonId.replace('select-ontology-', '');
-        let classes = await fetch('/api/ontologies/' + ontologyName + '/targetClasses').then(response => response.json());
-        let classTable = document.querySelector('#class-table');
-        classTable.innerHTML = '';
-        for (let i = 0; i < classes.length; i++) {
-            let curClass = classes[i];
-            let row = document.createElement('tr');
-            row.innerHTML = `
-                <td>` + curClass.name + `</td>
-                <td>
-                    <button class="mdl-button
-                                    mdl-js-button
-                                    mdl-button--raised
-                                    select-class"
-                                    data-ontology="` + ontologyName + `"
-                                    data-class-name="` + curClass.name + `"
-                                    data-class-uri="` + curClass.uri + `"
-                                    onclick="onSelectClass(this.getAttribute(\'data-class-name\'), this.getAttribute('data-class-uri'),
-                                    this.getAttribute(\'data-ontology\'))">
-                            Select
-                    </button>
-                </td>`;
-            classTable.appendChild(row);
-        }
+        await onSelectOntology(buttonId);
     }));
 
-    async function onSelectClass(ontClassName, ontClassUri, ontName) {
-        JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
-        let individuals = await fetch('/api/ontologies/' + ontName + '/classes/' + ontClassName + '/individuals?withImportedIndividuals=false&classIri=' + encodeURIComponent(ontClassUri))
-            .then(response => response.json());
-        let individualTable = document.querySelector('#individual-table');
-        individualTable.innerHTML = '';
-        for (let i = 0; i < individuals.length; i++) {
-            let individual = individuals[i];
-            let row = document.createElement('tr');
-            row.innerHTML = `
-                <td>` + individual.label + `</td>
-                <td>
-                    <button class="mdl-button
-                                    mdl-js-button
-                                    mdl-button--raised
-                                    select-individual"
-                                    data-ontology="` + ontName + `"
-                                    data-individual="` + individual.name + `"
-                                    onclick="onSelectIndividual(this.getAttribute(\'data-individual\'),
-                                    this.getAttribute(\'data-ontology\'))">
-                            Edit
-                    </button>
-                </td>
-                <td>
-                    <button class="mdl-button
-                                    mdl-js-button
-                                    mdl-button--raised
-                                    select-individual"
-                                    data-ontology="` + ontName + `"
-                                    data-individual="` + encodeURIComponent(individual.iri) + `"
-                                    onclick="fetch('/api/ontologies/' + this.getAttribute(\'data-ontology\') + '/individual?uri=' + this.getAttribute(\'data-individual\'),
-                                    {method: 'DELETE'}).then(async () => location.reload())">
-                            Delete
-                   </td>`;
-            individualTable.appendChild(row);
-        }
-        JsLoadingOverlay.hide();
-    }
 
-    function onSelectIndividual(individualName, ontologyName) {
-        location.href = '/edit/ontologies/' + ontologyName + '/individuals/' + individualName;
-    }
-
-    function deleteOntology(ontologyName, ontologyIri) {
-        // let params = new URLSearchParams();
-        // params.set("iri", );
-        fetch("/ontologies/" + ontologyName, {
-            method: 'DELETE'
-        }).then(function (response) {
-            if (response.ok) {
-                location.reload();
-            }
-        });
-    }
-
-    function exportOntology(ontologyName) {
-        fetch("/ontologies/" + ontologyName, {
-            method: 'GET'
-        });
-    }
-
-    function autoFillURI() {
-        const ontologyName = document.getElementById('ontologyNameInFormCreate').value;
-        for (let i = 0; i < ontologies.length; i++) {
-            if (ontologies[i].name === ontologyName) {
-                document.getElementById('ontologyURIInFormCreate').value = ontologies[i].iri;
-                break;
-            }
-        }
-    }
+    // Initialize home page
 
     autoFillURI();
-
-    function refreshAvailableClasses() {
-        const ontologyName = document.getElementById('ontologyNameInFormCreate').value;
-        fetch('/api/ontologies/' + ontologyName + '/classes')
-            .then(response => response.json())
-            .then(classes => {
-                $('#classSelectInFormCreate')[0].selectize.clearOptions();
-                for (let i = 0; i < classes.length; i++) {
-                    $('#classSelectInFormCreate')[0].selectize.addOption(classes[i]);
-                }
-                $('#classSelectInFormCreate')[0].selectize.refreshOptions(true);
-            });
-    }
 
     $('#classSelectInFormCreate').selectize({
         valueField: 'name',
@@ -525,7 +378,6 @@
         options: [],
         maxItems: 1
     });
-
 
     refreshAvailableClasses();
 
