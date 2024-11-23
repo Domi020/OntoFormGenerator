@@ -1,5 +1,10 @@
 // Initialization of the form filler page
 
+/**
+ * Initializes an object property by collecting all possible individuals from the ontology and setting up the selectize
+ * @param promises a list of promises for all object properties, where the current one will be added
+ * @param element the HTML element of the object property select
+ */
 function initObjectProperties(promises, element) {
     const fieldName = element.name;
     const fieldId = element.id;
@@ -39,6 +44,9 @@ function initObjectProperties(promises, element) {
         }));
 }
 
+/**
+ * Initializes the form filler page by loading all object properties of the form, and loading the draft if it exists
+ */
 function initFormFiller() {
     JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
     let promises = [];
@@ -156,6 +164,9 @@ function createDraftAndGoToHomepage() {
 //---------------------------------------------------------------------------------------------------------------------
 
 // Form extension features
+/**
+ * Create a new form element (for the form, NOT a new ontology property)
+ */
 function createField() {
     let propName = document.getElementById('new-property-class-select').value;
     let draftName = document.getElementById('instanceName').value;
@@ -167,9 +178,13 @@ function createField() {
         );
 }
 
-
-
-
+/**
+ * Add a field for a multiple-value property
+ * @param containerId the HTML element id of the container where the field should be added too
+ * @param templateId the HTML element id of the template for the field
+ * @param isObjectSelect whether the field is an object select or a datatype input
+ * @returns the created HTML element
+ */
 function addField(containerId, templateId, isObjectSelect) {
     let container = document.getElementById(containerId);
     let copies = container.getElementsByClassName('copy-' + containerId);
@@ -222,6 +237,10 @@ function addField(containerId, templateId, isObjectSelect) {
 }
 
 // noinspection JSUnusedGlobalSymbols
+/**
+ * Remove a field from a multiple-value property
+ * @param containerId the HTML element id of the container where the field should be removed from
+ */
 function removeField(containerId) {
     let container = document.getElementById(containerId);
     let copies = container.getElementsByClassName('copy-' + containerId);
@@ -230,10 +249,10 @@ function removeField(containerId) {
     }
 }
 
-
-
-
-
+/**
+ * Prepare the dialog to add a new form element to the form by selecting all ontology properties for the domain class
+ * and setting up the selectize, and other dialog elements
+ */
 function prepareNewFieldDialog() {
     JsLoadingOverlay.show({'spinnerIcon': 'ball-clip-rotate'});
     fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?classIri=${encodeURIComponent(targetClass.uri)}`)
@@ -278,6 +297,9 @@ function prepareNewFieldDialog() {
         });
 }
 
+/**
+ * Query the properties of the domain class of the form by the given query string in the dialog field
+ */
 function queryProperties() {
     let query = document.getElementById('new-property-input').value;
     fetch(`/api/ontologies/${ontologyName}/classes/${targetClass.name}/properties?classIri=${encodeURIComponent(targetClass.uri)}&query=${query}`)
@@ -425,6 +447,10 @@ function selectObjectPropertyFromGraph() {
 // Adding/editing individuals in the form
 
 // noinspection JSUnusedGlobalSymbols
+/**
+ * Switch to the edit individual page for the currently selected individual
+ * @param id the HTML element id of the individual select
+ */
 function editIndividual(id) {
     createDraft().then(
         () => {
@@ -437,6 +463,10 @@ function editIndividual(id) {
     );
 }
 
+/**
+ * Creates a new individual based on the selected option in the dialog, either by creating an empty individual or by
+ * loading another existing form
+ */
 function createIndividual() {
     if (document.getElementById("create-individual-dialog-option-1").checked) {
         // Empty individual
@@ -469,6 +499,10 @@ function createIndividual() {
 }
 
 // noinspection JSUnusedGlobalSymbols
+/**
+ * Set up the CreateIndividual dialog based on the selected property
+ * @param propertyName the property name where the new individual should be created
+ */
 function prepareAddIndividualDialog(propertyName) {
     const dialog = document.querySelector('#add-individual-dialog');
     document.getElementById('create-individual-dialog-ontology-class').innerText =
