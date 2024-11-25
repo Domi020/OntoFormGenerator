@@ -468,4 +468,7 @@ public class OntologyContentService {
             return ontologyProperties;
         }
     }
+    //TODO: Draft: Was wenn mehrere Felder mit selber Property?
+
+    //TODO: Draft Validation
 }

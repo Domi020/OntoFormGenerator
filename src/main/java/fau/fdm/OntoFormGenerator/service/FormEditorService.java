@@ -110,7 +110,6 @@ public class FormEditorService {
             return formFields;
         }
     }
-    // TODO: Restart function
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, "forms")) {

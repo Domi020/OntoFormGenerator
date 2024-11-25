@@ -153,8 +153,6 @@ public class FormOverviewService {
         return result;
     }
 
-    //TODO: generell mehr Stabilität => Hauptseite lädt trotz Fehler in Form/Ontologie/Individual
-
     public void deleteForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
             deleteForm(connection.getDataset(), formName);
