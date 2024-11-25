@@ -13,6 +13,7 @@ import org.apache.jena.query.ReadWrite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ public class FormOverviewService {
 
     private final PropertyService propertyService;
 
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
     @Autowired
     public FormOverviewService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService) {
         this.propertyService = propertyService;
@@ -37,7 +41,7 @@ public class FormOverviewService {
     }
 
     public List<Form> getFormsWithTargetClass(String ontologyName, String targetClass) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var targetClassIndiv = individualService.findIndividualInOntology(connection.getDataset(), ontologyName, targetClass);
 
             var allForms = individualService.getAllIndividualsOfClass(connection.getDataset(), "forms", "Form");
@@ -52,7 +56,7 @@ public class FormOverviewService {
 
     public void addNewForm(String formName, String ontologyName, String ontologyURI,
                            String targetClass) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             var individual = individualService.addIndividualByLocalName(dataset, "Form", formName);
             propertyService.addObjectPropertyToIndividual(dataset,
@@ -79,7 +83,7 @@ public class FormOverviewService {
 
     public List<Form> getAllForms() {
         List<Form> forms = new ArrayList<>();
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var individuals = individualService.getAllIndividualsOfClass(connection.getDataset(), "forms", "Form");
             for (var individual : individuals) {
                 var formName = individual.getLocalName();
@@ -96,7 +100,7 @@ public class FormOverviewService {
     }
 
     public List<Individual> getAllIndividualsOfForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var dataset = connection.getDataset();
             var formIndividual = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
@@ -126,7 +130,7 @@ public class FormOverviewService {
     }
 
     public List<Individual> getAllDraftsOfForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             return getAllDraftsOfForm(connection.getDataset(), formName);
         }
     }
@@ -154,7 +158,7 @@ public class FormOverviewService {
     }
 
     public void deleteForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             deleteForm(connection.getDataset(), formName);
             connection.commit();
         }
@@ -175,7 +179,7 @@ public class FormOverviewService {
     }
 
     public Ontology getOntologyOfForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var formIndividual = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var ontologyIndividual = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
                     "forms", formIndividual, "targetsOntology");

@@ -38,6 +38,9 @@ public class OntologyOverviewService {
     private final GeneralTDBService generalTDBService;
     private PropertyService propertyService;
 
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
     @Autowired
     public OntologyOverviewService(IndividualService individualService, GeneralTDBService generalTDBService, FormOverviewService formOverviewService, PropertyService propertyService) {
         this.generalTDBService = generalTDBService;
@@ -55,7 +58,7 @@ public class OntologyOverviewService {
     }
 
     public boolean importOntology(File owlFile, String ontologyName) throws IOException {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
             var newModel = OntModelFactory.createModel(newOntURI, GraphRepository.createGraphDocumentRepositoryMem());
@@ -90,7 +93,7 @@ public class OntologyOverviewService {
 
     public List<Ontology> getImportedOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, "forms")) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, "forms")) {
             OntClass ontologyClass = connection.getModel().getOntClass(formsIRI + "#Ontology");
             ontologyClass.listInstances().forEachRemaining(
                     res -> {
@@ -109,7 +112,7 @@ public class OntologyOverviewService {
     }
 
     public void deleteOntology(String ontologyName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             dataset.removeNamedModel(ontologyName);
             individualService.selectIndividualsInSPARQLQuery(dataset, "forms",
@@ -134,7 +137,7 @@ public class OntologyOverviewService {
     }
 
     public ByteArrayResource downloadOntology(String ontologyName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             connection.getModel().write(outputStream, "RDF/XML");
             return new ByteArrayResource(outputStream.toByteArray());

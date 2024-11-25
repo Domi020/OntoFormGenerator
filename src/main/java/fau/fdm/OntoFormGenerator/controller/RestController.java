@@ -3,6 +3,7 @@ package fau.fdm.OntoFormGenerator.controller;
 import fau.fdm.OntoFormGenerator.OntoFormGeneratorApplication;
 import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.service.*;
+import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,7 @@ public class RestController {
 
     private final FormFillService formFillService;
     private final OntologyConstraintService ontologyConstraintService;
+    private final GeneralTDBService generalTDBService;
     Logger logger = LoggerFactory.getLogger(OntologyOverviewService.class);
 
     private final OntologyOverviewService ontologyOverviewService;
@@ -27,13 +29,14 @@ public class RestController {
     private final FormEditorService formEditorService;
 
     public RestController(OntologyOverviewService ontologyOverviewService,
-                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService) {
+                          FormOverviewService formOverviewService, OntologyContentService ontologyContentService, FormEditorService formEditorService, FormFillService formFillService, OntologyConstraintService ontologyConstraintService, GeneralTDBService generalTDBService) {
         this.ontologyOverviewService = ontologyOverviewService;
         this.formOverviewService = formOverviewService;
         this.ontologyContentService = ontologyContentService;
         this.formEditorService = formEditorService;
         this.formFillService = formFillService;
         this.ontologyConstraintService = ontologyConstraintService;
+        this.generalTDBService = generalTDBService;
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -125,7 +128,7 @@ public class RestController {
     @RequestMapping(value = "/restart", method = RequestMethod.POST)
     public String restart(Model model,
                           @RequestParam(value = "deleteDB", required = false) boolean deleteDB) {
-        OntoFormGeneratorApplication.restart(deleteDB);
+        generalTDBService.restart(deleteDB);
         return loadMainPage(model);
     }
 }

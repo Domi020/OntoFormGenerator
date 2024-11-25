@@ -13,6 +13,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
@@ -29,6 +30,9 @@ public class FormEditorService {
     private final GeneralTDBService generalTDBService;
     private final OntologyConstraintService ontologyConstraintService;
 
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
     public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService, OntologyConstraintService ontologyConstraintService) {
         this.individualService = individualService;
         this.propertyService = propertyService;
@@ -38,7 +42,7 @@ public class FormEditorService {
     }
 
     public OntologyClass getSelectedEditorClass(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var classValue = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
                     "forms", form, "targetsClass");
@@ -48,7 +52,7 @@ public class FormEditorService {
     }
 
     public List<FormField> getAllFormElementsOfForm(String formName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, "forms")) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory,"forms")) {
             var dataset = connection.getDataset();
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var formElements = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
@@ -112,7 +116,7 @@ public class FormEditorService {
     }
 
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, "forms")) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory,"forms")) {
             var dataset = connection.getDataset();
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",

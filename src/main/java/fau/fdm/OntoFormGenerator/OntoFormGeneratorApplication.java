@@ -23,32 +23,18 @@ public class OntoFormGeneratorApplication implements WebMvcConfigurer {
 	private static ConfigurableApplicationContext context;
 	private static String[] arguments;
 
-	private static final String ontologyDirectory = "ontologies/production";
-
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 		System.setProperty("org.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH", "true");
 		arguments = args;
 		context = SpringApplication.run(OntoFormGeneratorApplication.class, args);
 	}
 
-	public static void restart(boolean deleteDb) {
-		Thread thread = new Thread(() -> {
-			context.close();
-			if (deleteDb) {
-				try {
-					Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
-					dataset.begin(ReadWrite.WRITE);
-					dataset.listModelNames().forEachRemaining(dataset::removeNamedModel);
-					dataset.commit();
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
-			}
-			context = SpringApplication.run(OntoFormGeneratorApplication.class, arguments);
-		});
-		thread.setDaemon(false);
-		thread.start();
+	public static void closeContext() {
+		context.close();
+	}
+	
+	public static void createContext() {
+		context = SpringApplication.run(OntoFormGeneratorApplication.class, arguments);
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class FormFillService {
     private final GeneralTDBService generalTDBService;
     private final PropertyService propertyService;
 
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
     public FormFillService(IndividualService individualService,
                            GeneralTDBService generalTDBService, PropertyService propertyService) {
         this.individualService = individualService;
@@ -41,7 +45,7 @@ public class FormFillService {
     }
 
     public void deleteIndividualByIri(String ontologyName, String individualUri) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             individualService.deleteIndividualByIri(connection.getDataset(), ontologyName, individualUri);
             individualService.deleteIndividualByIri(connection.getDataset(), "forms", individualUri);
             connection.commit();
@@ -50,7 +54,7 @@ public class FormFillService {
 
     public void deleteDraft(String formName,
                             String draftUri) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             individualService.deleteIndividualByIri(connection.getDataset(), "forms", draftUri);
             connection.commit();
         }
@@ -62,7 +66,7 @@ public class FormFillService {
                                           String instanceName,
                                           Map<String, List<String>> formValues,
                                           Map<String, List<String>> additionalValues) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             var classURI = generalTDBService.getClassURIInOntology(dataset, ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);
@@ -112,7 +116,7 @@ public class FormFillService {
     }
 
     public List<SetField> getSetFieldsByDraft(String formName, String individualName, String ontologyName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
@@ -131,7 +135,7 @@ public class FormFillService {
 
     public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
                                                            String individualName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
@@ -168,7 +172,7 @@ public class FormFillService {
 
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, null)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
             var gson = new Gson();
@@ -189,7 +193,7 @@ public class FormFillService {
                                                String targetField,
                                                String instanceName,
                                                Map<String, String[]> formValues) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, connection.getDataset().getNamedModel(ontologyName));
             var classURI = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, targetField);
             var ontologyURI = classURI.substring(0, classURI.lastIndexOf("#") + 1);

@@ -10,8 +10,6 @@ import org.apache.jena.tdb2.TDB2Factory;
 
 public class TDBConnection implements AutoCloseable {
 
-    private final String ontologyDirectory = "ontologies/production";
-
     @Getter
     Dataset dataset;
     @Getter
@@ -19,7 +17,9 @@ public class TDBConnection implements AutoCloseable {
 
     private boolean commit = false;
 
-    public TDBConnection(ReadWrite accessMode, String ontologyName) {
+    public TDBConnection(ReadWrite accessMode,
+                         String ontologyDirectory,
+                         String ontologyName) {
         dataset = TDB2Factory.connectDataset(ontologyDirectory);
         dataset.begin(accessMode);
         if (ontologyName != null) {

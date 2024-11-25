@@ -1,11 +1,13 @@
 package fau.fdm.OntoFormGenerator.tdb;
 
+import fau.fdm.OntoFormGenerator.OntoFormGeneratorApplication;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -184,6 +186,26 @@ public class GeneralTDBService {
         } finally {
             dataset.end();
         }
+    }
+
+    public void restart(boolean deleteDb) {
+        Thread thread = new Thread(() -> {
+            OntoFormGeneratorApplication.closeContext();
+            if (deleteDb) {
+                try {
+                    Dataset dataset = TDB2Factory.connectDataset(ontologyDirectory);
+                    dataset.begin(ReadWrite.WRITE);
+                    dataset.listModelNames().forEachRemaining(dataset::removeNamedModel);
+                    dataset.commit();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
+            }
+            OntoFormGeneratorApplication.createContext();
+        });
+        thread.setDaemon(false);
+        thread.start();
     }
 
     //TODO: Logging

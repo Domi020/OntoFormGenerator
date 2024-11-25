@@ -37,6 +37,9 @@ public class OntologyValidationService {
     private final RestTemplate restTemplate;
     private final GeneralTDBService generalTDBService;
 
+    @Value("${ontoformgenerator.ontologyDirectory}")
+    private String ontologyDirectory;
+
     @Value("${ontoformgenerator.validator.mode}")
     private ValidatorMode mode;
 
@@ -144,7 +147,7 @@ public class OntologyValidationService {
     }
 
     public ValidationResult validateOntology(String ontologyName) {
-        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyName)) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             return validateOntology(connection.getDataset(), ontologyName);
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
