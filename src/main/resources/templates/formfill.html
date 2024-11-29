@@ -33,8 +33,8 @@
         <label for="instanceName">Instance name</label>
         <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
     </div>
-    <div th:each="field: ${formElements}">
-        <div class="mdl-card mdl-shadow--8dp" style="width: 60%; min-height: 120px">
+    <div th:each="field: ${formElements}" style="padding-top: 10px; padding-left: 10px">
+        <div class="mdl-card mdl-shadow--8dp" style="width: 60%; min-height: 120px; padding-left: 10px">
             <div th:if="${field.fieldType == 'Input'}">
                 <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
@@ -53,8 +53,8 @@
             </div>
         </div>
     </div>
-    <div th:each="field: ${additionalElements}">
-        <div class="mdl-card mdl-shadow--8dp" style="width: 100%;">
+    <div th:each="field: ${additionalElements}" style="padding-top: 10px; padding-left: 10px">
+        <div class="mdl-card mdl-shadow--8dp" style="width: 60%; min-height: 120px; padding-left: 10px; background: #B2DCEF">
             <div th:if="${field.fieldType == 'Input'}">
                 <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},
                 multipleValues=${field.maximumValues}, required=${field.required})"></div>
@@ -180,7 +180,7 @@
                     </button>
                 </div>
                 <div class="mdl-textfield mdl-js-textfield">
-                    <label class="mdl-textfield__label" for="create-property-with-object">Selected class</label>
+                    <label for="create-property-with-object">Selected class</label>
                     <input class="mdl-textfield__input" id="create-property-with-object" type="text" name="create-property-with-object" readonly>
                 </div>
 
@@ -212,7 +212,7 @@
         <label for="new-object-property-range">Selected class</label>
     </div>
     <button class="close">
-        <a>Cancel</a>
+        <a>Select</a>
     </button>
 </dialog>
 <dialog id="add-subclass-dialog">
