@@ -150,6 +150,9 @@ public class OntologyContentService {
     public Individual getIndividualByString(String individualName, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), ontologyName, individualName);
+            if (individual == null) {
+                return null;
+            }
             return new Individual(individual.getLocalName(), propertyService.getLabelOfIndividual(connection.getDataset(), ontologyName, individual.getURI()), individual.getURI(),
                     new OntologyClass(individual.getOntClass().getLocalName(), individual.getOntClass().getURI()),
                     individualService.checkIfIndividualIsImported(connection.getDataset(), ontologyName, individual.getURI()));

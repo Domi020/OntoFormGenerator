@@ -45,4 +45,18 @@ public class OntologyOverviewServiceTest {
         Assertions.assertEquals("restaurantOnt",
                 list.get(0).getName());
     }
+
+    @Test
+    public void getOntologyByNameTest() {
+        var ontology = ontologyOverviewService.getOntologyByName("restaurantOnt");
+        Assertions.assertEquals("restaurantOnt", ontology.getName());
+    }
+
+    @Test
+    public void downloadOntologyTest() {
+        var file = ontologyOverviewService.downloadOntology("restaurantOnt");
+        Assertions.assertNotNull(file);
+        Assertions.assertTrue(file.exists());
+        Assertions.assertEquals(2871, file.contentLength());
+    }
 }

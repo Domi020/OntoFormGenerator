@@ -63,7 +63,9 @@ public class IndividualService {
                                                String ontologyName,
                                                String individualName) {
         OntModel ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
-        return ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName)).next();
+        var ind = ontModel.listIndividuals().filterKeep(individual -> individual.getLocalName().equals(individualName))
+                .nextOptional();
+        return ind.orElse(null);
     }
 
     public List<Resource> selectIndividualsInSPARQLQuery(Dataset dataset,
