@@ -29,8 +29,6 @@ public class IndividualService {
         this.generalTDBService = generalTDBService;
     }
 
-    // TODO: Replace "forms" strings by constants
-
     // Retrieval methods
 
     public List<Individual> getAllIndividualsOfClass(Dataset dataset,

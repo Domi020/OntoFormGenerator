@@ -218,7 +218,6 @@ public class OntologyContentService {
                                  String ontologyName,
                                  String individualUri,
                                  Map<String, String[]> form) {
-        //TODO: Delete all old props first; create new
         var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                 OntSpecification.OWL2_DL_MEM);
 
@@ -475,7 +474,4 @@ public class OntologyContentService {
             return ontologyProperties;
         }
     }
-    //TODO: Draft: Was wenn mehrere Felder mit selber Property?
-
-    //TODO: Draft Validation
 }

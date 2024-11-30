@@ -64,7 +64,12 @@ public class FormController {
         try {
             formEditorService.updateForm(formName, form);
         } catch (Exception e) {
-            return "error/formedit-samefield-error";
+            if (e.getMessage().equals("Field names must be unique")) {
+                return "error/formedit-samefield-error";
+            } else if (e.getMessage().equals("Properties must be unique")) {
+                return "error/formedit-sameproperty-error";
+            }
+            return "error/formedit-generic-error";
         }
         return loadIndexPage(model);
     }

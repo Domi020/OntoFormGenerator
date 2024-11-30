@@ -72,8 +72,6 @@ public class GeneralTDBService {
         return namedClass.getURI();
     }
 
-    // TODO: eventuell Low Level Services nur in laufenden Transaktionen nutzbar?
-
     /**
      * Get the local name of a class in an ontology by its URI.
      * @param dataset The TDB production dataset of OntoFormGenerator

@@ -127,6 +127,10 @@ public class FormEditorService {
                 throw new RuntimeException("Field names must be unique");
             }
 
+            if (formInput.get("propertyName").size() != formInput.get("propertyName").stream().distinct().count()) {
+                throw new RuntimeException("Properties must be unique");
+            }
+
             // Set targetsClass
             var classIri = generalTDBService.getClassURIInOntology(dataset, formInput.getFirst("ontologyName"),
                     formInput.getFirst("ontologyClass"));

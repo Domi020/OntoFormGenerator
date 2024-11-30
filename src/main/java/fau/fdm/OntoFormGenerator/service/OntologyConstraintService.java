@@ -101,6 +101,4 @@ public class OntologyConstraintService {
         }
         return individuals;
     }
-
-    // TODO: Allow forms with same name
 }
