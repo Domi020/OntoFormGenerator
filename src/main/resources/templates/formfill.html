@@ -33,7 +33,7 @@
         <label for="instanceName">Instance name</label>
         <input id="instanceName" class="mdl-textfield__input" type="text" name="instanceName">
     </div>
-    <div th:each="field: ${formElements}" style="padding-top: 10px; padding-left: 10px">
+    <div th:each="field: ${formElements}" class="fillField" style="padding-top: 10px; padding-left: 10px">
         <div class="mdl-card mdl-shadow--8dp" style="width: 60%; min-height: 120px; padding-left: 10px">
             <div th:if="${field.fieldType == 'Input'}">
                 <div th:replace="form-fields.html :: stringField (name=${field.name}, propName=${field.ontologyProperty.name},

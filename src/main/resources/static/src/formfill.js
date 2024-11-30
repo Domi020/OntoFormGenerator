@@ -575,6 +575,21 @@ function formDataToJSON() {
 }
 
 /**
+ * Checks if all text input fields are valid regarding data types, required etc. and alerts the user if not
+ * @returns {boolean} true if all text input fields are valid, false otherwise
+ */
+function checkInputValidity() {
+    let inputs = document.getElementsByTagName('input');
+    for (let item of inputs) {
+        if (item.validity.valid === false) {
+            alert('The following field is not valid: ' + item.name);
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * Saves the form, optionally validating the knowledge base
  * @param validate whether the knowledge base with the new individual should be validated before saving
  */
@@ -583,7 +598,10 @@ async function saveForm(validate) {
     if (validate) {
         await createDraft();
     }
-    if (!checkIfRequiredFieldsAreFilled()) return;
+    if (!checkIfRequiredFieldsAreFilled() || !checkInputValidity()) {
+        JsLoadingOverlay.hide();
+        return;
+    }
     const formJson = formDataToJSON();
     let draftParam = '';
     if (draftName) {
