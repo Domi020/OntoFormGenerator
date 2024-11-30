@@ -29,16 +29,16 @@ async function showDrafts(buttonId) {
     let showDraftsList = document.querySelector('#showDraftsList');
     showDraftsList.innerHTML = '';
     for (let i = 0; i < drafts.length; i++) {
-        let individual = drafts[i];
+        let draft = drafts[i];
         let listItem = document.createElement('li');
         listItem.classList.add('mdl-list__item');
         listItem.innerHTML = `
-                <span class="mdl-list__item-primary-content">` + individual.name + `</span>
+                <span class="mdl-list__item-primary-content">` + draft.name + `</span>
                 <a class="mdl-list__item-secondary-action clickable-button"
-                                       href="/fill/` + formName + `/draft/` + individual.name + `">
+                                       href="/fill/` + formName + `/draft/` + draft.firstDraftName + `">
                                         <i class="material-icons">edit</i></a>
                 <button class="mdl-list__item-secondary-action clickable-button"
-                                       onclick="fetch('/api/forms/${formName}/draft?uri=${encodeURIComponent(individual.iri)}',
+                                       onclick="fetch('/api/forms/${formName}/draft?uri=${encodeURIComponent(draft.iri)}',
                                        {method: 'DELETE'}).then(async () => location.reload())">
                                         <i class="material-icons">delete</i></button>`
         showDraftsList.appendChild(listItem);

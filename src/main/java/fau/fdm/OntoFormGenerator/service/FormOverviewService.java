@@ -1,9 +1,6 @@
 package fau.fdm.OntoFormGenerator.service;
 
-import fau.fdm.OntoFormGenerator.data.Form;
-import fau.fdm.OntoFormGenerator.data.Individual;
-import fau.fdm.OntoFormGenerator.data.Ontology;
-import fau.fdm.OntoFormGenerator.data.OntologyClass;
+import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
@@ -121,36 +118,38 @@ public class FormOverviewService {
         }
     }
 
-    public List<List<Individual>> getAllDraftsOfForms(List<Form> forms) {
-        List<List<Individual>> drafts = new ArrayList<>();
+    public List<List<Draft>> getAllDraftsOfForms(List<Form> forms) {
+        List<List<Draft>> drafts = new ArrayList<>();
         for (var form : forms) {
             drafts.add(getAllDraftsOfForm(form.getFormName()));
         }
         return drafts;
     }
 
-    public List<Individual> getAllDraftsOfForm(String formName) {
+    public List<Draft> getAllDraftsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             return getAllDraftsOfForm(connection.getDataset(), formName);
         }
     }
 
-    private List<Individual> getAllDraftsOfForm(Dataset dataset, String formName) {
+    private List<Draft> getAllDraftsOfForm(Dataset dataset, String formName) {
         var formIndividual = individualService.getIndividualByLocalName(dataset, "forms", formName);
         var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
                 "forms", formIndividual, "targetsOntology").getLocalName();
         var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                 "forms", formIndividual, "created");
-        List<Individual> result = new ArrayList<>();
+        List<Draft> result = new ArrayList<>();
         for (var individual : individuals) {
             var isDraft = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
                     individual, "isDraft");
             if (isDraft == null || !isDraft.getBoolean()) continue;
+            var currentDraftName = propertyService.getDatatypePropertyValueFromIndividual(dataset, "forms",
+                    individual, "hasDraftName").getString();
             try {
-                result.add(new Individual(individual.getLocalName(),
+                result.add(new Draft(currentDraftName,
                         propertyService.getLabelOfIndividual(dataset, "forms", individual.getURI()),
                         individual.getURI(),
-                        new OntologyClass("test", "test"), true));
+                        new OntologyClass("test", "test"), true, individual.getLocalName()));
             } catch (NullPointerException ignored) {}
 
         }

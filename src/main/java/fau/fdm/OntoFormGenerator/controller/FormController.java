@@ -1,5 +1,6 @@
 package fau.fdm.OntoFormGenerator.controller;
 
+import fau.fdm.OntoFormGenerator.data.Draft;
 import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.service.*;
@@ -72,11 +73,12 @@ public class FormController {
             "application/json;charset=UTF-8")
     public ResponseEntity<String> fillForm(@PathVariable String formName,
                                     @RequestParam(value = "validate", required = false) String validate,
+                                    @RequestParam(value = "draftName", required = false) String draftName,
                                     @RequestBody Map<String, String[]> form) {
         String ontologyName = form.get("ontologyName")[0];
         var individualUri = formFillService.createIndividualFromFilledForm(formName,
                 ontologyName, form.get("targetClass")[0],
-                form.get("instanceName")[0], form);
+                form.get("instanceName")[0], draftName, form);
         if (Boolean.parseBoolean(validate)) {
             try {
                 var res = ontologyValidationService.validateOntology(ontologyName);
@@ -97,13 +99,14 @@ public class FormController {
     @RequestMapping(value = "/api/forms/{formName}/draft", method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     public String fillFormDraft(@PathVariable String formName,
+                           @RequestParam("firstDraftName") String firstDraftName,
                            @RequestBody Map<String, Object> form,
                            Model model) {
         var normalFields = (Map<String, List<String>>) form.get("normalFields");
         var additionalFields = (Map<String, List<String>>) form.get("additionalFields");
         formFillService.createDraftFromFilledForm(formName,
                 normalFields.get("ontologyName").get(0), normalFields.get("targetClass").get(0),
-                normalFields.get("instanceName").get(0), normalFields, additionalFields);
+                normalFields.get("instanceName").get(0), firstDraftName, normalFields, additionalFields);
         return loadIndexPage(model);
     }
 
@@ -122,7 +125,7 @@ public class FormController {
     }
 
     @RequestMapping(value = "/api/forms/{formName}/drafts", method = RequestMethod.GET)
-    public ResponseEntity<List<Individual>> getDraftsOfForm(@PathVariable String formName) {
+    public ResponseEntity<List<Draft>> getDraftsOfForm(@PathVariable String formName) {
         return ResponseEntity.ok(formOverviewService.getAllDraftsOfForm(formName));
     }
 

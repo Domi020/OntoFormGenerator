@@ -113,6 +113,15 @@
     
 
 
+    <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasDraftName -->
+
+    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasDraftName">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#Individual"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasMaximumValues -->
 
     <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/fau/ontologies/2024/ontoformgenerator/forms#hasMaximumValues">

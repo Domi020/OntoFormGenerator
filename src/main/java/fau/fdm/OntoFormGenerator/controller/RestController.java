@@ -76,6 +76,8 @@ public class RestController {
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
         model.addAttribute("additionalElements", new ArrayList<FormField>());
 
+        model.addAttribute("draftName", null);
+
         return "formfill";
     }
 
@@ -96,7 +98,9 @@ public class RestController {
 
         model.addAttribute("setElements", formFillService.getSetFieldsByDraft(form, individualName,
                 ontology.getName()));
-        model.addAttribute("individualName", individualName);
+        model.addAttribute("individualName", formFillService.getCurrentDraftName(individualName));
+
+        model.addAttribute("draftName", individualName);
 
         return "formfill";
     }

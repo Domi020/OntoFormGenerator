@@ -80,6 +80,12 @@ async function createDraft() {
     if (formData.get('instanceName') === '') {
         formData.set('instanceName', generateInstanceName());
     }
+    let draftParam = "";
+    if (draftName) {
+        draftParam = `?firstDraftName=${draftName}`;
+    } else {
+        draftParam = `?firstDraftName=${formData.get('instanceName')}`;
+    }
     let normalFields = {};
     let additionalFields = {};
     formData.forEach(function (value, key) {
@@ -106,7 +112,7 @@ async function createDraft() {
         throw 0;
     }
     let formJSON = JSON.stringify(formString);
-    return fetch(`/api/forms/${formName}/draft`, {
+    return fetch(`/api/forms/${formName}/draft${draftParam}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -579,7 +585,11 @@ async function saveForm(validate) {
     }
     if (!checkIfRequiredFieldsAreFilled()) return;
     const formJson = formDataToJSON();
-    fetch(`/api/forms/${formName}/fill?validate=${validate.toString()}`, {
+    let draftParam = '';
+    if (draftName) {
+        draftParam = `&draftName=${draftName}`;
+    }
+    fetch(`/api/forms/${formName}/fill?validate=${validate.toString()}${draftParam}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
