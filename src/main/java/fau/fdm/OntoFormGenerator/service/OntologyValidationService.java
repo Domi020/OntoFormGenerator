@@ -86,6 +86,18 @@ public class OntologyValidationService {
     }
 
     /**
+     * Check if a URI is already used in an ontology.
+     * @param ontologyName The name of the ontology.
+     * @param URI The URI to check.
+     * @return True if the URI is already used, false otherwise.
+     */
+    public boolean checkIfURIisUsed(String ontologyName, String URI) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
+            return checkIfURIisUsed(connection.getDataset(), ontologyName, URI);
+        }
+    }
+
+    /**
      * Check if a new property name follows the naming schema of the ontology.
      * @param dataset The dataset to use.
      * @param ontologyName The name of the ontology.
@@ -102,6 +114,18 @@ public class OntologyValidationService {
         result.setOntologyNamingSchema(ontologySchema);
         result.setValid(ontologySchema == newPropertySchema);
         return result;
+    }
+
+    /**
+     * Check if a new property name follows the naming schema of the ontology.
+     * @param ontologyName The name of the ontology.
+     * @param newPropertyName The name of the new property.
+     * @return A result object containing the result of the validation - including the naming schemata and whether they match.
+     */
+    public NamingSchemaValidationResult checkNamingSchema(String ontologyName, String newPropertyName) {
+        try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
+            return checkNamingSchema(connection.getDataset(), ontologyName, newPropertyName);
+        }
     }
 
     private NamingSchema getNamingSchema(String name) {
