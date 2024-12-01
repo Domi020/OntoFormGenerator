@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service for getting basic form information especially for the index page.
+ */
 @Service
 public class FormOverviewService {
 
@@ -32,11 +35,17 @@ public class FormOverviewService {
     @Autowired
     public FormOverviewService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService) {
         this.propertyService = propertyService;
-        this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+        this.logger = LoggerFactory.getLogger(FormOverviewService.class);
         this.individualService = individualService;
         this.generalTDBService = generalTDBService;
     }
 
+    /**
+     * Get all forms that target a specific class in a specific ontology.
+     * @param ontologyName The name of the ontology.
+     * @param targetClass The class the forms target.
+     * @return A list of forms that target the specified class.
+     */
     public List<Form> getFormsWithTargetClass(String ontologyName, String targetClass) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var targetClassIndiv = individualService.findIndividualInOntology(connection.getDataset(), ontologyName, targetClass);
@@ -51,6 +60,13 @@ public class FormOverviewService {
         }
     }
 
+    /**
+     * Add a new form to the database.
+     * @param formName The name of the form.
+     * @param ontologyName The name of the ontology the form targets.
+     * @param ontologyURI The URI of the ontology the form targets.
+     * @param targetClass The class the form targets.
+     */
     public void addNewForm(String formName, String ontologyName, String ontologyURI,
                            String targetClass) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
@@ -78,6 +94,10 @@ public class FormOverviewService {
         }
     }
 
+    /**
+     * Get all forms of all ontologies in the database.
+     * @return A list of all forms in the database.
+     */
     public List<Form> getAllForms() {
         List<Form> forms = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
@@ -96,6 +116,11 @@ public class FormOverviewService {
         }
     }
 
+    /**
+     * Get all created individuals of a form.
+     * @param formName The name of the form.
+     * @return A list of all created individuals of the form.
+     */
     public List<Individual> getAllIndividualsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var dataset = connection.getDataset();
@@ -118,6 +143,11 @@ public class FormOverviewService {
         }
     }
 
+    /**
+     * Get all drafts of a form list.
+     * @param forms The list of forms for which the drafts should be retrieved.
+     * @return A list drafts for each form in the list, corresponding to the order of the input list.
+     */
     public List<List<Draft>> getAllDraftsOfForms(List<Form> forms) {
         List<List<Draft>> drafts = new ArrayList<>();
         for (var form : forms) {
@@ -126,16 +156,25 @@ public class FormOverviewService {
         return drafts;
     }
 
+    /**
+     * Get all drafts of a form.
+     * @param formName The name of the form.
+     * @return A list of all drafts of the form.
+     */
     public List<Draft> getAllDraftsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             return getAllDraftsOfForm(connection.getDataset(), formName);
         }
     }
 
+    /**
+     * Get all drafts of a form.
+     * @param dataset The opened TDB dataset to use.
+     * @param formName The name of the form.
+     * @return A list of all drafts of the form.
+     */
     private List<Draft> getAllDraftsOfForm(Dataset dataset, String formName) {
         var formIndividual = individualService.getIndividualByLocalName(dataset, "forms", formName);
-        var ontologyName = propertyService.getObjectPropertyValueFromIndividual(dataset,
-                "forms", formIndividual, "targetsOntology").getLocalName();
         var individuals = propertyService.getMultipleObjectPropertyValuesFromIndividual(dataset,
                 "forms", formIndividual, "created");
         List<Draft> result = new ArrayList<>();
@@ -156,6 +195,10 @@ public class FormOverviewService {
         return result;
     }
 
+    /**
+     * Delete a form from the database.
+     * @param formName The name of the form to delete.
+     */
     public void deleteForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             deleteForm(connection.getDataset(), formName);
@@ -163,6 +206,11 @@ public class FormOverviewService {
         }
     }
 
+    /**
+     * Delete a form from the database.
+     * @param dataset The opened TDB dataset to use.
+     * @param formName The name of the form to delete.
+     */
     public void deleteForm(Dataset dataset, String formName) {
         for (var draft : getAllDraftsOfForm(dataset, formName)) {
             individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
@@ -177,6 +225,11 @@ public class FormOverviewService {
         individualService.deleteIndividualByLocalName(dataset, "forms", formName);
     }
 
+    /**
+     * Get the ontology of a form.
+     * @param formName The name of the form.
+     * @return The ontology the form targets.
+     */
     public Ontology getOntologyOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var formIndividual = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);

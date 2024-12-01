@@ -28,6 +28,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * Service for getting ontology information about classes, properties and individuals.
+ */
 @Service
 public class OntologyContentService {
 
@@ -45,12 +48,17 @@ public class OntologyContentService {
     @Autowired
     public OntologyContentService(IndividualService individualService, GeneralTDBService generalTDBService, PropertyService propertyService, OntologyValidationService ontologyValidationService) {
         this.generalTDBService = generalTDBService;
-        this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+        this.logger = LoggerFactory.getLogger(OntologyContentService.class);
         this.individualService = individualService;
         this.propertyService = propertyService;
         this.ontologyValidationService = ontologyValidationService;
     }
 
+    /**
+     * Get all classes of an ontology.
+     * @param ontologyName The name of the ontology.
+     * @return A list of all classes in the ontology.
+     */
     public List<OntologyClass> getAllClassesOfOntology(String ontologyName) {
         List<OntologyClass> classes = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
@@ -61,6 +69,12 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Get all properties of a domain class.
+     * @param ontologyName The name of the ontology.
+     * @param classURI The URI of the domain class.
+     * @return A list of all properties of the domain class.
+     */
     public List<OntologyProperty> getAllPropertiesOfDomain(String ontologyName, String classURI) {
         List<OntologyProperty> properties = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
@@ -101,6 +115,11 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Get all individuals of an ontology.
+     * @param ontologyName The name of the ontology.
+     * @return A list of all individuals in the ontology.
+     */
     public List<Individual> getAllIndividualsOfOntology(String ontologyName) {
         List<Individual> individuals = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
@@ -121,6 +140,12 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Get all individuals of a class. Uses reasoning to also get all indirect individuals.
+     * @param ontologyName The name of the ontology.
+     * @param classIri The URI of the class.
+     * @return A list of all individuals of the class.
+     */
     public List<Individual> getAllIndividualsOfClass(String ontologyName, String classIri) {
         List<Individual> individuals = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
@@ -147,6 +172,12 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Get the individual of an ontology by its label name.
+     * @param individualName The label name of the individual.
+     * @param ontologyName The name of the ontology.
+     * @return The individual with the given name.
+     */
     public Individual getIndividualByString(String individualName, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), ontologyName, individualName);
@@ -159,6 +190,12 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Get the set properties (datatype and object) of an individual.
+     * @param individualURI The URI of the individual.
+     * @param ontologyName The name of the ontology.
+     * @return A list of all set properties of the individual.
+     */
     public List<SetProperty> getAllSetPropertiesByIndividual(String individualURI, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             return getSetProperties(connection.getDataset(), individualURI, ontologyName);
@@ -202,6 +239,13 @@ public class OntologyContentService {
         return setProperties;
     }
 
+    /**
+     * Create an empty individual in the ontology of a given class.
+     * @param ontologyName The name of the ontology.
+     * @param classUri The URI of the class.
+     * @param individualName The label name of the individual.
+     * @return True if the individual was created successfully, false otherwise.
+     */
     public Boolean addEmptyIndividual(String ontologyName, String classUri, String individualName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var ontClass = connection.getModel().getOntClass(classUri);
@@ -214,6 +258,19 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Edit an individual in the ontology - add, remove or change set properties.
+     * @param dataset The TDB dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param individualUri The URI of the individual.
+     * @param form The form data with the new properties in the following format:
+     *             {
+     *             "propertyName": ["property1", "property2", ...],
+     *             "fieldValue": ["value1", "value2", ...],
+     *             "isObjectProperty": ["true", "false", ...]
+     *             }
+     * @return The URI of the edited individual.
+     */
     public String editIndividual(Dataset dataset,
                                  String ontologyName,
                                  String individualUri,
@@ -278,7 +335,6 @@ public class OntologyContentService {
             }
         }
 
-
         // delete all old form elements that are not in the new form
         for (var alreadyInsertedElement : setProperties) {
             if (alreadyInsertedElement == null) continue;
@@ -298,6 +354,11 @@ public class OntologyContentService {
         return individualUri;
     }
 
+    /**
+     * Generate the subclass graph of an ontology.
+     * @param ontologyName The name of the ontology.
+     * @return The subclass graph of the ontology.
+     */
     public SubclassGraph buildSubclassGraph(String ontologyName) {
         SubclassGraph subclassGraph = new SubclassGraph();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
@@ -335,6 +396,15 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Add a new class to the ontology.
+     * @param ontologyName The name of the ontology.
+     * @param className The label name of the new class.
+     * @param superClass The label name of the superclass of the new class. Must be filled with "owl:Thing" if no superclass is given.
+     * @return The new class.
+     * @throws OntologyValidationException If the validation of the new class fails - for example if there are problems
+     *  with the naming schema or if it already exists.
+     */
     public OntologyClass addNewClass(String ontologyName, String className,
                                      String superClass) throws OntologyValidationException {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
@@ -355,6 +425,11 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Delete an existing individual from the ontology.
+     * @param ontologyName The name of the ontology.
+     * @param individualUri The URI of the individual.
+     */
     public void deleteIndividual(String ontologyName, String individualUri) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             individualService.deleteIndividualByIri(connection.getDataset(), ontologyName, individualUri);
@@ -366,6 +441,19 @@ public class OntologyContentService {
     private final String IS_USER_DEFINED = "http://ontologies.ontoformgenerator.de/general#isUserDefined";
     private final String RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
 
+    /**
+     * Create a new property in the ontology.
+     * @param ontologyName The name of the ontology.
+     * @param propDescription The description (rdfs:comment) of the new property.
+     * @param propertyName The label name of the new property.
+     * @param objectProperty True if the new property is an object property, false if it is a datatype property.
+     * @param domain The IRI of the domain class of the new property.
+     * @param range The IRI of the range class of the new property.
+     * @param validate True if the new property should be validated, false otherwise.
+     * @return The new property.
+     * @throws OntologyValidationException If the validation of the new property fails - for example if there are problems
+     *      with the naming schema or if it already exists.
+     */
     public OntologyProperty createNewProperty(String ontologyName, String propDescription, String propertyName,
                                               boolean objectProperty, String domain, String range,
                                               boolean validate) throws OntologyValidationException {
@@ -432,6 +520,11 @@ public class OntologyContentService {
         };
     }
 
+    /**
+     * Get all already used target classes of an ontology - classes for which forms were already created.
+     * @param ontologyName The name of the ontology.
+     * @return A list of all target classes.
+     */
     public List<OntologyClass> getTargetClasses(String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var ontology = individualService.findIndividualInOntology(connection.getDataset(), "forms", ontologyName);
@@ -445,6 +538,13 @@ public class OntologyContentService {
         }
     }
 
+    /**
+     * Query properties of a class in an ontology - search for name, label and description.
+     * @param ontologyName The name of the ontology.
+     * @param classIri The URI of the class.
+     * @param query The search query.
+     * @return A list of all properties that match the search query.
+     */
     public List<OntologyProperty> queryProperties(String ontologyName, String classIri, String query) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             // 1. Search for name (case invariant; contains)

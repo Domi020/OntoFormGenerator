@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service for managing imported ontologies.
+ */
 @Service
 public class OntologyOverviewService {
 
@@ -50,13 +53,20 @@ public class OntologyOverviewService {
         this.propertyService = propertyService;
     }
 
-    public OntologyOverviewService(String ontologyDirectory, Logger logger, PropertyService propertyService, FormOverviewService formOverviewService) {
+    public OntologyOverviewService(Logger logger, FormOverviewService formOverviewService) {
         this.logger = logger;
         this.individualService = null;
         this.generalTDBService = null;
         this.formOverviewService = formOverviewService;
     }
 
+    /**
+     * Imports an ontology from an OWL file.
+     * @param owlFile The OWL file to import.
+     * @param ontologyName The name of the ontology under which it should be stored.
+     * @return True if the import was successful, false otherwise.
+     * @throws IOException If an error occurs while reading the file - for example if the file uses an unsupported format.
+     */
     public boolean importOntology(File owlFile, String ontologyName) throws IOException {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
@@ -91,6 +101,10 @@ public class OntologyOverviewService {
         }
     }
 
+    /**
+     * Get a list of all imported ontologies.
+     * @return A list of all imported ontologies.
+     */
     public List<Ontology> getImportedOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, "forms")) {
@@ -106,11 +120,20 @@ public class OntologyOverviewService {
         }
     }
 
+    /**
+     * Get an ontology by its name.
+     * @param ontologyName The name of the ontology.
+     * @return The ontology with the given name, or null if no such ontology exists.
+     */
     public Ontology getOntologyByName(String ontologyName) {
         var ontologyList = getImportedOntologies();
         return ontologyList.stream().filter(ontology -> ontology.getName().equals(ontologyName)).findFirst().orElse(null);
     }
 
+    /**
+     * Delete an ontology by its name.
+     * @param ontologyName The name of the ontology to delete.
+     */
     public void deleteOntology(String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
@@ -136,6 +159,11 @@ public class OntologyOverviewService {
         }
     }
 
+    /**
+     * Download an ontology and its knowledge base including all created individuals by its name.
+     * @param ontologyName The name of the ontology to download.
+     * @return A byte array resource containing the ontology.
+     */
     public ByteArrayResource downloadOntology(String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

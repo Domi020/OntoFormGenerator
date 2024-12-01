@@ -1,5 +1,8 @@
 package fau.fdm.OntoFormGenerator.exception;
 
+/**
+ * ValidationException when the naming schema of a property does not match the naming schema of the ontology.
+ */
 public class NamingSchemaDifferentException extends OntologyValidationException {
     public NamingSchemaDifferentException(String newProperty, String ontologyName,
                                           String newPropertySchema, String ontologySchema) {

@@ -4,7 +4,6 @@ import fau.fdm.OntoFormGenerator.data.Draft;
 import fau.fdm.OntoFormGenerator.data.Form;
 import fau.fdm.OntoFormGenerator.data.Individual;
 import fau.fdm.OntoFormGenerator.service.*;
-import fau.fdm.OntoFormGenerator.tdb.IndividualService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -25,18 +24,16 @@ public class FormController {
     private final FormFillService formFillService;
 
     private final OntologyOverviewService ontologyOverviewService;
-    private final OntologyContentService ontologyContentService;
-    private final IndividualService individualService;
     private final OntologyValidationService ontologyValidationService;
 
     public FormController(FormOverviewService formOverviewService, FormEditorService formEditorService,
-                          FormFillService formFillService, OntologyOverviewService ontologyOverviewService, OntologyContentService ontologyContentService, IndividualService individualService, OntologyValidationService ontologyValidationService) {
+                          FormFillService formFillService,
+                          OntologyOverviewService ontologyOverviewService,
+                          OntologyValidationService ontologyValidationService) {
         this.formOverviewService = formOverviewService;
         this.formEditorService = formEditorService;
         this.formFillService = formFillService;
         this.ontologyOverviewService = ontologyOverviewService;
-        this.ontologyContentService = ontologyContentService;
-        this.individualService = individualService;
         this.ontologyValidationService = ontologyValidationService;
     }
 
@@ -86,7 +83,7 @@ public class FormController {
                 form.get("instanceName")[0], draftName, form);
         if (Boolean.parseBoolean(validate)) {
             try {
-                var res = ontologyValidationService.validateOntology(ontologyName);
+                var res = ontologyValidationService.validateOntologyWithReasoner(ontologyName);
                 if (res.isConsistent()) {
                     return ResponseEntity.ok("Instance was created and validated");
                 } else {
@@ -110,8 +107,8 @@ public class FormController {
         var normalFields = (Map<String, List<String>>) form.get("normalFields");
         var additionalFields = (Map<String, List<String>>) form.get("additionalFields");
         formFillService.createDraftFromFilledForm(formName,
-                normalFields.get("ontologyName").get(0), normalFields.get("targetClass").get(0),
-                normalFields.get("instanceName").get(0), firstDraftName, normalFields, additionalFields);
+                normalFields.get("ontologyName").get(0), normalFields.get("instanceName").get(0), firstDraftName,
+                normalFields, additionalFields);
         return loadIndexPage(model);
     }
 

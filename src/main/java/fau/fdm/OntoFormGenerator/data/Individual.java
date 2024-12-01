@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Represents an individual in an ontology.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

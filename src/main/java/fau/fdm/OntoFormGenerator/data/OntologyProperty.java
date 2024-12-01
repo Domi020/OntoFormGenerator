@@ -3,6 +3,9 @@ package fau.fdm.OntoFormGenerator.data;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represents a property (datatype or object) in an ontology.
+ */
 @Getter
 @Setter
 public class OntologyProperty {

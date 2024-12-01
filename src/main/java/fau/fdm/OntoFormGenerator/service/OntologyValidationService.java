@@ -3,7 +3,6 @@ package fau.fdm.OntoFormGenerator.service;
 import fau.fdm.OntoFormGenerator.data.OntologyClass;
 import fau.fdm.OntoFormGenerator.data.OntologyProperty;
 import fau.fdm.OntoFormGenerator.data.ValidationResult;
-import fau.fdm.OntoFormGenerator.exception.URIAlreadyExistsException;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
 import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
@@ -27,8 +26,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
+/**
+ * Service for validating ontologies.
+ */
 @Service
 public class OntologyValidationService {
 
@@ -49,6 +50,11 @@ public class OntologyValidationService {
         this.generalTDBService = generalTDBService;
     }
 
+    /**
+     * Check if a property name is valid - i.e. does not contain any filtered words.
+     * @param newPropertyName The name of the property to check.
+     * @return A result object containing the property name and whether it is valid.
+     */
     public PropertyNamingValidationResult checkNaming(String newPropertyName) {
         // var toCheck = newPropertyName.toLowerCase();
         var wordFilters = List.of("And", "Or", "Other", "Miscellaneous");
@@ -65,6 +71,13 @@ public class OntologyValidationService {
         return result;
     }
 
+    /**
+     * Check if a URI is already used in an ontology.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param URI The URI to check.
+     * @return True if the URI is already used, false otherwise.
+     */
     public boolean checkIfURIisUsed(Dataset dataset, String ontologyName,
                                  String URI) {
         var ontModel = generalTDBService.getOntModel(dataset.getNamedModel(ontologyName));
@@ -72,6 +85,13 @@ public class OntologyValidationService {
         return resource != null;
     }
 
+    /**
+     * Check if a new property name follows the naming schema of the ontology.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param newPropertyName The name of the new property.
+     * @return A result object containing the result of the validation - including the naming schemata and whether they match.
+     */
     public NamingSchemaValidationResult checkNamingSchema(Dataset dataset, String ontologyName,
                              String newPropertyName) {
         var ontologySchema = getOntologyNamingSchema(dataset, ontologyName);
@@ -114,6 +134,14 @@ public class OntologyValidationService {
         }
     }
 
+    /**
+     * Find potential similar properties to a new property in an ontology - then it should not be added, probably.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param domainUri The URI of the domain class.
+     * @param newPropertyName The name of the new property.
+     * @return A list of potential similar properties - or an empty list if none were found.
+     */
     public List<OntologyProperty> findPotentialSimilarProperties(Dataset dataset,
                                                                  String ontologyName,
                                                                  String domainUri,
@@ -146,15 +174,27 @@ public class OntologyValidationService {
         return resultList;
     }
 
-    public ValidationResult validateOntology(String ontologyName) {
+    /**
+     * Start a reasoner validation for an ontology.
+     * @param ontologyName The name of the ontology.
+     * @return The result of the validation.
+     */
+    public ValidationResult validateOntologyWithReasoner(String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
-            return validateOntology(connection.getDataset(), ontologyName);
+            return validateOntologyWithReasoner(connection.getDataset(), ontologyName);
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public ValidationResult validateOntology(Dataset dataset, String ontologyName)
+    /**
+     * Start a reasoner validation for an ontology.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @return The result of the validation.
+     * @throws OWLOntologyCreationException If OWL API could not import the knowledge base for a reason.
+     */
+    public ValidationResult validateOntologyWithReasoner(Dataset dataset, String ontologyName)
             throws OWLOntologyCreationException {
         var tdbModel = dataset.getNamedModel(ontologyName);
         Validator validator = null;

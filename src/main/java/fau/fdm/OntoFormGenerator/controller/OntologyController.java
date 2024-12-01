@@ -2,16 +2,11 @@ package fau.fdm.OntoFormGenerator.controller;
 
 import fau.fdm.OntoFormGenerator.data.*;
 import fau.fdm.OntoFormGenerator.exception.OntologyValidationException;
-import fau.fdm.OntoFormGenerator.exception.SimilarPropertiesExistException;
 import fau.fdm.OntoFormGenerator.service.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
-import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
@@ -23,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -207,7 +201,7 @@ public class OntologyController {
                 individualUri = generalTDBService.getIndividualURIInOntology(dataset, ontologyName, individualName);
             }
             var uri = ontologyContentService.editIndividual(dataset, ontologyName, individualUri, form);
-            var res = ontologyValidationService.validateOntology(dataset, ontologyName);
+            var res = ontologyValidationService.validateOntologyWithReasoner(dataset, ontologyName);
             if (res.isConsistent()) {
                 dataset.commit();
                 return ResponseEntity.ok("Instance was created and validated");

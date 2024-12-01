@@ -7,10 +7,8 @@ import fau.fdm.OntoFormGenerator.tdb.PropertyService;
 import fau.fdm.OntoFormGenerator.tdb.TDBConnection;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.impl.OntResourceImpl;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +17,10 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.*;
 
+/**
+ * Service for all function of the form editor.
+ * Including updating forms, and fetching metadata of forms.
+ */
 @Service
 public class FormEditorService {
 
@@ -36,12 +38,17 @@ public class FormEditorService {
     public FormEditorService(IndividualService individualService, PropertyService propertyService, GeneralTDBService generalTDBService, OntologyConstraintService ontologyConstraintService) {
         this.individualService = individualService;
         this.propertyService = propertyService;
-        this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+        this.logger = LoggerFactory.getLogger(FormEditorService.class);
         this.generalTDBService = generalTDBService;
         this.ontologyConstraintService = ontologyConstraintService;
     }
 
-    public OntologyClass getSelectedEditorClass(String formName) {
+    /**
+     * Get the target class of a specific form.
+     * @param formName The name of the form.
+     * @return The target class of the form.
+     */
+    public OntologyClass getTargetClassOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
             var classValue = propertyService.getObjectPropertyValueFromIndividual(connection.getDataset(),
@@ -51,6 +58,11 @@ public class FormEditorService {
         }
     }
 
+    /**
+     * Get all (standard, not additional) form elements of a form.
+     * @param formName The name of the form.
+     * @return A list of all form elements of the form.
+     */
     public List<FormField> getAllFormElementsOfForm(String formName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory,"forms")) {
             var dataset = connection.getDataset();
@@ -79,7 +91,6 @@ public class FormEditorService {
                 var domain = new OntologyClass(targetField.getLocalName(), targetField.getURI());
                 var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                 if (isObjectProperty) {
-                    // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                     OntologyClass objectRange;
                     var objectRangeProp = property.getRange();
                     if (objectRangeProp != null) {
@@ -91,7 +102,6 @@ public class FormEditorService {
                             new OntologyProperty(targetField.getLocalName(), domain, property.getURI(), true, objectRange, null),
                             fieldType, fieldName, maximumValues, minimumValues, required));
                 } else {
-                    // var property = propertyService.getPropertyFromOntologyByIRI(dataset, ontologyName, targetField.getURI());
                     var dataRangeProp = property.getRange();
                     String dataRange;
                     if (dataRangeProp != null) {
@@ -115,8 +125,26 @@ public class FormEditorService {
         }
     }
 
+    /**
+     * Update a form with new form elements.
+     * @param formName The name of the form.
+     * @param formInput The new form elements from the form editor in the following format:
+     *                {
+     *                  "fieldName": ["field1", "field2", ...],
+     *                  "propertyName": ["property1", "property2", ...],
+     *                  "ontologyName": "ontologyName",
+     *                  "ontologyClass": "ontologyClass",
+     *                  "isObjectProperty": ["true", "false", ...],
+     *                  "propertyRange": ["string", "int", ...],
+     *                  "required-checkbox": ["required-checkbox-0", "required-checkbox-1", ...],
+     *                  "maximumValues": ["1", "2", ...],
+     *                  "minimumValues": ["1", "1", ...]
+     *                }
+     */
     public void updateForm(String formName, MultiValueMap<String, String> formInput) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory,"forms")) {
+            logger.info("Updating form {}", formName);
+            logger.debug("Form input: {}", formInput);
             var dataset = connection.getDataset();
             var form = individualService.getIndividualByLocalName(dataset, "forms", formName);
             var ontology = propertyService.getObjectPropertyValueFromIndividual(dataset, "forms",
@@ -247,6 +275,7 @@ public class FormEditorService {
                         .getLocalName());
             }
             connection.commit();
+            logger.info("Form {} updated", formName);
         } catch (Exception e) {
             logger.error("Error while updating form", e);
             throw e;

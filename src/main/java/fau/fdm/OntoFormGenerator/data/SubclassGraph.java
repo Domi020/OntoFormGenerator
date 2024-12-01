@@ -6,6 +6,9 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the graph of subclasses in an ontology.
+ */
 @Getter
 @Setter
 public class SubclassGraph {

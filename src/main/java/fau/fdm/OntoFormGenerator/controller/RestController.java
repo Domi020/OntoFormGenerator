@@ -1,6 +1,5 @@
 package fau.fdm.OntoFormGenerator.controller;
 
-import fau.fdm.OntoFormGenerator.OntoFormGeneratorApplication;
 import fau.fdm.OntoFormGenerator.data.FormField;
 import fau.fdm.OntoFormGenerator.service.*;
 import fau.fdm.OntoFormGenerator.tdb.GeneralTDBService;
@@ -52,7 +51,7 @@ public class RestController {
 
     @RequestMapping(value = "/editor/{form}", method = RequestMethod.GET)
     public String loadEditorPage(Model model, @PathVariable String form, @RequestParam("ontology") String ontology) {
-        var targetClass = formEditorService.getSelectedEditorClass(form);
+        var targetClass = formEditorService.getTargetClassOfForm(form);
         model.addAttribute("form", form);
         model.addAttribute("ontology", ontology);
         model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology));
@@ -72,7 +71,7 @@ public class RestController {
         model.addAttribute("ontology", ontology);
         model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology));
 
-        model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
+        model.addAttribute("targetClass", formEditorService.getTargetClassOfForm(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
         model.addAttribute("additionalElements", new ArrayList<FormField>());
 
@@ -91,9 +90,9 @@ public class RestController {
         model.addAttribute("ontology", ontology.getName());
         model.addAttribute("ontologyClasses", ontologyContentService.getAllClassesOfOntology(ontology.getName()));
 
-        model.addAttribute("targetClass", formEditorService.getSelectedEditorClass(form));
+        model.addAttribute("targetClass", formEditorService.getTargetClassOfForm(form));
         model.addAttribute("formElements", formEditorService.getAllFormElementsOfForm(form));
-        model.addAttribute("additionalElements", formFillService.getAllAdditionalElementsOfDraft(form,
+        model.addAttribute("additionalElements", formFillService.getAllAdditionalFormElementsOfDraft(form,
                 ontology.getName(), individualName));
 
         model.addAttribute("setElements", formFillService.getSetFieldsByDraft(form, individualName,

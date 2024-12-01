@@ -17,12 +17,23 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service for getting constraints from the ontologies.
+ */
 @Service
 public class OntologyConstraintService {
 
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
+    /**
+     * Get cardinality and value constraints for a given domain class and property.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param domainClassUri The URI of the domain class.
+     * @param propertyUri The URI of the property.
+     * @return A list of constraints for this combination.
+     */
     public List<Constraint> getConstraints(Dataset dataset, String ontologyName, String domainClassUri, String propertyUri) {
         var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
@@ -61,12 +72,28 @@ public class OntologyConstraintService {
         return resultList;
     }
 
+    /**
+     * Get cardinality and value constraints for a given domain class and property.
+     * @param ontologyName The name of the ontology.
+     * @param domainClassUri The URI of the domain class.
+     * @param propertyUri The URI of the property.
+     * @return A list of constraints for this combination.
+     */
     public List<Constraint> getConstraints(String ontologyName, String domainClassUri, String propertyUri) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             return getConstraints(connection.getDataset(), ontologyName, domainClassUri, propertyUri);
         }
     }
 
+    /**
+     * Filter a list of allowed individuals for the given domain class and property from a complete list of individuals.
+     * @param individuals The complete list of individuals for a property.
+     * @param ontologyName The name of the ontology.
+     * @param domainClassUri The URI of the domain class.
+     * @param propertyUri The URI of the property.
+     * @return A list of individuals that are allowed for the given domain class and property. This is a subset of
+     *       the input list individuals.
+     */
     public List<Individual> filterForAllValuesFromIndividuals(List<Individual> individuals,
                                                               String ontologyName,
                                                               String domainClassUri,

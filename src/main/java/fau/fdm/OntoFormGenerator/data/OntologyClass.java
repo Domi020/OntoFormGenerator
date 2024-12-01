@@ -1,9 +1,11 @@
 package fau.fdm.OntoFormGenerator.data;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Represents an ontology class in an ontology with name and URI.
+ */
 @Getter
 @Setter
 public class OntologyClass {

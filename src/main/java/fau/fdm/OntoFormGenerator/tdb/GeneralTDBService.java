@@ -186,6 +186,10 @@ public class GeneralTDBService {
         }
     }
 
+    /**
+     * Restart the application by closing the Spring Boot context and creating a new one.
+     * @param deleteDb If true, the TDB database in the production folder will be deleted and recreated.
+     */
     public void restart(boolean deleteDb) {
         Thread thread = new Thread(() -> {
             OntoFormGeneratorApplication.closeContext();

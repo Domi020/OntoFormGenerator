@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Service for all functions of the form filling process.
+ */
 @Service
 public class FormFillService {
 
@@ -42,11 +45,16 @@ public class FormFillService {
     public FormFillService(IndividualService individualService,
                            GeneralTDBService generalTDBService, PropertyService propertyService) {
         this.individualService = individualService;
-        this.logger = LoggerFactory.getLogger(OntologyOverviewService.class);
+        this.logger = LoggerFactory.getLogger(FormFillService.class);
         this.generalTDBService = generalTDBService;
         this.propertyService = propertyService;
     }
 
+    /**
+     * Deletes an individual from the ontology with the given URI.
+     * @param ontologyName The name of the ontology the individual is in.
+     * @param individualUri The URI of the individual to delete.
+     */
     public void deleteIndividualByIri(String ontologyName, String individualUri) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             individualService.deleteIndividualByIri(connection.getDataset(), ontologyName, individualUri);
@@ -55,6 +63,11 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Deletes an existing draft from the ontology.
+     * @param formName The name of the form the draft is for.
+     * @param draftUri The URI of the draft to delete.
+     */
     public void deleteDraft(String formName,
                             String draftUri) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
@@ -63,9 +76,17 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Creates a draft from a filled form or updates an existing draft.
+     * @param formName The name of the form the draft is for.
+     * @param ontologyName The name of the ontology the form is in.
+     * @param instanceName The current name of the draft.
+     * @param firstDraftName The name of draft under which the draft was created first - can be equal to instanceName.
+     * @param formValues The values of the standard form fields.
+     * @param additionalValues The values of the additional fields.
+     */
     public void createDraftFromFilledForm(String formName,
                                           String ontologyName,
-                                          String targetField,
                                           String instanceName,
                                           String firstDraftName,
                                           Map<String, List<String>> formValues,
@@ -121,6 +142,13 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Get all already set fields in a draft.
+     * @param formName The name of the form the draft is for.
+     * @param individualName The name of the draft.
+     * @param ontologyName The name of the ontology the form is in.
+     * @return A list of all set fields in the draft.
+     */
     public List<SetField> getSetFieldsByDraft(String formName, String individualName, String ontologyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
@@ -139,6 +167,11 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Get the current draft name of a draft, given the original/first draft name.
+     * @param individualName The first name of the draft, as stated also in the URI.
+     * @return The current name of the draft.
+     */
     public String getCurrentDraftName(String individualName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, null)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
@@ -147,8 +180,15 @@ public class FormFillService {
         }
     }
 
-    public List<FormField> getAllAdditionalElementsOfDraft(String formName, String ontologyName,
-                                                           String individualName) {
+    /**
+     * Get all additional form elements of a draft (without values).
+     * @param formName The name of the form.
+     * @param ontologyName The name of the ontology the form is in.
+     * @param individualName The name of the draft.
+     * @return A list of all additional form elements of the draft.
+     */
+    public List<FormField> getAllAdditionalFormElementsOfDraft(String formName, String ontologyName,
+                                                               String individualName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
@@ -156,9 +196,6 @@ public class FormFillService {
             var draftMap = gson.fromJson(draft.getString(), Map.class);
             var formFields = new ArrayList<FormField>();
             var fields = (Map) draftMap.get("additionalFields");
-            var form = individualService.getIndividualByLocalName(connection.getDataset(), "forms", formName);
-            // var targetField = propertyService.getObjectPropertyValueFromIndividual(dataset,
-            //         "forms", individual, "targetsClass");
             for (var field : fields.keySet()) {
                 var fieldName = (String) field;
 
@@ -184,6 +221,12 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Add a new additional form field to a draft.
+     * @param formName The name of the form.
+     * @param individualName The name of the draft.
+     * @param propertyName The name of the property to add.
+     */
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
@@ -202,6 +245,17 @@ public class FormFillService {
         }
     }
 
+    /**
+     * Create an individual from a filled form. Activated with the "save" function.
+     * Removes the draft if it exists.
+     * @param formName The name of the form.
+     * @param ontologyName The name of the ontology the form is in.
+     * @param targetField The target class of the individual.
+     * @param instanceName The name of the individual.
+     * @param draftName The original/first name of the corresponding draft if it exists. Else, null.
+     * @param formValues The values of the form fields.
+     * @return The URI of the created individual.
+     */
     public String createIndividualFromFilledForm(String formName,
                                                String ontologyName,
                                                String targetField,
