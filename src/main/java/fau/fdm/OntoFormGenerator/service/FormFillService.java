@@ -70,8 +70,10 @@ public class FormFillService {
      */
     public void deleteDraft(String formName,
                             String draftUri) {
+        logger.info("Deleting draft with URI: " + draftUri);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             individualService.deleteIndividualByIri(connection.getDataset(), "forms", draftUri);
+            logger.info("Deletion of draft successful.");
             connection.commit();
         }
     }
@@ -91,6 +93,7 @@ public class FormFillService {
                                           String firstDraftName,
                                           Map<String, List<String>> formValues,
                                           Map<String, List<String>> additionalValues) {
+        logger.info("Creating draft for form: " + formName + " with name: " + instanceName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
 
@@ -113,6 +116,7 @@ public class FormFillService {
             if (!additionalValues.isEmpty()) json.deleteCharAt(json.lastIndexOf(","));
             json.append("}\n");
             json.append("}");
+            logger.debug("Draft JSON: {}", json.toString());
 
             var baseIri = formsOntologyIri + "#" + firstDraftName;
             var indiv = individualService.getIndividualByIri(dataset, "forms", baseIri);
@@ -139,6 +143,10 @@ public class FormFillService {
             propertyService.addDatatypePropertyToIndividual(dataset, "forms", indiv,
                     "hasDraftName", instanceName, XSDDatatype.XSDstring);
             connection.commit();
+            logger.info("Draft creation successful.");
+        } catch (Exception e) {
+            logger.error("Draft creation failed: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -189,6 +197,7 @@ public class FormFillService {
      */
     public List<FormField> getAllAdditionalFormElementsOfDraft(String formName, String ontologyName,
                                                                String individualName) {
+        logger.info("Getting all additional form elements of draft: " + individualName + " in form: " + formName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.READ, ontologyDirectory, ontologyName)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
@@ -229,6 +238,7 @@ public class FormFillService {
      */
     public void addFieldElementToInstance(String formName, String individualName,
                                           String propertyName) {
+        logger.info("Adding field element: " + propertyName + " to draft: " + individualName + " in form: " + formName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, null)) {
             var individual = individualService.findIndividualInOntology(connection.getDataset(), "forms", individualName);
             var draft = propertyService.getDatatypePropertyValueFromIndividual(connection.getDataset(), "forms", individual, "hasDraft");
@@ -242,6 +252,7 @@ public class FormFillService {
             propertyService.addDatatypePropertyToIndividual(connection.getDataset(), "forms", individual,
                     "hasDraft", json, XSDDatatype.XSDstring);
             connection.commit();
+            logger.info("Field element added successfully.");
         }
     }
 
@@ -262,6 +273,7 @@ public class FormFillService {
                                                String instanceName,
                                                String draftName,
                                                Map<String, String[]> formValues) {
+        logger.info("Creating individual from filled form: " + instanceName + " in form: " + formName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, connection.getDataset().getNamedModel(ontologyName));
             var classURI = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, targetField);
@@ -317,8 +329,10 @@ public class FormFillService {
             propertyService.addObjectPropertyToIndividual(connection.getDataset(), "forms", form,
                     "created", individual.getURI());
             connection.commit();
+            logger.info("Individual creation successful.");
             return individual.getURI();
         } catch (Exception e) {
+            logger.error("Individual creation failed: " + e.getMessage());
             return null;
         }
     }

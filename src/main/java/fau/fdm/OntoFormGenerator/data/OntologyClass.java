@@ -31,4 +31,12 @@ public class OntologyClass {
             this.uri = uri;
         }
     }
+
+    @Override
+    public String toString() {
+        return "OntologyClass{" +
+                "name='" + name + '\'' +
+                ", uri='" + uri + '\'' +
+                '}';
+    }
 }

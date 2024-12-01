@@ -68,6 +68,7 @@ public class OntologyOverviewService {
      * @throws IOException If an error occurs while reading the file - for example if the file uses an unsupported format.
      */
     public boolean importOntology(File owlFile, String ontologyName) throws IOException {
+        logger.info("Importing ontology {} from file {}", ontologyName, owlFile.getPath());
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             var newOntURI = "http://www.ontoformgenerator.de/ontologies/" + ontologyName;
@@ -135,6 +136,7 @@ public class OntologyOverviewService {
      * @param ontologyName The name of the ontology to delete.
      */
     public void deleteOntology(String ontologyName) {
+        logger.info("Deleting ontology {}", ontologyName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             dataset.removeNamedModel(ontologyName);
@@ -155,7 +157,10 @@ public class OntologyOverviewService {
                     });
             var ontologyIri = generalTDBService.getIndividualURIInOntology(dataset, "forms", ontologyName);
             individualService.deleteIndividualByIri(dataset, "forms", ontologyIri);
+            logger.info("Ontology {} deleted successfully", ontologyName);
             connection.commit();
+        } catch (Exception e) {
+            logger.error("Error deleting ontology", e);
         }
     }
 

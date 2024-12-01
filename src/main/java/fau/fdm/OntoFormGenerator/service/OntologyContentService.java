@@ -247,11 +247,13 @@ public class OntologyContentService {
      * @return True if the individual was created successfully, false otherwise.
      */
     public Boolean addEmptyIndividual(String ontologyName, String classUri, String individualName) {
+        logger.info("Adding empty individual {} to class {}", individualName, classUri);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var ontClass = connection.getModel().getOntClass(classUri);
             var ontologyURI = ontClass.getURI().substring(0, ontClass.getURI().lastIndexOf("#") + 1);
             connection.getModel().createIndividual(ontologyURI + individualName, ontClass);
             connection.commit();
+            logger.info("Successfully added individual {} to class {}", individualName, classUri);
             return true;
         } catch (Exception e) {
             return false;
@@ -275,14 +277,14 @@ public class OntologyContentService {
                                  String ontologyName,
                                  String individualUri,
                                  Map<String, String[]> form) {
+        logger.info("Editing individual {} in ontology {}", individualUri, ontologyName);
+        logger.debug("Form data: {}", form);
         var ontology = OntModelFactory.createModel(dataset.getNamedModel(ontologyName).getGraph(),
                 OntSpecification.OWL2_DL_MEM);
 
         var individual = individualService.getIndividualByIri(dataset, ontologyName, individualUri);
 
         var setProperties = getSetProperties(dataset, individualUri, ontologyName);
-
-        // propertyService.removeAllPropertyValuesFromIndividual(individual);
 
         for (int i = 0; i < form.getOrDefault("propertyName", new String[0]).length; i++) {
             // Check if property already exists
@@ -351,6 +353,7 @@ public class OntologyContentService {
                         alreadyInsertedElement.getValue());
             }
         }
+        logger.info("Successfully edited individual {} in ontology {}", individualUri, ontologyName);
         return individualUri;
     }
 
@@ -407,6 +410,7 @@ public class OntologyContentService {
      */
     public OntologyClass addNewClass(String ontologyName, String className,
                                      String superClass) throws OntologyValidationException {
+        logger.info("Adding new class {} to ontology {}", className, ontologyName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var superClassUri = generalTDBService.getClassURIInOntology(connection.getDataset(), ontologyName, superClass);
             var uri = generalTDBService.getOntologyURIByOntologyName(connection.getDataset(), ontologyName)
@@ -421,7 +425,12 @@ public class OntologyContentService {
             var isUsedDefinedProp = connection.getModel().getProperty(IS_USER_DEFINED);
             newClass.addProperty(isUsedDefinedProp, connection.getModel().createTypedLiteral(true));
             connection.commit();
+            logger.info("Successfully added new class {} to ontology {}", className, ontologyName);
             return new OntologyClass(className, uri);
+        } catch (Exception e) {
+            logger.error("Error adding new class {} to ontology {}", className, ontologyName);
+            logger.error(e.getMessage());
+            throw e;
         }
     }
 
@@ -431,10 +440,16 @@ public class OntologyContentService {
      * @param individualUri The URI of the individual.
      */
     public void deleteIndividual(String ontologyName, String individualUri) {
+        logger.info("Deleting individual {} from ontology {}", individualUri, ontologyName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             individualService.deleteIndividualByIri(connection.getDataset(), ontologyName, individualUri);
             individualService.deleteIndividualByIri(connection.getDataset(), "forms", individualUri);
+            logger.info("Successfully deleted individual {} from ontology {}", individualUri, ontologyName);
             connection.commit();
+        } catch (Exception e) {
+            logger.error("Error deleting individual {} from ontology {}", individualUri, ontologyName);
+            logger.error(e.getMessage());
+            throw e;
         }
     }
 
@@ -457,6 +472,7 @@ public class OntologyContentService {
     public OntologyProperty createNewProperty(String ontologyName, String propDescription, String propertyName,
                                               boolean objectProperty, String domain, String range,
                                               boolean validate) throws OntologyValidationException {
+        logger.info("Creating new property {} in ontology {}", propertyName, ontologyName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             if (validate) {
                 var synonyms = ontologyValidationService.findPotentialSimilarProperties(connection.getDataset(), ontologyName, domain, propertyName);
@@ -503,9 +519,14 @@ public class OntologyContentService {
                 property.addProperty(rdfsComment, ontModel.createTypedLiteral(propDescription));
             }
             connection.commit();
+            logger.info("Successfully created new property {} in ontology {}", propertyName, ontologyName);
             return new OntologyProperty(propertyName, new OntologyClass(domain, domainClass.getURI()), uri,
                     objectProperty, objectProperty ? new OntologyClass(fullRange.getLocalName(), fullRange.getURI()) : null,
                     objectProperty ? null : range);
+        } catch (Exception e) {
+            logger.error("Error creating new property {} in ontology {}", propertyName, ontologyName);
+            logger.error(e.getMessage());
+            throw e;
         }
     }
 

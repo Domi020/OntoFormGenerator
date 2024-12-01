@@ -209,6 +209,4 @@ public class GeneralTDBService {
         thread.setDaemon(false);
         thread.start();
     }
-
-    //TODO: Logging
 }

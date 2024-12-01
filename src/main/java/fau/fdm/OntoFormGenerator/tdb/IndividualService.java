@@ -23,8 +23,6 @@ public class IndividualService {
     @Value("${ontoformgenerator.ontologies.baseIRI}")
     private String baseIRI;
 
-    private final Logger logger = LoggerFactory.getLogger(IndividualService.class);
-
     public IndividualService(GeneralTDBService generalTDBService) {
         this.generalTDBService = generalTDBService;
     }

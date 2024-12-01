@@ -26,8 +26,6 @@ public class PropertyService {
     @Value("${ontoformgenerator.ontologies.baseIRI}")
     private String baseIRI;
 
-    private final Logger logger = LoggerFactory.getLogger(PropertyService.class);
-
     public PropertyService(GeneralTDBService generalTDBService) {
         this.generalTDBService = generalTDBService;
     }

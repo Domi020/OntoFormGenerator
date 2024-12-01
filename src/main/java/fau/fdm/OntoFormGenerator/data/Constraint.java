@@ -20,4 +20,14 @@ public class Constraint {
         EXACTLY,
         ONLY,
     }
+
+    @Override
+    public String toString() {
+        return "Constraint{" +
+                "domain=" + domain +
+                ", onProperty=" + onProperty +
+                ", value=" + value +
+                ", constraintType=" + constraintType +
+                '}';
+    }
 }

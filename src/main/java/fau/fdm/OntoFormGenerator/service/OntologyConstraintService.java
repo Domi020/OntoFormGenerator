@@ -11,6 +11,9 @@ import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,12 @@ public class OntologyConstraintService {
     @Value("${ontoformgenerator.ontologyDirectory}")
     private String ontologyDirectory;
 
+    private final Logger logger;
+
+    public OntologyConstraintService() {
+        this.logger = LoggerFactory.getLogger(OntologyConstraintService.class);
+    }
+
     /**
      * Get cardinality and value constraints for a given domain class and property.
      * @param dataset The dataset to use.
@@ -35,6 +44,7 @@ public class OntologyConstraintService {
      * @return A list of constraints for this combination.
      */
     public List<Constraint> getConstraints(Dataset dataset, String ontologyName, String domainClassUri, String propertyUri) {
+        logger.info("Getting constraints for domain class {} and property {}", domainClassUri, propertyUri);
         var ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM,
                 dataset.getNamedModel(ontologyName));
 
@@ -69,6 +79,8 @@ public class OntologyConstraintService {
                 resultList.add(res);
             }
         });
+        logger.info("Found {} constraints", resultList.size());
+        logger.debug("Constraints: {}", resultList);
         return resultList;
     }
 

@@ -28,4 +28,18 @@ public class OntologyProperty {
     }
 
     public OntologyProperty() {}
+
+    @Override
+    public String toString() {
+        return "OntologyProperty{" +
+                "name='" + name + '\'' +
+                ", domain=" + domain +
+                ", uri='" + uri + '\'' +
+                ", isObjectProperty=" + isObjectProperty +
+                ", objectRange=" + objectRange +
+                ", datatypeRange='" + datatypeRange + '\'' +
+                ", rdfsLabel='" + rdfsLabel + '\'' +
+                ", rdfsComment='" + rdfsComment + '\'' +
+                '}';
+    }
 }

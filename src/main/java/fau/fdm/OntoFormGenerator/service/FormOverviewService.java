@@ -69,6 +69,7 @@ public class FormOverviewService {
      */
     public void addNewForm(String formName, String ontologyName, String ontologyURI,
                            String targetClass) {
+        logger.info("Adding new form: " + formName + " targeting ontology: " + ontologyName);
         try (TDBConnection connection = new TDBConnection(ReadWrite.WRITE, ontologyDirectory, ontologyName)) {
             var dataset = connection.getDataset();
             var individual = individualService.addIndividualByLocalName(dataset, "Form", formName);
@@ -89,8 +90,11 @@ public class FormOverviewService {
                     propertyService.getPropertyFromOntology(dataset, "forms", "targetsClass"),
                     classIndividual
             );
-
+            logger.info("Form added: " + formName);
             connection.commit();
+        } catch (Exception e) {
+            logger.error("Error adding form: " + formName, e);
+            throw e;
         }
     }
 
@@ -212,6 +216,7 @@ public class FormOverviewService {
      * @param formName The name of the form to delete.
      */
     public void deleteForm(Dataset dataset, String formName) {
+        logger.info("Deleting form: " + formName);
         for (var draft : getAllDraftsOfForm(dataset, formName)) {
             individualService.deleteIndividualByIri(dataset, "forms", draft.getIri());
         }
@@ -223,6 +228,7 @@ public class FormOverviewService {
                     formElement.getURI());
         }
         individualService.deleteIndividualByLocalName(dataset, "forms", formName);
+        logger.info("Form deleted: " + formName);
     }
 
     /**
