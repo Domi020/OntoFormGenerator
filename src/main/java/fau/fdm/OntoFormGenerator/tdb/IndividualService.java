@@ -31,6 +31,13 @@ public class IndividualService {
 
     // Retrieval methods
 
+    /**
+     * Get all individuals of a given class in the ontology.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param className The name of the class.
+     * @return A list of individuals of the given class.
+     */
     public List<Individual> getAllIndividualsOfClass(Dataset dataset,
                                                         String ontologyName,
                                                         String className) {
@@ -43,6 +50,13 @@ public class IndividualService {
         return individuals;
     }
 
+    /**
+     * Get an individual in the ontology by its local name.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param individualName The local name of the individual.
+     * @return The individual if found, otherwise null.
+     */
     public Individual getIndividualByLocalName(Dataset dataset,
                                                String ontologyName,
                                                String individualName) {
@@ -50,6 +64,13 @@ public class IndividualService {
         return ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName);
     }
 
+    /**
+     * Find an individual in the ontology by its IRI.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param iri The IRI of the individual.
+     * @return The individual if found, otherwise null.
+     */
     public Individual getIndividualByIri(Dataset dataset,
                                          String ontologyName,
                                          String iri) {
@@ -57,6 +78,13 @@ public class IndividualService {
         return ontModel.getIndividual(iri);
     }
 
+    /**
+     * Search for an individual in the ontology by its local name.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param individualName The local name of the individual.
+     * @return The individual if found, otherwise null.
+     */
     public Individual findIndividualInOntology(Dataset dataset,
                                                String ontologyName,
                                                String individualName) {
@@ -66,6 +94,13 @@ public class IndividualService {
         return ind.orElse(null);
     }
 
+    /**
+     * Get all individuals by a SPARQL query.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param query The SPARQL query to execute. The query should select individuals with the variable name "?f".
+     * @return A list of individuals found by the query.
+     */
     public List<Resource> selectIndividualsInSPARQLQuery(Dataset dataset,
                                                          String ontologyName,
                                                          String query) {
@@ -86,6 +121,14 @@ public class IndividualService {
 
     // Creation methods
 
+    /**
+     * Add a new individual to the ontology by its local name.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param className The name of the class of the individual.
+     * @param individualName The local name of the individual.
+     * @return The created individual.
+     */
     public Individual addIndividualByLocalName(Dataset dataset,
                                                String ontologyName,
                                                String className,
@@ -96,12 +139,26 @@ public class IndividualService {
         return ontModel.createIndividual(baseIRI + "/" + ontologyName + "#" + individualName, ontClass);
     }
 
+    /**
+     * Add a new individual to the ontology by its local name in the forms ontology.
+     * @param dataset The dataset to use.
+     * @param className The name of the class of the individual.
+     * @param individualName The local name of the individual.
+     * @return The created individual.
+     */
     public Individual addIndividualByLocalName(Dataset dataset,
                                                String className,
                                                String individualName) {
         return addIndividualByLocalName(dataset, "forms", className, individualName);
     }
 
+    /**
+     * Add a new individual to the ontology by its IRI.
+     * @param dataset The dataset to use.
+     * @param className The name of the class of the individual.
+     * @param IRI The IRI of the individual.
+     * @return The created individual.
+     */
     public Individual addIndividualWithUniqueIRI(Dataset dataset,
                                                  String className,
                                                  String IRI) {
@@ -116,6 +173,12 @@ public class IndividualService {
 
     // Deletion methods
 
+    /**
+     * Delete an individual by its local name.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param individualName The local name of the individual.
+     */
     public void deleteIndividualByLocalName(Dataset dataset,
                                             String ontologyName,
                                             String individualName) {
@@ -123,6 +186,12 @@ public class IndividualService {
         ontModel.getIndividual(baseIRI + "/" + ontologyName + "#" + individualName).remove();
     }
 
+    /**
+     * Delete an individual by its IRI.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param iri The IRI of the individual.
+     */
     public void deleteIndividualByIri(Dataset dataset,
                                       String ontologyName,
                                       String iri) {
@@ -135,6 +204,13 @@ public class IndividualService {
 
     // Other methods
 
+    /**
+     * Check if an individual is imported in the ontology, or was created with the form generator.
+     * @param dataset The dataset to use.
+     * @param ontologyName The name of the ontology.
+     * @param individualIri The IRI of the individual.
+     * @return True if the individual is imported, false otherwise (was created with OntoFormGenerator).
+     */
     public boolean checkIfIndividualIsImported(Dataset dataset,
                                                String ontologyName,
                                                String individualIri) {

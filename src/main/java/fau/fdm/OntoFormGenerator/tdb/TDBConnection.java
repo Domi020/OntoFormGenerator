@@ -8,6 +8,11 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb2.TDB2Factory;
 
+/**
+ * Represents a connection to a TDB dataset implementing the AutoCloseable interface.
+ * The connection is opened in the constructor and closed when the object is destroyed.
+ * If the connection is not explicitly committed, it is aborted automatically.
+ */
 public class TDBConnection implements AutoCloseable {
 
     @Getter
